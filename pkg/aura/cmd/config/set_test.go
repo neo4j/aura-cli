@@ -18,7 +18,7 @@ import (
 func TestSetConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	cmd.SetArgs([]string{"config", "set", "auth-url", "test"})
 
 	b := bytes.NewBufferString("")
@@ -28,7 +28,7 @@ func TestSetConfig(t *testing.T) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.Nil(err)
 
 	out, err := io.ReadAll(b)

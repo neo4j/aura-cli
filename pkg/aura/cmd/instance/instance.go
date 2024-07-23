@@ -1,37 +1,47 @@
 package instance
 
 import (
-	"github.com/neo4j/cli/pkg/clicfg"
+	"errors"
+
+	"github.com/neo4j/cli/pkg/clictx"
 	"github.com/spf13/cobra"
 )
 
-var Cmd = &cobra.Command{
-	Use:   "instance",
-	Short: "Relates to AuraDB or AuraDS instances",
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := clicfg.Viper.BindPFlag("aura.base-url", cmd.Flags().Lookup("base-url")); err != nil {
-			return err
-		}
-		if err := clicfg.Viper.BindPFlag("aura.auth-url", cmd.Flags().Lookup("auth-url")); err != nil {
-			return err
-		}
-		if err := clicfg.Viper.BindPFlag("aura.output", cmd.Flags().Lookup("output")); err != nil {
-			return err
-		}
+func NewCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "instance",
+		Short: "Relates to AuraDB or AuraDS instances",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			config, ok := clictx.Config(cmd.Context())
 
-		return nil
-	},
-}
+			if !ok {
+				return errors.New("error fetching cli configuration values")
+			}
 
-func init() {
-	Cmd.AddCommand(CreateCmd)
-	Cmd.AddCommand(DeleteCmd)
-	Cmd.AddCommand(GetCmd)
-	Cmd.AddCommand(ListCmd)
-	Cmd.AddCommand(PauseCmd)
-	Cmd.AddCommand(ResumeCmd)
+			if err := config.BindPFlag("aura.base-url", cmd.Flags().Lookup("base-url")); err != nil {
+				return err
+			}
+			if err := config.BindPFlag("aura.auth-url", cmd.Flags().Lookup("auth-url")); err != nil {
+				return err
+			}
+			if err := config.BindPFlag("aura.output", cmd.Flags().Lookup("output")); err != nil {
+				return err
+			}
 
-	Cmd.PersistentFlags().String("auth-url", "", "")
-	Cmd.PersistentFlags().String("base-url", "", "")
-	Cmd.PersistentFlags().String("output", "", "")
+			return nil
+		},
+	}
+
+	cmd.AddCommand(NewCreateCmd())
+	cmd.AddCommand(NewDeleteCmd())
+	cmd.AddCommand(NewGetCmd())
+	cmd.AddCommand(NewListCmd())
+	cmd.AddCommand(NewPauseCmd())
+	cmd.AddCommand(NewResumeCmd())
+
+	cmd.PersistentFlags().String("auth-url", "", "")
+	cmd.PersistentFlags().String("base-url", "", "")
+	cmd.PersistentFlags().String("output", "", "")
+
+	return cmd
 }

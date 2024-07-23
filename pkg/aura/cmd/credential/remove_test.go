@@ -18,7 +18,7 @@ import (
 func TestRemoveCredential(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	cmd.SetArgs([]string{"credential", "remove", "test"})
 
 	b := bytes.NewBufferString("")
@@ -28,7 +28,7 @@ func TestRemoveCredential(t *testing.T) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.Nil(err)
 
 	out, err := io.ReadAll(b)

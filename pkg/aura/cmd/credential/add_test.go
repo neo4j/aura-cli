@@ -18,7 +18,7 @@ import (
 func TestAddCredential(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	cmd.SetArgs([]string{"credential", "add", "--name", "test", "--client-id", "testclientid", "--client-secret", "testclientsecret"})
 
 	b := bytes.NewBufferString("")
@@ -28,7 +28,7 @@ func TestAddCredential(t *testing.T) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.Nil(err)
 
 	out, err := io.ReadAll(b)
@@ -40,7 +40,7 @@ func TestAddCredential(t *testing.T) {
 func TestAddCredentialIfAlreadyExists(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	cmd.SetArgs([]string{"credential", "add", "--name", "test", "--client-id", "testclientid", "--client-secret", "testclientsecret"})
 
 	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{"aura":{"credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret"}]}}`), nil)
@@ -49,6 +49,6 @@ func TestAddCredentialIfAlreadyExists(t *testing.T) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.ErrorContains(err, "already have credential with name test")
 }

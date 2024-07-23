@@ -18,7 +18,7 @@ import (
 func TestUseCredential(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	cmd.SetArgs([]string{"credential", "use", "test"})
 
 	b := bytes.NewBufferString("")
@@ -28,7 +28,7 @@ func TestUseCredential(t *testing.T) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.Nil(err)
 
 	out, err := io.ReadAll(b)
@@ -41,7 +41,7 @@ func TestUseCredential(t *testing.T) {
 func TestUseCredentialIfDoesNotExist(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	cmd.SetArgs([]string{"credential", "use", "test"})
 
 	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{}`), nil)
@@ -50,6 +50,6 @@ func TestUseCredentialIfDoesNotExist(t *testing.T) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.ErrorContains(err, "could not find credential with name test")
 }

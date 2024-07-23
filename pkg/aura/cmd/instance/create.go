@@ -5,32 +5,33 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	version              string
-	region               string
-	memory               string
-	name                 string
-	_type                string
-	tenantId             string
-	cloudProvider        string
-	customerManagedKeyId string
-)
+func NewCreateCmd() *cobra.Command {
+	var (
+		version              string
+		region               string
+		memory               string
+		name                 string
+		_type                string
+		tenantId             string
+		cloudProvider        string
+		customerManagedKeyId string
+	)
 
-const (
-	versionFlag              = "version"
-	regionFlag               = "region"
-	memoryFlag               = "memory"
-	nameFlag                 = "name"
-	typeFlag                 = "type"
-	tenantIdFlag             = "tenant-id"
-	cloudProviderFlag        = "cloud-provider"
-	customerManagedKeyIdFlag = "customer-managed-key-id"
-)
+	const (
+		versionFlag              = "version"
+		regionFlag               = "region"
+		memoryFlag               = "memory"
+		nameFlag                 = "name"
+		typeFlag                 = "type"
+		tenantIdFlag             = "tenant-id"
+		cloudProviderFlag        = "cloud-provider"
+		customerManagedKeyIdFlag = "customer-managed-key-id"
+	)
 
-var CreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Creates a new instance",
-	Long: `This subcommand starts the creation process of an Aura instance.
+	cmd := &cobra.Command{
+		Use:   "create",
+		Short: "Creates a new instance",
+		Long: `This subcommand starts the creation process of an Aura instance.
 
 Creating an instance is an asynchronous operation. Supported instance configurations for your tenant can be obtained by calling the tenant get subcommand.
 
@@ -41,44 +42,45 @@ This subcommand returns your instance ID, initial credentials, connection URL al
 You must also provide a --cloud-provider flag with the subcommand, which specifies which cloud provider the instances will be hosted in. The acceptable values for this field are gcp, aws, or azure.
 
 For Enterprise instances you can specify a --customer-managed-key-id flag to use a Customer Managed Key for encryption.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		body := map[string]any{
-			"version":        version,
-			"region":         region,
-			"memory":         memory,
-			"name":           name,
-			"type":           _type,
-			"tenant_id":      tenantId,
-			"cloud_provider": cloudProvider,
-		}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			body := map[string]any{
+				"version":        version,
+				"region":         region,
+				"memory":         memory,
+				"name":           name,
+				"type":           _type,
+				"tenant_id":      tenantId,
+				"cloud_provider": cloudProvider,
+			}
 
-		if customerManagedKeyId != "" {
-			body["customer_managed_key_id"] = customerManagedKeyId
-		}
+			if customerManagedKeyId != "" {
+				body["customer_managed_key_id"] = customerManagedKeyId
+			}
 
-		return api.MakeRequest(cmd, "POST", "/instances", body)
-	},
-}
+			return api.MakeRequest(cmd, "POST", "/instances", body)
+		},
+	}
 
-func init() {
-	CreateCmd.Flags().StringVar(&version, versionFlag, "5", "The Neo4j version of the instance.")
+	cmd.Flags().StringVar(&version, versionFlag, "5", "The Neo4j version of the instance.")
 
-	CreateCmd.Flags().StringVar(&region, regionFlag, "", "The region where the instance is hosted.")
-	CreateCmd.MarkFlagRequired(regionFlag)
+	cmd.Flags().StringVar(&region, regionFlag, "", "The region where the instance is hosted.")
+	cmd.MarkFlagRequired(regionFlag)
 
-	CreateCmd.Flags().StringVar(&memory, memoryFlag, "", "The size of the instance memory in GB.")
-	CreateCmd.MarkFlagRequired(memoryFlag)
+	cmd.Flags().StringVar(&memory, memoryFlag, "", "The size of the instance memory in GB.")
+	cmd.MarkFlagRequired(memoryFlag)
 
-	CreateCmd.Flags().StringVar(&name, nameFlag, "", "The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
-	CreateCmd.MarkFlagRequired(nameFlag)
+	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
+	cmd.MarkFlagRequired(nameFlag)
 
-	CreateCmd.Flags().StringVar(&_type, typeFlag, "", "The type of the instance.")
-	CreateCmd.MarkFlagRequired(typeFlag)
+	cmd.Flags().StringVar(&_type, typeFlag, "", "The type of the instance.")
+	cmd.MarkFlagRequired(typeFlag)
 
-	CreateCmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "The tenant??????????")
+	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
 
-	CreateCmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
-	CreateCmd.MarkFlagRequired(cloudProviderFlag)
+	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
+	cmd.MarkFlagRequired(cloudProviderFlag)
 
-	CreateCmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "")
+	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "")
+
+	return cmd
 }

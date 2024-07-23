@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 var configPrefix string
-var Viper *viper.Viper
 
 const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
 const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
@@ -37,7 +37,7 @@ func (config *Config) Get(key string) (interface{}, error) {
 func (config *Config) Set(key string, value interface{}) error {
 	config.viper.Set(key, value)
 
-	err := Viper.Unmarshal(config)
+	err := config.viper.Unmarshal(config)
 	if err != nil {
 		return err
 	}
@@ -63,6 +63,10 @@ func (config *Config) Write() error {
 	fmt.Printf("wrote %d bytes to config file\n", n)
 
 	return nil
+}
+
+func (config *Config) BindPFlag(key string, flag *pflag.Flag) error {
+	return config.viper.BindPFlag(key, flag)
 }
 
 type AuraConfig struct {
@@ -166,6 +170,8 @@ func NewConfig() (*Config, error) {
 }
 
 func NewConfigFrom(in io.Reader, out *bufio.Writer) (*Config, error) {
+	Viper := viper.New()
+
 	Viper.SetConfigType("json")
 
 	bindEnvironmentVariables(Viper)
@@ -198,8 +204,4 @@ func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
 	Viper.SetDefault("aura.output", "json")
 	Viper.SetDefault("aura.credentials", []AuraCredential{})
-}
-
-func init() {
-	Viper = viper.New()
 }

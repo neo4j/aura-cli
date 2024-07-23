@@ -1,36 +1,46 @@
 package customermanagedkey
 
 import (
-	"github.com/neo4j/cli/pkg/clicfg"
+	"errors"
+
+	"github.com/neo4j/cli/pkg/clictx"
 	"github.com/spf13/cobra"
 )
 
-var Cmd = &cobra.Command{
-	Use:     "customer-managed-key",
-	Short:   "Relates to Customer Managed Keys",
-	Aliases: []string{"cmk"},
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := clicfg.Viper.BindPFlag("aura.base-url", cmd.Flags().Lookup("base-url")); err != nil {
-			return err
-		}
-		if err := clicfg.Viper.BindPFlag("aura.auth-url", cmd.Flags().Lookup("auth-url")); err != nil {
-			return err
-		}
-		if err := clicfg.Viper.BindPFlag("aura.output", cmd.Flags().Lookup("output")); err != nil {
-			return err
-		}
+func NewCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "customer-managed-key",
+		Short:   "Relates to Customer Managed Keys",
+		Aliases: []string{"cmk"},
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			config, ok := clictx.Config(cmd.Context())
 
-		return nil
-	},
-}
+			if !ok {
+				return errors.New("error fetching cli configuration values")
+			}
 
-func init() {
-	Cmd.PersistentFlags().String("auth-url", "", "")
-	Cmd.PersistentFlags().String("base-url", "", "")
-	Cmd.PersistentFlags().String("output", "", "")
+			if err := config.BindPFlag("aura.base-url", cmd.Flags().Lookup("base-url")); err != nil {
+				return err
+			}
+			if err := config.BindPFlag("aura.auth-url", cmd.Flags().Lookup("auth-url")); err != nil {
+				return err
+			}
+			if err := config.BindPFlag("aura.output", cmd.Flags().Lookup("output")); err != nil {
+				return err
+			}
 
-	Cmd.AddCommand(CreateCmd)
-	Cmd.AddCommand(DeleteCmd)
-	Cmd.AddCommand(GetCmd)
-	Cmd.AddCommand(ListCmd)
+			return nil
+		},
+	}
+
+	cmd.PersistentFlags().String("auth-url", "", "")
+	cmd.PersistentFlags().String("base-url", "", "")
+	cmd.PersistentFlags().String("output", "", "")
+
+	cmd.AddCommand(NewCreateCmd())
+	cmd.AddCommand(NewDeleteCmd())
+	cmd.AddCommand(NewGetCmd())
+	cmd.AddCommand(NewListCmd())
+
+	return cmd
 }

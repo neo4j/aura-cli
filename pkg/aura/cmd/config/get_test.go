@@ -17,7 +17,7 @@ import (
 func TestGetConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"config", "get", "auth-url"})
@@ -29,7 +29,7 @@ func TestGetConfig(t *testing.T) {
 
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.Nil(err)
 
 	out, err := io.ReadAll(b)
@@ -42,7 +42,7 @@ func TestGetConfig(t *testing.T) {
 func TestGetConfigDefault(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"config", "get", "auth-url"})
@@ -53,7 +53,7 @@ func TestGetConfigDefault(t *testing.T) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(err)
 
-	err = aura.Execute(ctx)
+	err = cmd.ExecuteContext(ctx)
 	assert.Nil(err)
 
 	out, err := io.ReadAll(b)

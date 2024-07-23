@@ -16,6 +16,8 @@ import (
 var Version = "dev"
 
 func main() {
+	cmd := neo4j.NewCmd()
+
 	cfg, err := clicfg.NewConfig()
 	if err != nil {
 		fmt.Println(err)
@@ -29,5 +31,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	neo4j.Execute(ctx)
+	cmd.ExecuteContext(ctx)
 }

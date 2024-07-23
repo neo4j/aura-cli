@@ -7,12 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var GetCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Returns instance details",
-	Long:  "This endpoint returns details about a specific Aura Instance.",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return api.MakeRequest(cmd, "GET", fmt.Sprintf("/instances/%s", args[0]), nil)
-	},
+func NewGetCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "get",
+		Short: "Returns instance details",
+		Long:  "This endpoint returns details about a specific Aura Instance.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return api.MakeRequest(cmd, "GET", fmt.Sprintf("/instances/%s", args[0]), nil)
+		},
+	}
 }

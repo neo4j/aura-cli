@@ -58,7 +58,7 @@ func TestGetInstance(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	cmd := aura.Cmd
+	cmd := aura.NewCmd()
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"instance", "get", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), instanceId})
