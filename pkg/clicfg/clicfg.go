@@ -152,13 +152,32 @@ type AuraCredential struct {
 func NewConfig() (*Config, error) {
 	configPath := filepath.Join(configPrefix, "neo4j", "cli", "config.json")
 
+	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+		return nil, err
+	}
+
 	f, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return &Config{}, err
 	}
 	defer f.Close()
 
+	fi, err := os.Stat(configPath)
+
+	if err != nil {
+		return &Config{}, err
+	}
+
 	out := bufio.NewWriter(f)
+
+	if fi.Size() == 0 {
+		if _, err := out.Write([]byte("{}")); err != nil {
+			return nil, err
+		}
+		if err := out.Flush(); err != nil {
+			return nil, err
+		}
+	}
 
 	in, err := os.Open(configPath)
 	if err != nil {
