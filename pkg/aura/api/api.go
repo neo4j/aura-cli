@@ -17,22 +17,27 @@ import (
 
 const userAgent = "Neo4jCLI/%s"
 
+type Grant struct {
+	AccessToken string `json:"access_token"`
+	//ExpiresIn   string `json:"expires_in"`
+}
+
 func getToken(ctx context.Context) (string, error) {
-	type Grant struct {
-		AccessToken string `json:"access_token"`
-		// expiresIn   string `json:"expires_in"`
-	}
-
-	client := http.Client{}
-
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-
 	config, ok := clictx.Config(ctx)
-
 	if !ok {
 		return "", errors.New("error fetching cli configuration values")
 	}
+
+	credential, err := config.Aura.GetDefaultCredential()
+	if err != nil {
+		return "", err
+	}
+
+	// If token exists and not expire rate
+
+	data := url.Values{}
+
+	data.Set("grant_type", "client_credentials")
 
 	u, err := config.Get("aura.auth-url")
 
@@ -55,8 +60,9 @@ func getToken(ctx context.Context) (string, error) {
 		"Content-Type": {"application/x-www-form-urlencoded"},
 		"User-Agent":   {fmt.Sprintf(userAgent, version)},
 	}
+	req.SetBasicAuth(credential.ClientId, credential.ClientSecret)
 
-	req.SetBasicAuth("9nNx3JS9gfTGAVaD7RnVfViWpimYkNwN", "gV-_AibheBDqZnNI7sePG807m8jbEq_ICqIwPYGLRwWBwqnQb7KJ39A0GUkCSbgD")
+	client := http.Client{}
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -89,6 +95,8 @@ func getToken(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// Save Grant in config
 
 	return grant.AccessToken, nil
 }

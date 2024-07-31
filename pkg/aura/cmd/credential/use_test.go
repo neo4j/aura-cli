@@ -34,7 +34,7 @@ func TestUseCredential(t *testing.T) {
 	out, err := io.ReadAll(b)
 	assert.Nil(err)
 
-	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","default-credential":"test","credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret"}]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
+	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","default-credential":"test","credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret","access-token":"","token-expiry":""}]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
 }
 
 // TODO: currently fails when running with all tests - figure out what is going here

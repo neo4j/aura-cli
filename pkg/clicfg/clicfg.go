@@ -3,6 +3,7 @@ package clicfg
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -132,6 +133,20 @@ func (auraConfig *AuraConfig) SetDefaultCredential(name string) error {
 	return nil
 }
 
+func (auraConfig *AuraConfig) GetDefaultCredential() (AuraCredential, error) {
+	if auraConfig.DefaultCredential == "" {
+		return AuraCredential{}, errors.New("no default credential found")
+	}
+
+	for _, credential := range auraConfig.Credentials {
+		if credential.Name == auraConfig.DefaultCredential {
+			return credential, nil
+		}
+	}
+
+	return AuraCredential{}, fmt.Errorf("could not find credential with name %s", auraConfig.DefaultCredential)
+}
+
 func (auraConfig *AuraConfig) Print(cmd *cobra.Command) error {
 	encoder := json.NewEncoder(cmd.OutOrStdout())
 	encoder.SetIndent("", "\t")
@@ -147,6 +162,8 @@ type AuraCredential struct {
 	Name         string `mapstructure:"name" json:"name"`
 	ClientId     string `mapstructure:"client-id" json:"client-id"`
 	ClientSecret string `mapstructure:"client-secret" json:"client-secret"`
+	AccessToken  string `mapstructure:"access-token" json:"access-token"`
+	TokenExpiry  string `mapstructure:"token-expiry" json:"token-expiry"`
 }
 
 func NewConfig() (*Config, error) {
