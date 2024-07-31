@@ -11,6 +11,7 @@ import (
 	"github.com/neo4j/cli/pkg/clicfg"
 	"github.com/neo4j/cli/pkg/clictx"
 	"github.com/neo4j/cli/pkg/neo4j"
+	"github.com/spf13/afero"
 )
 
 var Version = "dev"
@@ -18,7 +19,7 @@ var Version = "dev"
 func main() {
 	cmd := neo4j.NewCmd()
 
-	cfg, err := clicfg.NewConfig()
+	cfg, err := clicfg.NewConfig(afero.NewOsFs())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

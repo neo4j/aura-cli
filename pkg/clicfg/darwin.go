@@ -11,5 +11,5 @@ func init() {
 	currentUser, _ := user.Current()
 	homeDir := currentUser.HomeDir
 
-	configPrefix = filepath.Join(homeDir, "Library/Preferences")
+	ConfigPrefix = filepath.Join(homeDir, "Library/Preferences")
 }

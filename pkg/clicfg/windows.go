@@ -15,5 +15,5 @@ func init() {
 		log.Panic(err)
 	}
 
-	configPrefix = p
+	ConfigPrefix = p
 }
