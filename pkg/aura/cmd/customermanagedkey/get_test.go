@@ -62,7 +62,16 @@ func TestGetCustomerManagedKey(t *testing.T) {
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"customer-managed-key", "get", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), cmkId})
 
-	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{}`), nil)
+	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{
+		"aura": {
+			"credentials": [{
+				"name": "test-cred",
+				"access-token": "dsa",
+				"token-expiry": 123
+			}],
+			"default-credential": "test-cred"
+		}
+	}`), nil)
 	assert.Nil(err)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
@@ -139,7 +148,16 @@ func TestGetCustomerManagedKeyAlias(t *testing.T) {
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"cmk", "get", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), cmkId})
 
-	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{}`), nil)
+	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{
+		"aura": {
+			"credentials": [{
+				"name": "test-cred",
+				"access-token": "dsa",
+				"token-expiry": 123
+			}],
+			"default-credential": "test-cred"
+		}
+	}`), nil)
 	assert.Nil(err)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
