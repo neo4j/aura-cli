@@ -1,27 +1,26 @@
 package clicfg
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-var configPrefix string
+var ConfigPrefix string
 
 const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
 const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
 
 type Config struct {
 	viper *viper.Viper
-	out   *bufio.Writer
+	fs    afero.Fs
 	Aura  AuraConfig `mapstructure:"aura" json:"aura"`
 }
 
@@ -47,17 +46,22 @@ func (config *Config) Set(key string, value interface{}) error {
 }
 
 func (config *Config) Write() error {
+	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli", "config.json")
+
+	f, err := config.fs.OpenFile(configPath, os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
 	content, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	n, err := config.out.Write(content)
-	if err != nil {
-		return err
-	}
+	n, err := f.Write(content)
 
-	if err = config.out.Flush(); err != nil {
+	if err != nil {
 		return err
 	}
 
@@ -166,46 +170,40 @@ type AuraCredential struct {
 	TokenExpiry  string `mapstructure:"token-expiry" json:"token-expiry"`
 }
 
-func NewConfig() (*Config, error) {
-	configPath := filepath.Join(configPrefix, "neo4j", "cli", "config.json")
+func NewConfig(fs afero.Fs) (*Config, error) {
+	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli", "config.json")
 
-	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+	if err := fs.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
 		return nil, err
 	}
 
-	f, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := fs.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return &Config{}, err
 	}
 	defer f.Close()
 
-	fi, err := os.Stat(configPath)
+	fi, err := fs.Stat(configPath)
 
 	if err != nil {
 		return &Config{}, err
 	}
 
-	out := bufio.NewWriter(f)
-
 	if fi.Size() == 0 {
-		if _, err := out.Write([]byte("{}")); err != nil {
+		if _, err := f.Write([]byte("{}")); err != nil {
 			return nil, err
 		}
-		if err := out.Flush(); err != nil {
+		if err := f.Sync(); err != nil {
 			return nil, err
 		}
 	}
 
-	in, err := os.Open(configPath)
+	in, err := fs.Open(configPath)
 	if err != nil {
 		return &Config{}, err
 	}
 	defer in.Close()
 
-	return NewConfigFrom(in, out)
-}
-
-func NewConfigFrom(in io.Reader, out *bufio.Writer) (*Config, error) {
 	Viper := viper.New()
 
 	Viper.SetConfigType("json")
@@ -218,14 +216,14 @@ func NewConfigFrom(in io.Reader, out *bufio.Writer) (*Config, error) {
 	}
 
 	var config Config
-	err := Viper.Unmarshal(&config)
+	err = Viper.Unmarshal(&config)
 
 	if err != nil {
 		return &Config{}, err
 	}
 
 	config.viper = Viper
-	config.out = out
+	config.fs = fs
 
 	return &config, nil
 }

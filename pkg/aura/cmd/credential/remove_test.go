@@ -1,14 +1,11 @@
 package credential_test
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"strings"
 	"testing"
 
+	"github.com/neo4j/cli/internal/testutils"
 	"github.com/neo4j/cli/pkg/aura"
 	"github.com/neo4j/cli/pkg/clicfg"
 	"github.com/neo4j/cli/pkg/clictx"
@@ -21,8 +18,10 @@ func TestRemoveCredential(t *testing.T) {
 	cmd := aura.NewCmd()
 	cmd.SetArgs([]string{"credential", "remove", "test"})
 
-	b := bytes.NewBufferString("")
-	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{"aura":{"credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret"}]}}`), bufio.NewWriter(b))
+	fs, err := testutils.GetTestFs(`{"aura":{"credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret"}]}}`)
+	assert.Nil(err)
+
+	cfg, err := clicfg.NewConfig(fs)
 	assert.Nil(err)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
@@ -31,7 +30,7 @@ func TestRemoveCredential(t *testing.T) {
 	err = cmd.ExecuteContext(ctx)
 	assert.Nil(err)
 
-	out, err := io.ReadAll(b)
+	out, err := testutils.GetTestConfig(fs)
 	assert.Nil(err)
 
 	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","credentials":[]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))

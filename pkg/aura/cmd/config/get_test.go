@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"testing"
 
+	"github.com/neo4j/cli/internal/testutils"
 	"github.com/neo4j/cli/pkg/aura"
 	"github.com/neo4j/cli/pkg/clicfg"
 	"github.com/neo4j/cli/pkg/clictx"
@@ -22,7 +22,10 @@ func TestGetConfig(t *testing.T) {
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"config", "get", "auth-url"})
 
-	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{"aura":{"auth-url":"test"}}`), nil)
+	fs, err := testutils.GetTestFs(`{"aura":{"auth-url":"test"}}`)
+	assert.Nil(err)
+
+	cfg, err := clicfg.NewConfig(fs)
 	assert.Nil(err)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
@@ -47,7 +50,10 @@ func TestGetConfigDefault(t *testing.T) {
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"config", "get", "auth-url"})
 
-	cfg, err := clicfg.NewConfigFrom(strings.NewReader("{}"), nil)
+	fs, err := testutils.GetDefaultTestFs()
+	assert.Nil(err)
+
+	cfg, err := clicfg.NewConfig(fs)
 	assert.Nil(err)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")

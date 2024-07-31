@@ -7,9 +7,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
+	"github.com/neo4j/cli/internal/testutils"
 	"github.com/neo4j/cli/pkg/aura"
 	"github.com/neo4j/cli/pkg/clicfg"
 	"github.com/neo4j/cli/pkg/clictx"
@@ -62,7 +62,7 @@ func TestGetCustomerManagedKey(t *testing.T) {
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"customer-managed-key", "get", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), cmkId})
 
-	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{
+	fs, err := testutils.GetTestFs(`{
 		"aura": {
 			"credentials": [{
 				"name": "test-cred",
@@ -71,7 +71,10 @@ func TestGetCustomerManagedKey(t *testing.T) {
 			}],
 			"default-credential": "test-cred"
 		}
-	}`), nil)
+	}`)
+	assert.Nil(err)
+
+	cfg, err := clicfg.NewConfig(fs)
 	assert.Nil(err)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
@@ -148,7 +151,7 @@ func TestGetCustomerManagedKeyAlias(t *testing.T) {
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"cmk", "get", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), cmkId})
 
-	cfg, err := clicfg.NewConfigFrom(strings.NewReader(`{
+	fs, err := testutils.GetTestFs(`{
 		"aura": {
 			"credentials": [{
 				"name": "test-cred",
@@ -157,7 +160,10 @@ func TestGetCustomerManagedKeyAlias(t *testing.T) {
 			}],
 			"default-credential": "test-cred"
 		}
-	}`), nil)
+	}`)
+	assert.Nil(err)
+
+	cfg, err := clicfg.NewConfig(fs)
 	assert.Nil(err)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")

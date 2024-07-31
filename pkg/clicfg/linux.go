@@ -19,8 +19,8 @@ func init() {
 	if strings.HasPrefix(xdgConfigHome, "~/") {
 		currentUser, _ := user.Current()
 		homeDir := currentUser.HomeDir
-		configPrefix = filepath.Join(homeDir, xdgConfigHome[2:])
+		ConfigPrefix = filepath.Join(homeDir, xdgConfigHome[2:])
 	} else {
-		configPrefix = xdgConfigHome
+		ConfigPrefix = xdgConfigHome
 	}
 }
