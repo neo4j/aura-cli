@@ -27,7 +27,7 @@ func TestGetInstance(t *testing.T) {
 	mux.HandleFunc("/oauth/token", func(res http.ResponseWriter, req *http.Request) {
 		authCounter++
 		res.WriteHeader(200)
-		res.Write([]byte(`{"access_token":"12345678","expires_in":"3600","token_type":"bearer"}`))
+		res.Write([]byte(`{"access_token":"12345678","expires_in":3600,"token_type":"bearer"}`))
 	})
 
 	var getCounter = 0

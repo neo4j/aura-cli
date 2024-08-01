@@ -33,7 +33,7 @@ func TestAddCredential(t *testing.T) {
 	out, err := testutils.GetTestConfig(fs)
 	assert.Nil(err)
 
-	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret","access-token":"","token-expiry":""}]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), out)
+	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret","access-token":"","token-expiry":0}]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), out)
 }
 
 func TestAddCredentialIfAlreadyExists(t *testing.T) {
