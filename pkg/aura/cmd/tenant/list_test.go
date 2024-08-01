@@ -26,7 +26,7 @@ func TestListTenants(t *testing.T) {
 		authCounter++
 
 		res.WriteHeader(200)
-		res.Write([]byte(`{"access_token":"12345678","expires_in":"3600","token_type":"bearer"}`))
+		res.Write([]byte(`{"access_token":"12345678","expires_in":3600,"token_type":"bearer"}`))
 	})
 
 	var listCounter = 0

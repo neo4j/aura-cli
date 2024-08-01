@@ -19,7 +19,7 @@ const userAgent = "Neo4jCLI/%s"
 
 type Grant struct {
 	AccessToken string `json:"access_token"`
-	//ExpiresIn   string `json:"expires_in"`
+	ExpiresIn   int64  `json:"expires_in"`
 }
 
 func getToken(ctx context.Context) (string, error) {
@@ -33,7 +33,9 @@ func getToken(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	// If token exists and not expire rate
+	if credential.IsAccessTokenValid() {
+		return credential.AccessToken, nil
+	}
 
 	data := url.Values{}
 
@@ -96,8 +98,8 @@ func getToken(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	// Save Grant in config
-
+	credential.UpdateAccessToken(grant.AccessToken, grant.ExpiresIn)
+	config.Write()
 	return grant.AccessToken, nil
 }
 

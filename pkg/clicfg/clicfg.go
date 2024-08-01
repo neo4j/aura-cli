@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -137,18 +138,19 @@ func (auraConfig *AuraConfig) SetDefaultCredential(name string) error {
 	return nil
 }
 
-func (auraConfig *AuraConfig) GetDefaultCredential() (AuraCredential, error) {
+func (auraConfig *AuraConfig) GetDefaultCredential() (*AuraCredential, error) {
 	if auraConfig.DefaultCredential == "" {
-		return AuraCredential{}, errors.New("no default credential found")
+		return nil, errors.New("no default credential found")
 	}
 
-	for _, credential := range auraConfig.Credentials {
+	for index := range auraConfig.Credentials {
+		var credential = &(auraConfig.Credentials[index])
 		if credential.Name == auraConfig.DefaultCredential {
 			return credential, nil
 		}
 	}
 
-	return AuraCredential{}, fmt.Errorf("could not find credential with name %s", auraConfig.DefaultCredential)
+	return nil, fmt.Errorf("could not find credential with name %s", auraConfig.DefaultCredential)
 }
 
 func (auraConfig *AuraConfig) Print(cmd *cobra.Command) error {
@@ -167,7 +169,30 @@ type AuraCredential struct {
 	ClientId     string `mapstructure:"client-id" json:"client-id"`
 	ClientSecret string `mapstructure:"client-secret" json:"client-secret"`
 	AccessToken  string `mapstructure:"access-token" json:"access-token"`
-	TokenExpiry  string `mapstructure:"token-expiry" json:"token-expiry"`
+	TokenExpiry  int64  `mapstructure:"token-expiry" json:"token-expiry"`
+}
+
+func (credential *AuraCredential) UpdateAccessToken(accessToken string, expiresInSeconds int64) {
+	const expireToleranceSeconds = 60
+
+	now := time.Now().UnixMilli()
+
+	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
+	credential.AccessToken = accessToken
+}
+
+func (credential *AuraCredential) IsAccessTokenValid() bool {
+	now := time.Now().UnixMilli()
+
+	if credential.AccessToken == "" {
+		return false
+	}
+
+	if now >= credential.TokenExpiry {
+		return false
+	}
+
+	return true
 }
 
 func NewConfig(fs afero.Fs) (*Config, error) {
