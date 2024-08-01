@@ -19,6 +19,7 @@ var Version = "dev"
 func main() {
 	cmd := aura.NewCmd()
 
+	cmd.SetOut(os.Stdout)
 	cfg, err := clicfg.NewConfig(afero.NewOsFs())
 	if err != nil {
 		fmt.Println(err)
@@ -26,7 +27,6 @@ func main() {
 	}
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, Version)
-
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -18,6 +18,7 @@ var Version = "dev"
 
 func main() {
 	cmd := neo4j.NewCmd()
+	cmd.SetOut(os.Stdout)
 
 	cfg, err := clicfg.NewConfig(afero.NewOsFs())
 	if err != nil {
