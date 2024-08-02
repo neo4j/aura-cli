@@ -42,15 +42,26 @@ This subcommand returns your instance ID, initial credentials, connection URL al
 You must also provide a --cloud-provider flag with the subcommand, which specifies which cloud provider the instances will be hosted in. The acceptable values for this field are gcp, aws, or azure.
 
 For Enterprise instances you can specify a --customer-managed-key-id flag to use a Customer Managed Key for encryption.`,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			typeValue, _ := cmd.Flags().GetString("type")
+			if typeValue != "free-db" {
+				cmd.MarkFlagRequired(memoryFlag)
+			}
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"version":        version,
 				"region":         region,
-				"memory":         memory,
 				"name":           name,
 				"type":           _type,
 				"tenant_id":      tenantId,
 				"cloud_provider": cloudProvider,
+			}
+
+			if _type == "free-db" {
+				body["memory"] = "1GB"
+			} else {
+				body["memory"] = memory
 			}
 
 			if customerManagedKeyId != "" {
@@ -67,7 +78,6 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.MarkFlagRequired(regionFlag)
 
 	cmd.Flags().StringVar(&memory, memoryFlag, "", "The size of the instance memory in GB.")
-	cmd.MarkFlagRequired(memoryFlag)
 
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
 	cmd.MarkFlagRequired(nameFlag)
