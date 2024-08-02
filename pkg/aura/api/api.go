@@ -184,6 +184,11 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		return err
 	}
 
+	if res.StatusCode == http.StatusNoContent {
+		cmd.Println("Operation Successful")
+		return nil
+	}
+
 	switch output := output.(string); output {
 	case "json":
 		var pretty bytes.Buffer
