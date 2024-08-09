@@ -38,6 +38,7 @@ func NewCmd() *cobra.Command {
 	cmd.AddCommand(NewListCmd())
 	cmd.AddCommand(NewPauseCmd())
 	cmd.AddCommand(NewResumeCmd())
+	cmd.AddCommand(NewUpdateCmd())
 
 	cmd.PersistentFlags().String("auth-url", "", "")
 	cmd.PersistentFlags().String("base-url", "", "")
