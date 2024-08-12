@@ -23,18 +23,7 @@ func TestCreateFreeInstance(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	var postCounter = 0
-	helper.AddRequestHandler("/v1/instances", func(res http.ResponseWriter, req *http.Request) {
-		postCounter++
-
-		assert.Equal(http.MethodPost, req.Method)
-		assert.Equal("/v1/instances", req.URL.Path)
-		body, err := io.ReadAll(req.Body)
-		assert.Nil(err)
-		assert.Equal(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`, string(body))
-
-		res.WriteHeader(200)
-		res.Write([]byte(`{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -46,13 +35,13 @@ func TestCreateFreeInstance(t *testing.T) {
 				"type": "free-db",
 				"name": "Instance01"
 			}
-		}`))
-
-	})
+		}`)
 
 	helper.ExecuteCommand([]string{"instance", "create", "--region", "europe-west1", "--name", "Instance01", "--type", "free-db", "--tenant-id", "YOUR_TENANT_ID", "--cloud-provider", "gcp"})
 
-	assert.Equal(1, postCounter)
+	assert.Equal(len(mockHandler.Calls), 1)
+	assert.Equal(mockHandler.Calls[0].Method, http.MethodPost)
+	assert.Equal(mockHandler.Calls[0].Body, `{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
 
 	helper.AssertOut(`{
 	"data": {

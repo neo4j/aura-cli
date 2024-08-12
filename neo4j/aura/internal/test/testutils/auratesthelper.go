@@ -17,6 +17,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type call struct {
+	Method string
+	Path   string
+	Body   string
+}
+
+type requestHandlerMock struct {
+	Calls []call
+}
+
 type AuraTestHelper struct {
 	mux    *http.ServeMux
 	Server *httptest.Server
@@ -63,6 +73,25 @@ func (helper *AuraTestHelper) AssertOut(expected string) {
 	assert.Nil(helper.t, err)
 
 	assert.Equal(helper.t, expected, string(out))
+}
+
+func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, body string) *requestHandlerMock {
+	mock := requestHandlerMock{}
+	mock.Calls = []call{}
+
+	helper.mux.HandleFunc(path, func(res http.ResponseWriter, req *http.Request) {
+		print("BONJOUR")
+
+		requestBody, err := io.ReadAll(req.Body)
+		assert.Nil(helper.t, err)
+
+		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: string(requestBody)})
+
+		res.WriteHeader(status)
+		res.Write([]byte(body))
+	})
+
+	return &mock
 }
 
 func NewAuraTestHelper(t *testing.T) AuraTestHelper {
