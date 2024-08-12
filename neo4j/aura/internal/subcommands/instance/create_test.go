@@ -43,20 +43,19 @@ func TestCreateFreeInstance(t *testing.T) {
 	assert.Equal(mockHandler.Calls[0].Method, http.MethodPost)
 	assert.Equal(mockHandler.Calls[0].Body, `{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
 
-	helper.AssertOut(`{
-	"data": {
-		"id": "db1d1234",
-		"connection_url": "YOUR_CONNECTION_URL",
-		"username": "neo4j",
-		"password": "letMeIn123!",
-		"tenant_id": "YOUR_TENANT_ID",
-		"cloud_provider": "gcp",
-		"region": "europe-west1",
-		"type": "free-db",
-		"name": "Instance01"
-	}
-}
-`)
+	helper.AssertOutJson(`{
+		"data": {
+			"id": "db1d1234",
+			"connection_url": "YOUR_CONNECTION_URL",
+			"username": "neo4j",
+			"password": "letMeIn123!",
+			"tenant_id": "YOUR_TENANT_ID",
+			"cloud_provider": "gcp",
+			"region": "europe-west1",
+			"type": "free-db",
+			"name": "Instance01"
+		}
+	}`)
 }
 
 func TestCreateProfessionalInstance(t *testing.T) {

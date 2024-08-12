@@ -75,6 +75,16 @@ func (helper *AuraTestHelper) AssertOut(expected string) {
 	assert.Equal(helper.t, expected, string(out))
 }
 
+func (helper *AuraTestHelper) AssertOutJson(expected string) {
+	out, err := io.ReadAll(helper.out)
+	assert.Nil(helper.t, err)
+
+	formatted, err := FormatJson(expected)
+	assert.Nil(helper.t, err)
+
+	assert.Equal(helper.t, formatted, string(out))
+}
+
 func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, body string) *requestHandlerMock {
 	mock := requestHandlerMock{}
 	mock.Calls = []call{}
