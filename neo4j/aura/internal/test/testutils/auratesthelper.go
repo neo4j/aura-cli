@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura"
@@ -21,7 +22,7 @@ import (
 type call struct {
 	Method string
 	Path   string
-	Body   string
+	Body   map[string]interface{}
 }
 
 type requestHandlerMock struct {
@@ -30,7 +31,32 @@ type requestHandlerMock struct {
 }
 
 func (mock *requestHandlerMock) AssertCalledTimes(times int) {
-	assert.Equal(mock.t, times, len(mock.Calls))
+	calls := len(mock.Calls)
+
+	assert.Equal(mock.t, times, calls, "Request handler mock not called the expected number of times")
+}
+
+func (mock *requestHandlerMock) AssertCalledWithMethod(method string) {
+	for _, call := range mock.Calls {
+		if call.Method == method {
+			return
+		}
+	}
+
+	assert.Fail(mock.t, fmt.Sprintf("Handler not called with method: %s", method))
+}
+
+func (mock *requestHandlerMock) AssertCalledWithBody(body string) {
+	unmarshalled, err := UmarshalJson([]byte(body))
+	assert.Nil(mock.t, err)
+
+	for _, call := range mock.Calls {
+		if cmp.Equal(call.Body, unmarshalled) {
+			return
+		}
+	}
+
+	assert.Fail(mock.t, fmt.Sprintf("Handler not called with body: %s", body))
 }
 
 type AuraTestHelper struct {
@@ -96,12 +122,14 @@ func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, bod
 	mock := requestHandlerMock{Calls: []call{}, t: helper.t}
 
 	helper.mux.HandleFunc(path, func(res http.ResponseWriter, req *http.Request) {
-		print("BONJOUR")
 
 		requestBody, err := io.ReadAll(req.Body)
 		assert.Nil(helper.t, err)
 
-		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: string(requestBody)})
+		unmarshalledBody, err := UmarshalJson(requestBody)
+		assert.Nil(helper.t, err)
+
+		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: unmarshalledBody})
 
 		res.WriteHeader(status)
 		res.Write([]byte(body))
