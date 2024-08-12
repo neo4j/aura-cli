@@ -25,6 +25,11 @@ type call struct {
 
 type requestHandlerMock struct {
 	Calls []call
+	t     *testing.T
+}
+
+func (mock *requestHandlerMock) AssertCalledTimes(times int) {
+	assert.Equal(mock.t, times, len(mock.Calls))
 }
 
 type AuraTestHelper struct {
@@ -33,7 +38,6 @@ type AuraTestHelper struct {
 	cmd    *cobra.Command
 	out    *bytes.Buffer
 	err    *bytes.Buffer
-	ctx    context.Context
 	cfg    string
 	t      *testing.T
 }
@@ -86,8 +90,7 @@ func (helper *AuraTestHelper) AssertOutJson(expected string) {
 }
 
 func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, body string) *requestHandlerMock {
-	mock := requestHandlerMock{}
-	mock.Calls = []call{}
+	mock := requestHandlerMock{Calls: []call{}, t: helper.t}
 
 	helper.mux.HandleFunc(path, func(res http.ResponseWriter, req *http.Request) {
 		print("BONJOUR")

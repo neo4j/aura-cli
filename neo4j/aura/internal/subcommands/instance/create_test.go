@@ -39,7 +39,7 @@ func TestCreateFreeInstance(t *testing.T) {
 
 	helper.ExecuteCommand([]string{"instance", "create", "--region", "europe-west1", "--name", "Instance01", "--type", "free-db", "--tenant-id", "YOUR_TENANT_ID", "--cloud-provider", "gcp"})
 
-	assert.Equal(len(mockHandler.Calls), 1)
+	mockHandler.AssertCalledTimes(1)
 	assert.Equal(mockHandler.Calls[0].Method, http.MethodPost)
 	assert.Equal(mockHandler.Calls[0].Body, `{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
 
