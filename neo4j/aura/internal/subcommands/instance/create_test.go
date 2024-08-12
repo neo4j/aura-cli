@@ -12,6 +12,7 @@ import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura"
+	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 	"github.com/neo4j/cli/test/utils/testfs"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,17 +20,11 @@ import (
 func TestCreateFreeInstance(t *testing.T) {
 	assert := assert.New(t)
 
-	mux := http.NewServeMux()
-
-	var authCounter = 0
-	mux.HandleFunc("/oauth/token", func(res http.ResponseWriter, req *http.Request) {
-		authCounter++
-		res.WriteHeader(200)
-		res.Write([]byte(`{"access_token":"12345678","expires_in":3600,"token_type":"bearer"}`))
-	})
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
 	var postCounter = 0
-	mux.HandleFunc("/v1/instances", func(res http.ResponseWriter, req *http.Request) {
+	helper.AddRequestHandler("/v1/instances", func(res http.ResponseWriter, req *http.Request) {
 		postCounter++
 
 		assert.Equal(http.MethodPost, req.Method)
@@ -55,42 +50,11 @@ func TestCreateFreeInstance(t *testing.T) {
 
 	})
 
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	helper.ExecuteCommand([]string{"instance", "create", "--region", "europe-west1", "--name", "Instance01", "--type", "free-db", "--tenant-id", "YOUR_TENANT_ID", "--cloud-provider", "gcp"})
 
-	cmd := aura.NewCmd()
-	b := bytes.NewBufferString("")
-	cmd.SetOut(b)
-	cmd.SetArgs([]string{"instance", "create", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), "--region", "europe-west1", "--name", "Instance01", "--type", "free-db", "--tenant-id", "YOUR_TENANT_ID", "--cloud-provider", "gcp"})
-
-	fs, err := testfs.GetTestFs(`{
-				"aura": {
-			"credentials": [{
-				"name": "test-cred",
-				"access-token": "dsa",
-				"token-expiry": 123
-			}],
-			"default-credential": "test-cred"
-		}
-	}`)
-	assert.Nil(err)
-
-	cfg, err := clicfg.NewConfig(fs)
-	assert.Nil(err)
-
-	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
-	assert.Nil(err)
-
-	err = cmd.ExecuteContext(ctx)
-	assert.Nil(err)
-
-	out, err := io.ReadAll(b)
-	assert.Nil(err)
-
-	assert.Equal(1, authCounter)
 	assert.Equal(1, postCounter)
 
-	assert.Equal(`{
+	helper.AssertOut(`{
 	"data": {
 		"id": "db1d1234",
 		"connection_url": "YOUR_CONNECTION_URL",
@@ -103,7 +67,7 @@ func TestCreateFreeInstance(t *testing.T) {
 		"name": "Instance01"
 	}
 }
-`, string(out))
+`)
 }
 
 func TestCreateProfessionalInstance(t *testing.T) {
