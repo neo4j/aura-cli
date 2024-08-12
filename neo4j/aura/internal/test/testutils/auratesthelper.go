@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -50,7 +51,9 @@ func (helper *AuraTestHelper) Close() {
 	helper.Server.Close()
 }
 
-func (helper *AuraTestHelper) ExecuteCommand(args []string) {
+func (helper *AuraTestHelper) ExecuteCommand(command string) {
+	args := strings.Split(command, " ")
+
 	args = append(args, "--auth-url", fmt.Sprintf("%s/oauth/token", helper.Server.URL), "--base-url", fmt.Sprintf("%s/v1", helper.Server.URL))
 
 	helper.cmd.SetArgs(args)
