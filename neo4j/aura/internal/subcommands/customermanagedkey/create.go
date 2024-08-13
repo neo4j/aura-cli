@@ -62,7 +62,7 @@ Once the key has a status of ready you can use it for creating new instances by 
 	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)
 
-	cmd.Flags().StringVar(&keyId, keyIdFlag, "", "The cloud provider hosting the instance.")
+	cmd.Flags().StringVar(&keyId, keyIdFlag, "", "")
 	cmd.MarkFlagRequired(keyIdFlag)
 
 	return cmd
