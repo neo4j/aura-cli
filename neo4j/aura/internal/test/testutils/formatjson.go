@@ -21,3 +21,9 @@ func UmarshalJson(data []byte) (map[string]interface{}, error) {
 	err := json.Unmarshal(data, &result)
 	return result, err
 }
+
+func MarshalJson(v map[string]interface{}) (string, error) {
+	data, err := json.Marshal(v)
+
+	return string(data), err
+}

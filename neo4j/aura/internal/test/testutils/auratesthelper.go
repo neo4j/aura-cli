@@ -37,26 +37,36 @@ func (mock *requestHandlerMock) AssertCalledTimes(times int) {
 }
 
 func (mock *requestHandlerMock) AssertCalledWithMethod(method string) {
+	methods := ""
+
 	for _, call := range mock.Calls {
 		if call.Method == method {
 			return
 		}
+
+		methods += call.Method
 	}
 
-	assert.Fail(mock.t, fmt.Sprintf("Handler not called with method: %s", method))
+	assert.Fail(mock.t, fmt.Sprintf("Handler not called with method:\nexpected: %s, actual: %s", method, methods))
 }
 
 func (mock *requestHandlerMock) AssertCalledWithBody(body string) {
 	unmarshalled, err := UmarshalJson([]byte(body))
 	assert.Nil(mock.t, err)
 
+	bodies := ""
+
 	for _, call := range mock.Calls {
 		if cmp.Equal(call.Body, unmarshalled) {
 			return
 		}
+		data, err := MarshalJson(call.Body)
+		assert.Nil(mock.t, err)
+
+		bodies += data + "\n"
 	}
 
-	assert.Fail(mock.t, fmt.Sprintf("Handler not called with body: %s", body))
+	assert.Fail(mock.t, fmt.Sprintf("Handler not called with body:\nexpected: %s\nactual: %s", body, bodies))
 }
 
 type AuraTestHelper struct {
