@@ -90,7 +90,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)
 
-	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "")
+	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "An optional customer managed key to be used for instance creation.")
 
 	return cmd
 }
