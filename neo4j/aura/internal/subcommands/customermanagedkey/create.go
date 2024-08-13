@@ -1,6 +1,9 @@
 package customermanagedkey
 
 import (
+	"errors"
+
+	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +37,19 @@ Before you can use the key you will need to setup permissions for it. Log in to 
 You can poll the current status of this operation by periodically getting the key details using the get subcommand.
 
 Once the key has a status of ready you can use it for creating new instances by setting the --customer-managed-key-id flag.`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			config, ok := clictx.Config(cmd.Context())
+
+			if !ok {
+				return errors.New("error fetching cli configuration values")
+			}
+
+			if config.Aura.DefaultTenant == "" {
+				cmd.MarkFlagRequired(tenantIdFlag)
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"region":         region,
@@ -58,7 +74,6 @@ Once the key has a status of ready you can use it for creating new instances by 
 	cmd.MarkFlagRequired(instanceTypeFlag)
 
 	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
-	cmd.MarkFlagRequired(tenantIdFlag)
 
 	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)
