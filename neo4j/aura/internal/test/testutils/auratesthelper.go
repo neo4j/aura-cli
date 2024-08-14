@@ -7,10 +7,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/shlex"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura"
@@ -88,7 +88,8 @@ func (helper *AuraTestHelper) Close() {
 }
 
 func (helper *AuraTestHelper) ExecuteCommand(command string) {
-	args := strings.Split(command, " ")
+	args, err := shlex.Split(command)
+	assert.Nil(helper.t, err)
 
 	args = append(args, "--auth-url", fmt.Sprintf("%s/oauth/token", helper.Server.URL), "--base-url", fmt.Sprintf("%s/v1", helper.Server.URL))
 
@@ -103,12 +104,18 @@ func (helper *AuraTestHelper) ExecuteCommand(command string) {
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(helper.t, err)
 
-	err = helper.cmd.ExecuteContext(ctx)
-	assert.Nil(helper.t, err)
+	helper.cmd.ExecuteContext(ctx)
 }
 
 func (helper *AuraTestHelper) SetConfig(cfg string) {
 	helper.cfg = cfg
+}
+
+func (helper *AuraTestHelper) AssertErr(expected string) {
+	out, err := io.ReadAll(helper.err)
+	assert.Nil(helper.t, err)
+
+	assert.Equal(helper.t, expected, string(out))
 }
 
 func (helper *AuraTestHelper) AssertOut(expected string) {
@@ -132,12 +139,14 @@ func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, bod
 	mock := requestHandlerMock{Calls: []call{}, t: helper.t}
 
 	helper.mux.HandleFunc(path, func(res http.ResponseWriter, req *http.Request) {
-
 		requestBody, err := io.ReadAll(req.Body)
 		assert.Nil(helper.t, err)
 
-		unmarshalledBody, err := UmarshalJson(requestBody)
-		assert.Nil(helper.t, err)
+		var unmarshalledBody map[string]interface{}
+		if len(requestBody) > 0 {
+			unmarshalledBody, err = UmarshalJson(requestBody)
+			assert.Nil(helper.t, err)
+		}
 
 		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: unmarshalledBody})
 
