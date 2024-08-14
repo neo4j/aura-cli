@@ -1,20 +1,10 @@
 package instance_test
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/neo4j/cli/common/clicfg"
-	"github.com/neo4j/cli/common/clictx"
-	"github.com/neo4j/cli/neo4j/aura"
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
-	"github.com/neo4j/cli/test/utils/testfs"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateFreeInstance(t *testing.T) {
@@ -57,29 +47,10 @@ func TestCreateFreeInstance(t *testing.T) {
 }
 
 func TestCreateProfessionalInstance(t *testing.T) {
-	assert := assert.New(t)
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
-	mux := http.NewServeMux()
-
-	var authCounter = 0
-	mux.HandleFunc("/oauth/token", func(res http.ResponseWriter, req *http.Request) {
-		authCounter++
-		res.WriteHeader(200)
-		res.Write([]byte(`{"access_token":"12345678","expires_in":3600,"token_type":"bearer"}`))
-	})
-
-	var postCounter = 0
-	mux.HandleFunc("/v1/instances", func(res http.ResponseWriter, req *http.Request) {
-		postCounter++
-
-		assert.Equal(http.MethodPost, req.Method)
-		assert.Equal("/v1/instances", req.URL.Path)
-		body, err := io.ReadAll(req.Body)
-		assert.Nil(err)
-		assert.Equal(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"professional-db","version":"5"}`, string(body))
-
-		res.WriteHeader(200)
-		res.Write([]byte(`{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -91,114 +62,43 @@ func TestCreateProfessionalInstance(t *testing.T) {
 				"type": "professional-db",
 				"name": "Instance01"
 			}
-		}`))
+		}`)
 
-	})
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --memory 4GB")
 
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"professional-db","version":"5"}`)
 
-	cmd := aura.NewCmd()
-	b := bytes.NewBufferString("")
-	cmd.SetOut(b)
-	cmd.SetArgs([]string{"instance", "create", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), "--region", "europe-west1", "--name", "Instance01", "--type", "professional-db", "--tenant-id", "YOUR_TENANT_ID", "--cloud-provider", "gcp", "--memory", "4GB"})
-
-	fs, err := testfs.GetTestFs(`{
-				"aura": {
-			"credentials": [{
-				"name": "test-cred",
-				"access-token": "dsa",
-				"token-expiry": 123
-			}],
-			"default-credential": "test-cred"
+	helper.AssertOutJson(`{
+		"data": {
+			"id": "db1d1234",
+			"connection_url": "YOUR_CONNECTION_URL",
+			"username": "neo4j",
+			"password": "letMeIn123!",
+			"tenant_id": "YOUR_TENANT_ID",
+			"cloud_provider": "gcp",
+			"region": "europe-west1",
+			"type": "professional-db",
+			"name": "Instance01"
 		}
-	}`)
-	assert.Nil(err)
-
-	cfg, err := clicfg.NewConfig(fs)
-	assert.Nil(err)
-
-	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
-	assert.Nil(err)
-
-	err = cmd.ExecuteContext(ctx)
-	assert.Nil(err)
-
-	out, err := io.ReadAll(b)
-	assert.Nil(err)
-
-	assert.Equal(1, authCounter)
-	assert.Equal(1, postCounter)
-
-	assert.Equal(`{
-	"data": {
-		"id": "db1d1234",
-		"connection_url": "YOUR_CONNECTION_URL",
-		"username": "neo4j",
-		"password": "letMeIn123!",
-		"tenant_id": "YOUR_TENANT_ID",
-		"cloud_provider": "gcp",
-		"region": "europe-west1",
-		"type": "professional-db",
-		"name": "Instance01"
 	}
-}
-`, string(out))
+	`)
 }
 
 func TestCreateProfessionalInstanceNoMemory(t *testing.T) {
-	assert := assert.New(t)
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
-	mux := http.NewServeMux()
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
 
-	var authCounter = 0
-	mux.HandleFunc("/oauth/token", func(res http.ResponseWriter, req *http.Request) {
-		authCounter++
-	})
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp")
 
-	var postCounter = 0
-	mux.HandleFunc("/v1/instances", func(res http.ResponseWriter, req *http.Request) {
-		postCounter++
-	})
+	mockHandler.AssertCalledTimes(0)
 
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	cmd := aura.NewCmd()
-	b := bytes.NewBufferString("")
-	cmd.SetOut(b)
-	cmd.SetErr(b)
-	cmd.SetArgs([]string{"instance", "create", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), "--region", "europe-west1", "--name", "Instance01", "--type", "professional-db", "--tenant-id", "YOUR_TENANT_ID", "--cloud-provider", "gcp"})
-
-	fs, err := testfs.GetTestFs(`{
-				"aura": {
-			"credentials": [{
-				"name": "test-cred",
-				"access-token": "dsa",
-				"token-expiry": 123
-			}],
-			"default-credential": "test-cred"
-		}
-	}`)
-	assert.Nil(err)
-
-	cfg, err := clicfg.NewConfig(fs)
-	assert.Nil(err)
-
-	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
-	assert.Nil(err)
-
-	err = cmd.ExecuteContext(ctx)
-	assert.ErrorContains(err, `required flag(s) "memory" not set`)
-
-	assert.Equal(0, authCounter)
-	assert.Equal(0, postCounter)
-
-	out, err := io.ReadAll(b)
-	assert.Nil(err)
-
-	assert.Equal(`Error: required flag(s) "memory" not set
-Usage:
+	helper.AssertErr(`Error: required flag(s) "memory" not set
+`)
+	helper.AssertOut(`Usage:
   aura instance create [flags]
 
 Flags:
@@ -217,5 +117,5 @@ Global Flags:
       --base-url string   
       --output string
 
-`, string(out))
+`)
 }
