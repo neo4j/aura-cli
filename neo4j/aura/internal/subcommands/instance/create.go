@@ -1,6 +1,9 @@
 package instance
 
 import (
+	"errors"
+
+	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/spf13/cobra"
 )
@@ -42,11 +45,23 @@ This subcommand returns your instance ID, initial credentials, connection URL al
 You must also provide a --cloud-provider flag with the subcommand, which specifies which cloud provider the instances will be hosted in. The acceptable values for this field are gcp, aws, or azure.
 
 For Enterprise instances you can specify a --customer-managed-key-id flag to use a Customer Managed Key for encryption.`,
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			typeValue, _ := cmd.Flags().GetString("type")
 			if typeValue != "free-db" {
 				cmd.MarkFlagRequired(memoryFlag)
 			}
+
+			config, ok := clictx.Config(cmd.Context())
+
+			if !ok {
+				return errors.New("error fetching cli configuration values")
+			}
+
+			if config.Aura.DefaultTenant == "" {
+				cmd.MarkFlagRequired(tenantIdFlag)
+			}
+
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{

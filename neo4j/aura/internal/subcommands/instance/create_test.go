@@ -219,3 +219,77 @@ Global Flags:
 
 `, string(out))
 }
+
+func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
+	assert := assert.New(t)
+
+	mux := http.NewServeMux()
+
+	var authCounter = 0
+	mux.HandleFunc("/oauth/token", func(res http.ResponseWriter, req *http.Request) {
+		authCounter++
+	})
+
+	var postCounter = 0
+	mux.HandleFunc("/v1/instances", func(res http.ResponseWriter, req *http.Request) {
+		postCounter++
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	cmd := aura.NewCmd()
+	b := bytes.NewBufferString("")
+	cmd.SetOut(b)
+	cmd.SetErr(b)
+	cmd.SetArgs([]string{"instance", "create", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), "--region", "europe-west1", "--name", "Instance01", "--type", "professional-db", "--cloud-provider", "gcp", "--memory", "1GB"})
+
+	fs, err := testfs.GetTestFs(`{
+				"aura": {
+			"credentials": [{
+				"name": "test-cred",
+				"access-token": "dsa",
+				"token-expiry": 123
+			}],
+			"default-credential": "test-cred"
+		}
+	}`)
+	assert.Nil(err)
+
+	cfg, err := clicfg.NewConfig(fs)
+	assert.Nil(err)
+
+	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
+	assert.Nil(err)
+
+	err = cmd.ExecuteContext(ctx)
+	assert.ErrorContains(err, `required flag(s) "tenant-id" not set`)
+
+	assert.Equal(0, authCounter)
+	assert.Equal(0, postCounter)
+
+	out, err := io.ReadAll(b)
+	assert.Nil(err)
+
+	assert.Equal(`Error: required flag(s) "tenant-id" not set
+Usage:
+  aura instance create [flags]
+
+Flags:
+      --cloud-provider string            The cloud provider hosting the instance.
+      --customer-managed-key-id string   
+  -h, --help                             help for create
+      --memory string                    The size of the instance memory in GB.
+      --name string                      The name of the instance (any UTF-8 characters with no trailing or leading whitespace).
+      --region string                    The region where the instance is hosted.
+      --tenant-id string                 
+      --type string                      The type of the instance.
+      --version string                   The Neo4j version of the instance. (default "5")
+
+Global Flags:
+      --auth-url string   
+      --base-url string   
+      --output string
+
+`, string(out))
+}
