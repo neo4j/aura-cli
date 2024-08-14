@@ -277,7 +277,7 @@ Usage:
 
 Flags:
       --cloud-provider string            The cloud provider hosting the instance.
-      --customer-managed-key-id string   
+      --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
   -h, --help                             help for create
       --memory string                    The size of the instance memory in GB.
       --name string                      The name of the instance (any UTF-8 characters with no trailing or leading whitespace).
