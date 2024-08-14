@@ -1,10 +1,20 @@
 package instance_test
 
 import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clictx"
+	"github.com/neo4j/cli/neo4j/aura"
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
+	"github.com/neo4j/cli/test/utils/testfs"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateFreeInstance(t *testing.T) {
@@ -177,7 +187,7 @@ Usage:
 
 Flags:
       --cloud-provider string            The cloud provider hosting the instance.
-      --customer-managed-key-id string   
+      --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
   -h, --help                             help for create
       --memory string                    The size of the instance memory in GB.
       --name string                      The name of the instance (any UTF-8 characters with no trailing or leading whitespace).
