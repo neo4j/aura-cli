@@ -132,12 +132,14 @@ func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, bod
 	mock := requestHandlerMock{Calls: []call{}, t: helper.t}
 
 	helper.mux.HandleFunc(path, func(res http.ResponseWriter, req *http.Request) {
-
 		requestBody, err := io.ReadAll(req.Body)
 		assert.Nil(helper.t, err)
 
-		unmarshalledBody, err := UmarshalJson(requestBody)
-		assert.Nil(helper.t, err)
+		var unmarshalledBody map[string]interface{}
+		if len(requestBody) > 0 {
+			unmarshalledBody, err = UmarshalJson(requestBody)
+			assert.Nil(helper.t, err)
+		}
 
 		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: unmarshalledBody})
 
