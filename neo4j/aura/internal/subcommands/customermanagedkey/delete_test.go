@@ -9,19 +9,75 @@ import (
 )
 
 func TestDeleteCustomerManagedKey(t *testing.T) {
-	for _, command := range []string{"customer-managed-key", "cmk"} {
-		helper := testutils.NewAuraTestHelper(t)
-		defer helper.Close()
+	commands := []string{"customer-managed-key", "cmk"}
 
-		cmkId := "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9"
+	for _, command := range commands {
+		t.Run(fmt.Sprintf("%s", command), func(t *testing.T) {
+			helper := testutils.NewAuraTestHelper(t)
+			defer helper.Close()
 
-		mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/customer-managed-keys/%s", cmkId), http.StatusNoContent, "")
+			cmkId := "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9"
 
-		helper.ExecuteCommand(fmt.Sprintf("%s delete %s", command, cmkId))
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/customer-managed-keys/%s", cmkId), http.StatusNoContent, "")
 
-		mockHandler.AssertCalledTimes(1)
-		mockHandler.AssertCalledWithMethod(http.MethodDelete)
+			helper.ExecuteCommand(fmt.Sprintf("%s delete %s", command, cmkId))
 
-		helper.AssertOut("Operation Successful\n")
+			mockHandler.AssertCalledTimes(1)
+			mockHandler.AssertCalledWithMethod(http.MethodDelete)
+
+			helper.AssertOut("Operation Successful\n")
+		})
+	}
+}
+
+func TestDeleteCustomerManagedKeyError(t *testing.T) {
+	testCases := []struct {
+		statusCode    int
+		expectedError string
+		returnBody    string
+	}{
+		{
+			statusCode:    http.StatusBadRequest,
+			expectedError: "Error",
+			returnBody: `{
+				"errors": [
+				  {
+					"message": "Can not delete encryption key <UUID>. The key is linked to an active instance.",
+					"reason": "encryption-key-is-active"
+				  }
+				]
+			  }`,
+		},
+		{
+			statusCode:    http.StatusNotFound,
+			expectedError: "Not Found",
+			returnBody: `{
+				"errors": [
+				  {
+					"message": "Encryption Key not found: <UUID>",
+					"reason": "encryption-key-not-found"
+				  }
+				]
+			  }`,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("StatusCode%d", testCase.statusCode), func(t *testing.T) {
+			helper := testutils.NewAuraTestHelper(t)
+			defer helper.Close()
+
+			cmkId := "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9"
+
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/customer-managed-keys/%s", cmkId), testCase.statusCode, testCase.returnBody)
+
+			helper.ExecuteCommand(fmt.Sprintf("customer-managed-key delete %s", cmkId))
+
+			mockHandler.AssertCalledTimes(1)
+			mockHandler.AssertCalledWithMethod(http.MethodDelete)
+
+			helper.AssertOut("")
+			helper.AssertErr(testCase.expectedError)
+		})
 	}
 }

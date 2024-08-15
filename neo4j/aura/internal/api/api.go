@@ -124,7 +124,6 @@ func getHeaders(ctx context.Context) (http.Header, error) {
 
 func MakeRequest(cmd *cobra.Command, method string, path string, data map[string]any) error {
 	client := http.Client{}
-
 	var body io.Reader
 	if data == nil {
 		body = nil
@@ -189,16 +188,18 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		return nil
 	}
 
-	switch output := output.(string); output {
-	case "json":
-		var pretty bytes.Buffer
-		err := json.Indent(&pretty, resBody, "", "\t")
-		if err != nil {
-			return err
+	if len(resBody) > 0 {
+		switch output := output.(string); output {
+		case "json":
+			var pretty bytes.Buffer
+			err := json.Indent(&pretty, resBody, "", "\t")
+			if err != nil {
+				return err
+			}
+			cmd.Println(pretty.String())
+		default:
+			cmd.Println(string(resBody))
 		}
-		cmd.Println(pretty.String())
-	default:
-		cmd.Println(string(resBody))
 	}
 
 	return nil
