@@ -176,14 +176,14 @@ func NewAuraTestHelper(t *testing.T) AuraTestHelper {
 
 	helper.cfg = `{
 				"aura": {
-			"credentials": [{
-				"name": "test-cred",
-				"access-token": "dsa",
-				"token-expiry": 123
-			}],
-			"default-credential": "test-cred"
-		}
-	}`
+					"credentials": [{
+						"name": "test-cred",
+						"access-token": "dsa",
+						"token-expiry": 123
+					}],
+					"default-credential": "test-cred"
+					}
+				}`
 
 	helper.mux = http.NewServeMux()
 	helper.mux.HandleFunc("/oauth/token", func(res http.ResponseWriter, req *http.Request) {
