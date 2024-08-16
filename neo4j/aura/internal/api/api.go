@@ -203,6 +203,7 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 	switch statusCode := res.StatusCode; statusCode {
 	// successful responses
 	case http.StatusOK:
+		fallthrough
 	case http.StatusAccepted:
 		if len(resBody) > 0 {
 			switch output := output.(string); output {
@@ -292,8 +293,11 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		return fmt.Errorf("server rate limit exceeded, suggested cool-off period is %s seconds before rerunning the command", retryAfter)
 	// server error responses
 	case http.StatusInternalServerError:
+		fallthrough
 	case http.StatusBadGateway:
+		fallthrough
 	case http.StatusServiceUnavailable:
+		fallthrough
 	case http.StatusGatewayTimeout:
 		var errorResponse ErrorResponse
 
