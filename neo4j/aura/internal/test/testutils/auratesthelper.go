@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -115,14 +116,14 @@ func (helper *AuraTestHelper) AssertErr(expected string) {
 	out, err := io.ReadAll(helper.err)
 	assert.Nil(helper.t, err)
 
-	assert.Equal(helper.t, expected, string(out))
+	assert.Equal(helper.t, strings.TrimSpace(expected), strings.TrimSpace(string(out)))
 }
 
 func (helper *AuraTestHelper) AssertOut(expected string) {
 	out, err := io.ReadAll(helper.out)
 	assert.Nil(helper.t, err)
 
-	assert.Equal(helper.t, expected, string(out))
+	assert.Equal(helper.t, strings.TrimSpace(expected), strings.TrimSpace(string(out)))
 }
 
 func (helper *AuraTestHelper) AssertOutJson(expected string) {

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/neo4j/cli/common/clictx"
@@ -20,6 +21,20 @@ const userAgent = "Neo4jCLI/%s"
 type Grant struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int64  `json:"expires_in"`
+}
+
+type ErrorResponse struct {
+	Errors []Error `json:"errors"`
+}
+
+type Error struct {
+	Message string `json:"message"`
+	Reason  string `json:"reason"`
+	Field   string `json:"field"`
+}
+
+type ServerError struct {
+	Error string `json:"error"`
 }
 
 func getToken(ctx context.Context) (string, error) {
@@ -123,8 +138,9 @@ func getHeaders(ctx context.Context) (http.Header, error) {
 }
 
 func MakeRequest(cmd *cobra.Command, method string, path string, data map[string]any) error {
-	client := http.Client{}
+	cmd.SilenceUsage = true
 
+	client := http.Client{}
 	var body io.Reader
 	if data == nil {
 		body = nil
@@ -184,21 +200,138 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		return err
 	}
 
-	if res.StatusCode == http.StatusNoContent {
-		cmd.Println("Operation Successful")
-		return nil
-	}
-
-	switch output := output.(string); output {
-	case "json":
-		var pretty bytes.Buffer
-		err := json.Indent(&pretty, resBody, "", "\t")
-		if err != nil {
-			return err
+	switch statusCode := res.StatusCode; statusCode {
+	// successful responses
+	case http.StatusOK:
+		fallthrough
+	case http.StatusAccepted:
+		if len(resBody) > 0 {
+			switch output := output.(string); output {
+			case "json":
+				var pretty bytes.Buffer
+				err := json.Indent(&pretty, resBody, "", "\t")
+				if err != nil {
+					return err
+				}
+				cmd.Println(pretty.String())
+			default:
+				cmd.Println(string(resBody))
+			}
 		}
-		cmd.Println(pretty.String())
+	case http.StatusNoContent:
+		cmd.Println("Operation Successful")
+	// redirection messages
+	case http.StatusPermanentRedirect:
+		return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+	// client error responses
+	case http.StatusBadRequest:
+		var errorResponse ErrorResponse
+
+		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
+
+		return fmt.Errorf("%s", messages)
+	case http.StatusUnauthorized:
+		// TODO: clear the token?
+		var errorResponse ErrorResponse
+
+		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
+
+		return fmt.Errorf("%s", messages)
+	case http.StatusForbidden:
+		var serverError ServerError
+
+		err := json.Unmarshal(resBody, &serverError)
+
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		// TODO: clear the token?
+		var errorResponse ErrorResponse
+
+		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
+
+		return fmt.Errorf("%s", messages)
+	case http.StatusNotFound:
+		var errorResponse ErrorResponse
+
+		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
+
+		return fmt.Errorf("%s", messages)
+	case http.StatusConflict:
+		var errorResponse ErrorResponse
+
+		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
+
+		return fmt.Errorf("%s", messages)
+	case http.StatusUnsupportedMediaType:
+		return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+	case http.StatusTooManyRequests:
+		retryAfter := res.Header.Get("Retry-After")
+		return fmt.Errorf("server rate limit exceeded, suggested cool-off period is %s seconds before rerunning the command", retryAfter)
+	// server error responses
+	case http.StatusInternalServerError:
+		fallthrough
+	case http.StatusBadGateway:
+		fallthrough
+	case http.StatusServiceUnavailable:
+		fallthrough
+	case http.StatusGatewayTimeout:
+		var errorResponse ErrorResponse
+
+		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
+
+		return fmt.Errorf("%s", messages)
 	default:
-		cmd.Println(string(resBody))
+		return fmt.Errorf("unexpected status code %d and body %s running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, resBody, os.Args[1:])
 	}
 
 	return nil

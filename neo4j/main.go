@@ -28,6 +28,14 @@ func NewCmd() *cobra.Command {
 }
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli\n\n", os.Args[1:])
+
+			panic(r)
+		}
+	}()
+
 	cmd := NewCmd()
 	cmd.SetOut(os.Stdout)
 
