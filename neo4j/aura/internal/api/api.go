@@ -290,6 +290,20 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		}
 
 		return fmt.Errorf("%s", messages)
+	case http.StatusMethodNotAllowed:
+		var errorResponse ErrorResponse
+
+		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
+
+		return fmt.Errorf("%s", messages)
 	case http.StatusConflict:
 		var errorResponse ErrorResponse
 

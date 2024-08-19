@@ -203,3 +203,93 @@ Global Flags:
 
 `, string(out))
 }
+
+func TestCreateInstanceError(t *testing.T) {
+	testCases := []struct {
+		statusCode    int
+		expectedError string
+		returnBody    string
+	}{
+		{
+			statusCode:    http.StatusBadRequest,
+			expectedError: "Error: [You must provide billing details in the Aura Console before creating an instance]",
+			returnBody: `{
+				"errors": [
+					{
+					"message": "You must provide billing details in the Aura Console before creating an instance",
+					"reason": "missing-billing-details"
+					}
+				]
+			}`,
+		},
+		{
+			statusCode:    http.StatusMethodNotAllowed,
+			expectedError: "Error: [string]",
+			returnBody: `{
+				"errors": [
+					{
+					"message": "string",
+					"reason": "string",
+					"field": "string"
+					}
+				]
+			}`,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("StatusCode%d", testCase.statusCode), func(t *testing.T) {
+			helper := testutils.NewAuraTestHelper(t)
+			defer helper.Close()
+
+			mockHandler := helper.NewRequestHandlerMock("/v1/instances", testCase.statusCode, testCase.returnBody)
+
+			helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --memory 4GB")
+
+			mockHandler.AssertCalledTimes(1)
+			mockHandler.AssertCalledWithMethod(http.MethodPost)
+
+			helper.AssertOut("")
+			helper.AssertErr(testCase.expectedError)
+		})
+	}
+}
+
+func TestInstanceWithCmkId(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+			"data": {
+				"id": "db1d1234",
+				"connection_url": "YOUR_CONNECTION_URL",
+				"username": "neo4j",
+				"password": "letMeIn123!",
+				"tenant_id": "YOUR_TENANT_ID",
+				"cloud_provider": "gcp",
+				"region": "europe-west1",
+				"type": "enterprise-db",
+				"name": "Instance01"
+			}
+		}`)
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type enterprise-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --memory 16GB --customer-managed-key-id UUID_OF_YOUR_KEY")
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY"}`)
+
+	helper.AssertOutJson(`{
+		"data": {
+			"id": "db1d1234",
+			"connection_url": "YOUR_CONNECTION_URL",
+			"username": "neo4j",
+			"password": "letMeIn123!",
+			"tenant_id": "YOUR_TENANT_ID",
+			"cloud_provider": "gcp",
+			"region": "europe-west1",
+			"type": "enterprise-db",
+			"name": "Instance01"
+		}
+	}`)
+}
