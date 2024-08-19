@@ -31,6 +31,8 @@ func TestDeleteCustomerManagedKey(t *testing.T) {
 }
 
 func TestDeleteCustomerManagedKeyError(t *testing.T) {
+	cmkId := "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9"
+
 	testCases := []struct {
 		statusCode    int
 		expectedError string
@@ -38,27 +40,27 @@ func TestDeleteCustomerManagedKeyError(t *testing.T) {
 	}{
 		{
 			statusCode:    http.StatusBadRequest,
-			expectedError: "Error: [Can not delete encryption key <UUID>. The key is linked to an active instance.]",
-			returnBody: `{
+			expectedError: fmt.Sprintf("Error: [Can not delete encryption key %s. The key is linked to an active instance.]", cmkId),
+			returnBody: fmt.Sprintf(`{
 				"errors": [
 				  {
-					"message": "Can not delete encryption key <UUID>. The key is linked to an active instance.",
+					"message": "Can not delete encryption key %s. The key is linked to an active instance.",
 					"reason": "encryption-key-is-active"
 				  }
 				]
-			  }`,
+			  }`, cmkId),
 		},
 		{
 			statusCode:    http.StatusNotFound,
-			expectedError: "Error: [Encryption Key not found: <UUID>]",
-			returnBody: `{
+			expectedError: fmt.Sprintf("Error: [Encryption Key not found: %s]", cmkId),
+			returnBody: fmt.Sprintf(`{
 				"errors": [
 				  {
-					"message": "Encryption Key not found: <UUID>",
+					"message": "Encryption Key not found: %s",
 					"reason": "encryption-key-not-found"
 				  }
 				]
-			  }`,
+			  }`, cmkId),
 		},
 	}
 
@@ -66,8 +68,6 @@ func TestDeleteCustomerManagedKeyError(t *testing.T) {
 		t.Run(fmt.Sprintf("StatusCode%d", testCase.statusCode), func(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
-
-			cmkId := "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9"
 
 			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/customer-managed-keys/%s", cmkId), testCase.statusCode, testCase.returnBody)
 

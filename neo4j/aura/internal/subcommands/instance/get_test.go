@@ -52,3 +52,26 @@ func TestGetInstance(t *testing.T) {
 	}
 	`)
 }
+
+func TestGetInstanceNotFoundError(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	instanceId := "2f49c2b3"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s", instanceId), http.StatusNotFound, fmt.Sprintf(`{
+		"errors": [
+			{
+			"message": "DB not found: %s",
+			"reason": "db-not-found"
+			}
+		]
+	}`, instanceId))
+
+	helper.ExecuteCommand(fmt.Sprintf("instance get %s", instanceId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertErr(fmt.Sprintf("Error: [DB not found: %s]", instanceId))
+}
