@@ -38,7 +38,7 @@ func TestDeleteCustomerManagedKeyError(t *testing.T) {
 	}{
 		{
 			statusCode:    http.StatusBadRequest,
-			expectedError: "Error",
+			expectedError: "Error: [Can not delete encryption key <UUID>. The key is linked to an active instance.]",
 			returnBody: `{
 				"errors": [
 				  {
@@ -50,7 +50,7 @@ func TestDeleteCustomerManagedKeyError(t *testing.T) {
 		},
 		{
 			statusCode:    http.StatusNotFound,
-			expectedError: "Not Found",
+			expectedError: "Error: [Encryption Key not found: <UUID>]",
 			returnBody: `{
 				"errors": [
 				  {

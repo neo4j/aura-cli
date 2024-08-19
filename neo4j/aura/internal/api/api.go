@@ -228,29 +228,31 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
 
 		messages := []string{}
 		for _, e := range errorResponse.Errors {
 			messages = append(messages, e.Message)
 		}
 
-		if err != nil {
-			return fmt.Errorf("error running command with args %s: %s", os.Args[1:], messages)
-		}
+		return fmt.Errorf("%s", messages)
 	case http.StatusUnauthorized:
 		// TODO: clear the token?
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
 
 		messages := []string{}
 		for _, e := range errorResponse.Errors {
 			messages = append(messages, e.Message)
 		}
 
-		if err != nil {
-			return fmt.Errorf("error running command with args %s: %s", os.Args[1:], messages)
-		}
+		return fmt.Errorf("%s", messages)
 	case http.StatusForbidden:
 		var serverError ServerError
 
@@ -264,28 +266,30 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
 
 		messages := []string{}
 		for _, e := range errorResponse.Errors {
 			messages = append(messages, e.Message)
 		}
 
-		if err != nil {
-			return fmt.Errorf("error running command with args %s: %s", os.Args[1:], messages)
-		}
+		return fmt.Errorf("%s", messages)
 	case http.StatusNotFound:
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
 
 		messages := []string{}
 		for _, e := range errorResponse.Errors {
 			messages = append(messages, e.Message)
 		}
 
-		if err != nil {
-			return fmt.Errorf("error running command with args %s: %s", os.Args[1:], messages)
-		}
+		return fmt.Errorf("%s", messages)
 	case http.StatusUnsupportedMediaType:
 		return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
 	case http.StatusTooManyRequests:
@@ -302,15 +306,16 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
+		if err != nil {
+			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
 
 		messages := []string{}
 		for _, e := range errorResponse.Errors {
 			messages = append(messages, e.Message)
 		}
 
-		if err != nil {
-			return fmt.Errorf("error running command with args %s: %s\n\nyou can retry running the command", os.Args[1:], messages)
-		}
+		return fmt.Errorf("%s", messages)
 	}
 
 	return nil
