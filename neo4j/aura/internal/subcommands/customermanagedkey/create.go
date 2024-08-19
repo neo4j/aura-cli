@@ -43,7 +43,6 @@ Once the key has a status of ready you can use it for creating new instances by 
 			if !ok {
 				return errors.New("error fetching cli configuration values")
 			}
-
 			if config.Aura.DefaultTenant == "" {
 				cmd.MarkFlagRequired(tenantIdFlag)
 			}
@@ -55,9 +54,18 @@ Once the key has a status of ready you can use it for creating new instances by 
 				"region":         region,
 				"name":           name,
 				"instance_type":  instanceType,
-				"tenant_id":      tenantId,
 				"cloud_provider": cloudProvider,
 				"key_id":         keyId,
+			}
+
+			if tenantId == "" {
+				config, ok := clictx.Config(cmd.Context())
+				if !ok {
+					return errors.New("error fetching cli configuration values")
+				}
+				body["tenant_id"] = config.Aura.DefaultTenant
+			} else {
+				body["tenant_id"] = tenantId
 			}
 
 			return api.MakeRequest(cmd, "POST", "/customer-managed-keys", body)

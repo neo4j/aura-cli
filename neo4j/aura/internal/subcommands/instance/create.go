@@ -69,8 +69,17 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				"region":         region,
 				"name":           name,
 				"type":           _type,
-				"tenant_id":      tenantId,
 				"cloud_provider": cloudProvider,
+			}
+
+			if tenantId == "" {
+				config, ok := clictx.Config(cmd.Context())
+				if !ok {
+					return errors.New("error fetching cli configuration values")
+				}
+				body["tenant_id"] = config.Aura.DefaultTenant
+			} else {
+				body["tenant_id"] = tenantId
 			}
 
 			if _type == "free-db" {
