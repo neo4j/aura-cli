@@ -12,7 +12,7 @@ func TestDeleteCustomerManagedKey(t *testing.T) {
 	commands := []string{"customer-managed-key", "cmk"}
 
 	for _, command := range commands {
-		t.Run(fmt.Sprintf("%s", command), func(t *testing.T) {
+		t.Run(command, func(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
