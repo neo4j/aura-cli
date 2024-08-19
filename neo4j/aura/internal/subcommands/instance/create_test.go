@@ -203,3 +203,54 @@ Global Flags:
 
 `, string(out))
 }
+
+func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.SetConfig(`{
+		"aura": {
+		"default-tenant": "YOUR_TENANT_ID",
+		"credentials": [{
+			"name": "test-cred",
+			"access-token": "dsa",
+			"token-expiry": 123
+		}],
+		"default-credential": "test-cred"
+		}
+	}`)
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+			"data": {
+				"id": "db1d1234",
+				"connection_url": "YOUR_CONNECTION_URL",
+				"username": "neo4j",
+				"password": "letMeIn123!",
+				"tenant_id": "YOUR_TENANT_ID",
+				"cloud_provider": "gcp",
+				"region": "europe-west1",
+				"type": "free-db",
+				"name": "Instance01"
+			}
+		}`)
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type free-db --cloud-provider gcp")
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
+
+	helper.AssertOutJson(`{
+		"data": {
+			"id": "db1d1234",
+			"connection_url": "YOUR_CONNECTION_URL",
+			"username": "neo4j",
+			"password": "letMeIn123!",
+			"tenant_id": "YOUR_TENANT_ID",
+			"cloud_provider": "gcp",
+			"region": "europe-west1",
+			"type": "free-db",
+			"name": "Instance01"
+		}
+	}`)
+}
