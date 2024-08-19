@@ -2,6 +2,7 @@ package instance
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/spf13/cobra"
@@ -18,7 +19,7 @@ func NewListCmd() *cobra.Command {
 You can filter instances in a particular tenant using --tenant-id. If the tenant flag is not specified, this subcommand lists all instances a user has access to across all tenants.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if tenantId != "" {
-				return api.MakeRequest(cmd, "GET", fmt.Sprintf("/instances?tenantId=%s", tenantId), nil)
+				return api.MakeRequest(cmd, http.MethodGet, fmt.Sprintf("/instances?tenantId=%s", tenantId), nil)
 			} else {
 				return api.MakeRequest(cmd, "GET", "/instances", nil)
 			}
