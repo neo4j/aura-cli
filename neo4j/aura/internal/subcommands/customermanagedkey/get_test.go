@@ -50,3 +50,28 @@ func TestGetCustomerManagedKey(t *testing.T) {
 		`)
 	}
 }
+
+func TestGetCustomerManagedKeyNotFoundError(t *testing.T) {
+	for _, command := range []string{"customer-managed-key", "cmk"} {
+		helper := testutils.NewAuraTestHelper(t)
+		defer helper.Close()
+
+		cmkId := "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9"
+
+		mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/customer-managed-keys/%s", cmkId), http.StatusNotFound, fmt.Sprintf(`{
+			"errors": [
+				{
+				"message": "Encryption Key not found: %s",
+				"reason": "encryption-key-not-found"
+				}
+			]
+			}`, cmkId))
+
+		helper.ExecuteCommand(fmt.Sprintf("%s get %s", command, cmkId))
+
+		mockHandler.AssertCalledTimes(1)
+		mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+		helper.AssertErr(fmt.Sprintf("Error: [Encryption Key not found: %s]", cmkId))
+	}
+}
