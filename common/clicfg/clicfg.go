@@ -35,6 +35,14 @@ func (config *Config) Get(key string) (interface{}, error) {
 	return val, nil
 }
 
+func (config *Config) GetString(key string) (string, error) {
+	if !config.viper.IsSet(key) {
+		return "", fmt.Errorf("could not find config value with key %s", key)
+	}
+
+	return config.viper.GetString(key), nil
+}
+
 func (config *Config) Set(key string, value interface{}) error {
 	config.viper.Set(key, value)
 
