@@ -2,8 +2,10 @@ package instance
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
+	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +38,21 @@ Resizing an instance is an asynchronous operation. The instance remains availabl
 				body["name"] = name
 			}
 
-			return api.MakeRequest(cmd, "PATCH", fmt.Sprintf("/instances/%s", args[0]), body)
+			path := fmt.Sprintf("/instances/%s", args[0])
+
+			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPatch, path, body)
+			if err != nil {
+				return err
+			}
+
+			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
+				err = output.PrintBody(cmd, resBody)
+				if err != nil {
+					return err
+				}
+
+			}
+			return nil
 		},
 	}
 

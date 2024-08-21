@@ -2,9 +2,11 @@ package instance
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
+	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -92,7 +94,21 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				body["customer_managed_key_id"] = customerManagedKeyId
 			}
 
-			return api.MakeRequest(cmd, "POST", "/instances", body)
+			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPost, "/instances", body)
+			if err != nil {
+				return err
+			}
+
+			// NOTE: Instance create should not return OK (200), it always returns 202
+			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
+				err = output.PrintBody(cmd, resBody)
+				if err != nil {
+					return err
+				}
+
+			}
+
+			return nil
 		},
 	}
 

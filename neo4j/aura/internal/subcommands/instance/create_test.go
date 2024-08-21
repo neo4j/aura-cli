@@ -21,7 +21,7 @@ func TestCreateFreeInstance(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -60,7 +60,7 @@ func TestCreateProfessionalInstance(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -259,7 +259,7 @@ func TestInstanceWithCmkId(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -310,7 +310,7 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 		}
 	}`)
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
