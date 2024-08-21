@@ -1,14 +1,64 @@
 package instance
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
+
+const MaxPollRetries = 100
+const PollWaitSeconds = 20
+
+type InstanceStatus string
+
+const (
+	InstanceStatusCreating      InstanceStatus = "creating"
+	InstanceStatusDestroying    InstanceStatus = "destroying"
+	InstanceStatusRunning       InstanceStatus = "running"
+	InstanceStatusPausing       InstanceStatus = "pausing"
+	InstanceStatusPaused        InstanceStatus = "paused"
+	InstanceStatusSuspending    InstanceStatus = "suspending"
+	InstanceStatusSuspended     InstanceStatus = "suspended"
+	InstanceStatusResuming      InstanceStatus = "resuming"
+	InstanceStatusLoading       InstanceStatus = "loading"
+	InstanceStatusLoadingFailed InstanceStatus = "loading failed"
+	InstanceStatusRestoring     InstanceStatus = "restoring"
+	InstanceStatusUpdating      InstanceStatus = "updating"
+	InstanceStatusOverwriting   InstanceStatus = "overwriting"
+)
+
+// Response Body of Create and Get Instance for successful requests
+type CreateInstanceResponse struct {
+	Data struct {
+		Id            string
+		ConnectionUrl string `json:"connection_url"`
+		Username      string
+		Password      string
+		TenantId      string `json:"tenant_id"`
+		CloudProvider string `json:"cloud_provider"`
+		Region        string
+		Type          string
+		Name          string
+	}
+}
+
+type GetInstanceResponse struct {
+	Data struct {
+		Id       string
+		Name     string
+		TenantId string `json:"tenant_id"`
+		Status   InstanceStatus
+	}
+}
+
+// creating, destroying, running, pausing, paused, suspending, suspended, resuming, loading, loading failed, restoring, updating, overwriting
 
 func NewCreateCmd() *cobra.Command {
 	var (
@@ -101,10 +151,33 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 
 			// NOTE: Instance create should not return OK (200), it always returns 202
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
+				cmd.Println("Instance created successfully")
+
+				if err := output.PrintBody(cmd, resBody); err != nil {
+					return err
+				}
+
+				cmd.Println("The new instance will be available soonish ™️")
+				var response CreateInstanceResponse
+				if err := json.Unmarshal(resBody, &response); err != nil {
+					return err
+				}
+
+				pollResponse, err := pollInstanceCreate(cmd, response.Data.Id)
 				if err != nil {
 					return err
 				}
+
+				cmd.Println("Instance finished creating")
+				cmd.Println("Status:", pollResponse.Data.Status)
+
+				// println(response)
+				// cmd.Println("Instance created: ", response.Data.Name, " [", response.Data.Id, "]")
+
+				// err = output.PrintBody(cmd, resBody)
+				// if err != nil {
+				// 	return err
+				// }
 
 			}
 
@@ -133,4 +206,30 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "An optional customer managed key to be used for instance creation.")
 
 	return cmd
+}
+
+func pollInstanceCreate(cmd *cobra.Command, instanceId string) (*GetInstanceResponse, error) {
+	path := fmt.Sprintf("/instances/%s", instanceId)
+
+	for i := 0; i < MaxPollRetries; i++ {
+		resBody, statusCode, err := api.MakeRequest(cmd, http.MethodGet, path, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if statusCode == http.StatusOK {
+			var response GetInstanceResponse
+			if err := json.Unmarshal(resBody, &response); err != nil {
+				return nil, err
+			}
+
+			if response.Data.Status == InstanceStatusCreating {
+				time.Sleep(time.Second * PollWaitSeconds)
+			} else {
+				return &response, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("hit max retries for polling")
 }
