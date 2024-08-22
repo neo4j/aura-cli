@@ -70,6 +70,7 @@ func NewCreateCmd() *cobra.Command {
 		tenantId             string
 		cloudProvider        string
 		customerManagedKeyId string
+		await                bool
 	)
 
 	const (
@@ -81,6 +82,7 @@ func NewCreateCmd() *cobra.Command {
 		tenantIdFlag             = "tenant-id"
 		cloudProviderFlag        = "cloud-provider"
 		customerManagedKeyIdFlag = "customer-managed-key-id"
+		awaitFlag                = "await"
 	)
 
 	cmd := &cobra.Command{
@@ -149,36 +151,27 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				return err
 			}
 
-			// NOTE: Instance create should not return OK (200), it always returns 202
+			// NOTE: Instance create should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				cmd.Println("Instance created successfully")
-
 				if err := output.PrintBody(cmd, resBody); err != nil {
 					return err
 				}
 
-				cmd.Println("The new instance will be available soonish ™️")
-				var response CreateInstanceResponse
-				if err := json.Unmarshal(resBody, &response); err != nil {
-					return err
+				if await {
+					cmd.Println("Creating instance...")
+					var response CreateInstanceResponse
+					if err := json.Unmarshal(resBody, &response); err != nil {
+						return err
+					}
+
+					pollResponse, err := pollInstanceCreate(cmd, response.Data.Id)
+					if err != nil {
+						return err
+					}
+
+					cmd.Println("Instance creating")
+					cmd.Println("Status:", pollResponse.Data.Status)
 				}
-
-				pollResponse, err := pollInstanceCreate(cmd, response.Data.Id)
-				if err != nil {
-					return err
-				}
-
-				cmd.Println("Instance finished creating")
-				cmd.Println("Status:", pollResponse.Data.Status)
-
-				// println(response)
-				// cmd.Println("Instance created: ", response.Data.Name, " [", response.Data.Id, "]")
-
-				// err = output.PrintBody(cmd, resBody)
-				// if err != nil {
-				// 	return err
-				// }
-
 			}
 
 			return nil
@@ -204,6 +197,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.MarkFlagRequired(cloudProviderFlag)
 
 	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "An optional customer managed key to be used for instance creation.")
+	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created instance is ready.")
 
 	return cmd
 }
