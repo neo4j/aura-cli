@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -10,7 +11,15 @@ import (
 )
 
 func NewResumeCmd() *cobra.Command {
-	return &cobra.Command{
+	var (
+		await bool
+	)
+
+	const (
+		awaitFlag = "await"
+	)
+
+	cmd := &cobra.Command{
 		Use:   "resume",
 		Short: "Resumes an instance",
 		Long: `Starts the resume process of an Aura instance.
@@ -34,8 +43,25 @@ If another operation is being performed on the instance you are trying to resume
 					return err
 				}
 
+				if await {
+					cmd.Println("Waiting for instance to be ready...")
+					var response api.CreateInstanceResponse
+					if err := json.Unmarshal(resBody, &response); err != nil {
+						return err
+					}
+
+					pollResponse, err := api.PollInstance(cmd, response.Data.Id, api.InstanceStatusResuming)
+					if err != nil {
+						return err
+					}
+
+					cmd.Println("Instance Status:", pollResponse.Data.Status)
+				}
 			}
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until resumed instance is ready.")
+	return cmd
 }
