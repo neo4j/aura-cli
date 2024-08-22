@@ -219,3 +219,26 @@ type GetInstanceResponse struct {
 		Status   InstanceStatus
 	}
 }
+
+type CMKStatus string
+
+const (
+	CMKStatusReady   = "ready"
+	CMKStatusPending = "pending"
+)
+
+// Response Body of Create and Get Instance for successful requests
+type CreateCMKResponse struct {
+	Data struct {
+		Id     string
+		Status CMKStatus
+	}
+}
+
+type GetCMKResponse struct {
+	Data struct {
+		Id     string
+		Name   string
+		Status CMKStatus
+	}
+}
