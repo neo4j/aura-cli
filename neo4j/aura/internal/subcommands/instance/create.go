@@ -3,18 +3,13 @@ package instance
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
-
-const MaxPollRetries = 100
-const PollWaitSeconds = 20
 
 func NewCreateCmd() *cobra.Command {
 	var (
@@ -120,7 +115,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 						return err
 					}
 
-					pollResponse, err := pollInstanceCreate(cmd, response.Data.Id)
+					pollResponse, err := api.PollInstance(cmd, response.Data.Id, api.InstanceStatusCreating)
 					if err != nil {
 						return err
 					}
@@ -155,30 +150,4 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created instance is ready.")
 
 	return cmd
-}
-
-func pollInstanceCreate(cmd *cobra.Command, instanceId string) (*api.GetInstanceResponse, error) {
-	path := fmt.Sprintf("/instances/%s", instanceId)
-
-	for i := 0; i < MaxPollRetries; i++ {
-		resBody, statusCode, err := api.MakeRequest(cmd, http.MethodGet, path, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		if statusCode == http.StatusOK {
-			var response api.GetInstanceResponse
-			if err := json.Unmarshal(resBody, &response); err != nil {
-				return nil, err
-			}
-
-			if response.Data.Status == api.InstanceStatusCreating {
-				time.Sleep(time.Second * PollWaitSeconds)
-			} else {
-				return &response, nil
-			}
-		}
-	}
-
-	return nil, fmt.Errorf("hit max retries for polling")
 }
