@@ -16,50 +16,6 @@ import (
 const MaxPollRetries = 100
 const PollWaitSeconds = 20
 
-type InstanceStatus string
-
-const (
-	InstanceStatusCreating      InstanceStatus = "creating"
-	InstanceStatusDestroying    InstanceStatus = "destroying"
-	InstanceStatusRunning       InstanceStatus = "running"
-	InstanceStatusPausing       InstanceStatus = "pausing"
-	InstanceStatusPaused        InstanceStatus = "paused"
-	InstanceStatusSuspending    InstanceStatus = "suspending"
-	InstanceStatusSuspended     InstanceStatus = "suspended"
-	InstanceStatusResuming      InstanceStatus = "resuming"
-	InstanceStatusLoading       InstanceStatus = "loading"
-	InstanceStatusLoadingFailed InstanceStatus = "loading failed"
-	InstanceStatusRestoring     InstanceStatus = "restoring"
-	InstanceStatusUpdating      InstanceStatus = "updating"
-	InstanceStatusOverwriting   InstanceStatus = "overwriting"
-)
-
-// Response Body of Create and Get Instance for successful requests
-type CreateInstanceResponse struct {
-	Data struct {
-		Id            string
-		ConnectionUrl string `json:"connection_url"`
-		Username      string
-		Password      string
-		TenantId      string `json:"tenant_id"`
-		CloudProvider string `json:"cloud_provider"`
-		Region        string
-		Type          string
-		Name          string
-	}
-}
-
-type GetInstanceResponse struct {
-	Data struct {
-		Id       string
-		Name     string
-		TenantId string `json:"tenant_id"`
-		Status   InstanceStatus
-	}
-}
-
-// creating, destroying, running, pausing, paused, suspending, suspended, resuming, loading, loading failed, restoring, updating, overwriting
-
 func NewCreateCmd() *cobra.Command {
 	var (
 		version              string
@@ -158,8 +114,8 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				}
 
 				if await {
-					cmd.Println("Creating instance...")
-					var response CreateInstanceResponse
+					cmd.Println("Waiting for instance to be ready...")
+					var response api.CreateInstanceResponse
 					if err := json.Unmarshal(resBody, &response); err != nil {
 						return err
 					}
@@ -169,8 +125,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 						return err
 					}
 
-					cmd.Println("Instance creating")
-					cmd.Println("Status:", pollResponse.Data.Status)
+					cmd.Println("Instance Status:", pollResponse.Data.Status)
 				}
 			}
 
@@ -202,7 +157,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	return cmd
 }
 
-func pollInstanceCreate(cmd *cobra.Command, instanceId string) (*GetInstanceResponse, error) {
+func pollInstanceCreate(cmd *cobra.Command, instanceId string) (*api.GetInstanceResponse, error) {
 	path := fmt.Sprintf("/instances/%s", instanceId)
 
 	for i := 0; i < MaxPollRetries; i++ {
@@ -212,12 +167,12 @@ func pollInstanceCreate(cmd *cobra.Command, instanceId string) (*GetInstanceResp
 		}
 
 		if statusCode == http.StatusOK {
-			var response GetInstanceResponse
+			var response api.GetInstanceResponse
 			if err := json.Unmarshal(resBody, &response); err != nil {
 				return nil, err
 			}
 
-			if response.Data.Status == InstanceStatusCreating {
+			if response.Data.Status == api.InstanceStatusCreating {
 				time.Sleep(time.Second * PollWaitSeconds)
 			} else {
 				return &response, nil

@@ -176,3 +176,46 @@ func getHeaders(ctx context.Context) (http.Header, error) {
 		"User-Agent":    {fmt.Sprintf(userAgent, version)},
 	}, nil
 }
+
+// Response types
+type InstanceStatus string
+
+const (
+	InstanceStatusCreating      InstanceStatus = "creating"
+	InstanceStatusDestroying    InstanceStatus = "destroying"
+	InstanceStatusRunning       InstanceStatus = "running"
+	InstanceStatusPausing       InstanceStatus = "pausing"
+	InstanceStatusPaused        InstanceStatus = "paused"
+	InstanceStatusSuspending    InstanceStatus = "suspending"
+	InstanceStatusSuspended     InstanceStatus = "suspended"
+	InstanceStatusResuming      InstanceStatus = "resuming"
+	InstanceStatusLoading       InstanceStatus = "loading"
+	InstanceStatusLoadingFailed InstanceStatus = "loading failed"
+	InstanceStatusRestoring     InstanceStatus = "restoring"
+	InstanceStatusUpdating      InstanceStatus = "updating"
+	InstanceStatusOverwriting   InstanceStatus = "overwriting"
+)
+
+// Response Body of Create and Get Instance for successful requests
+type CreateInstanceResponse struct {
+	Data struct {
+		Id            string
+		ConnectionUrl string `json:"connection_url"`
+		Username      string
+		Password      string
+		TenantId      string `json:"tenant_id"`
+		CloudProvider string `json:"cloud_provider"`
+		Region        string
+		Type          string
+		Name          string
+	}
+}
+
+type GetInstanceResponse struct {
+	Data struct {
+		Id       string
+		Name     string
+		TenantId string `json:"tenant_id"`
+		Status   InstanceStatus
+	}
+}
