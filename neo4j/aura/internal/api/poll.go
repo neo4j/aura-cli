@@ -9,13 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const MaxPollRetries = 100
-const PollWaitSeconds = 20
+const maxPollRetries = 100
+const pollWaitSeconds = 20
 
 func PollInstance(cmd *cobra.Command, instanceId string, waitingStatus InstanceStatus) (*GetInstanceResponse, error) {
 	path := fmt.Sprintf("/instances/%s", instanceId)
 
-	for i := 0; i < MaxPollRetries; i++ {
+	for i := 0; i < maxPollRetries; i++ {
 		resBody, statusCode, err := MakeRequest(cmd, http.MethodGet, path, nil)
 		if err != nil {
 			return nil, err
@@ -28,7 +28,7 @@ func PollInstance(cmd *cobra.Command, instanceId string, waitingStatus InstanceS
 			}
 
 			if response.Data.Status == waitingStatus {
-				time.Sleep(time.Second * PollWaitSeconds)
+				time.Sleep(time.Second * pollWaitSeconds)
 			} else {
 				return &response, nil
 			}
