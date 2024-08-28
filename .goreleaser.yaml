@@ -13,17 +13,6 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./neo4j/aura/cmd/aura
-    id: "aura"
-    binary: aura
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - windows
-      - darwin
-    ldflags:
-      - -X "main.Version={{.Env.GORELEASER_CURRENT_TAG}}"
   - main: ./neo4j
     id: "neo4j"
     binary: neo4j
