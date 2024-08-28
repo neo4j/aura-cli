@@ -2,9 +2,11 @@ package customermanagedkey
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
+	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -68,7 +70,21 @@ Once the key has a status of ready you can use it for creating new instances by 
 				body["tenant_id"] = tenantId
 			}
 
-			return api.MakeRequest(cmd, "POST", "/customer-managed-keys", body)
+			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPost, "/customer-managed-keys", body)
+			if err != nil {
+				return err
+			}
+			// NOTE: Instance delete should not return OK (200), it always returns 202
+			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
+				err = output.PrintBody(cmd, resBody)
+				if err != nil {
+					return err
+				}
+
+			}
+
+			return nil
+
 		},
 	}
 
