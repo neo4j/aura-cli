@@ -25,7 +25,7 @@ func main() {
 		}
 	}()
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd(Version)
 
 	cmd.SetOut(os.Stdout)
 	cfg, err := clicfg.NewConfig(afero.NewOsFs())

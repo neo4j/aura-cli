@@ -25,5 +25,6 @@ go.work.sum
 .env
 
 bin/
+dist/
 
 test-api/

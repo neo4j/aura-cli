@@ -12,10 +12,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCmd() *cobra.Command {
+func NewCmd(version string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "aura",
-		Short: "Allows you to programmatically provision and manage your Aura instances",
+		Use:     "aura",
+		Short:   "Allows you to programmatically provision and manage your Aura instances",
+		Version: version,
 	}
 
 	cmd.AddCommand(config.NewCmd())

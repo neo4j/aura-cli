@@ -178,7 +178,6 @@ func getHeaders(ctx context.Context) (http.Header, error) {
 }
 
 // Response types
-// type InstanceStatus string
 
 const (
 	InstanceStatusCreating      string = "creating"

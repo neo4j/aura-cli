@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const MaxPollRetries = 100
-const PollWaitSeconds = 20
+const maxPollRetries = 100
+const pollWaitSeconds = 20
 
 type PollResponse struct {
 	Data struct {
@@ -30,7 +30,7 @@ func PollCMK(cmd *cobra.Command, cmkId string, waitingStatus string) (*PollRespo
 }
 
 func poll(cmd *cobra.Command, url string, waitingStatus string) (*PollResponse, error) {
-	for i := 0; i < MaxPollRetries; i++ {
+	for i := 0; i < maxPollRetries; i++ {
 		resBody, statusCode, err := MakeRequest(cmd, http.MethodGet, url, nil)
 		if err != nil {
 			return nil, err
@@ -43,7 +43,7 @@ func poll(cmd *cobra.Command, url string, waitingStatus string) (*PollResponse, 
 			}
 
 			if response.Data.Status == waitingStatus {
-				time.Sleep(time.Second * PollWaitSeconds)
+				time.Sleep(time.Second * pollWaitSeconds)
 			} else {
 				return &response, nil
 			}
