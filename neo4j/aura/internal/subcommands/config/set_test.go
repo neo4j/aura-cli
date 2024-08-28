@@ -15,7 +15,7 @@ import (
 func TestSetConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd("test")
 	cmd.SetArgs([]string{"config", "set", "auth-url", "test"})
 
 	fs, err := testfs.GetDefaultTestFs()

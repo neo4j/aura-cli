@@ -17,7 +17,7 @@ import (
 func TestListConfigDefault(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd("test")
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"config", "list"})

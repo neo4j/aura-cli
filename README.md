@@ -1,5 +1,11 @@
 # Neo4j CLI
 
+## Prerequisites
+
+```bash
+go install github.com/miniscruff/changie@latest
+```
+
 ## Build
 
 ```bash
