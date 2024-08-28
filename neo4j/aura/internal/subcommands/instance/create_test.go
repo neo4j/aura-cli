@@ -1,20 +1,11 @@
 package instance_test
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/neo4j/cli/common/clicfg"
-	"github.com/neo4j/cli/common/clictx"
-	"github.com/neo4j/cli/neo4j/aura"
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
-	"github.com/neo4j/cli/test/utils/testfs"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateFreeInstance(t *testing.T) {
@@ -131,58 +122,18 @@ Global Flags:
 }
 
 func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
-	assert := assert.New(t)
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
-	mux := http.NewServeMux()
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
 
-	var authCounter = 0
-	mux.HandleFunc("/oauth/token", func(res http.ResponseWriter, req *http.Request) {
-		authCounter++
-	})
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --memory 1GB --cloud-provider gcp")
 
-	var postCounter = 0
-	mux.HandleFunc("/v1/instances", func(res http.ResponseWriter, req *http.Request) {
-		postCounter++
-	})
+	mockHandler.AssertCalledTimes(0)
 
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	cmd := aura.NewCmd()
-	b := bytes.NewBufferString("")
-	cmd.SetOut(b)
-	cmd.SetErr(b)
-	cmd.SetArgs([]string{"instance", "create", "--auth-url", fmt.Sprintf("%s/oauth/token", server.URL), "--base-url", fmt.Sprintf("%s/v1", server.URL), "--region", "europe-west1", "--name", "Instance01", "--type", "professional-db", "--cloud-provider", "gcp", "--memory", "1GB"})
-
-	fs, err := testfs.GetTestFs(`{
-				"aura": {
-			"credentials": [{
-				"name": "test-cred",
-				"access-token": "dsa",
-				"token-expiry": 123
-			}],
-			"default-credential": "test-cred"
-		}
-	}`)
-	assert.Nil(err)
-
-	cfg, err := clicfg.NewConfig(fs)
-	assert.Nil(err)
-
-	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
-	assert.Nil(err)
-
-	err = cmd.ExecuteContext(ctx)
-	assert.ErrorContains(err, `required flag(s) "tenant-id" not set`)
-
-	assert.Equal(0, authCounter)
-	assert.Equal(0, postCounter)
-
-	out, err := io.ReadAll(b)
-	assert.Nil(err)
-
-	assert.Equal(`Error: required flag(s) "tenant-id" not set
-Usage:
+	helper.AssertErr(`Error: required flag(s) "tenant-id" not set
+`)
+	helper.AssertOut(`Usage:
   aura instance create [flags]
 
 Flags:
@@ -201,7 +152,7 @@ Global Flags:
       --base-url string   
       --output string
 
-`, string(out))
+`)
 }
 
 func TestCreateInstanceError(t *testing.T) {
