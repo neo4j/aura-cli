@@ -15,7 +15,7 @@ import (
 func TestAddCredential(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd("test")
 	cmd.SetArgs([]string{"credential", "add", "--name", "test", "--client-id", "testclientid", "--client-secret", "testclientsecret"})
 
 	fs, err := testfs.GetDefaultTestFs()
@@ -39,7 +39,7 @@ func TestAddCredential(t *testing.T) {
 func TestAddCredentialIfAlreadyExists(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd("test")
 	cmd.SetArgs([]string{"credential", "add", "--name", "test", "--client-id", "testclientid", "--client-secret", "testclientsecret"})
 
 	fs, err := testfs.GetTestFs(`{"aura":{"credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret"}]}}`)

@@ -1,0 +1,30 @@
+name: release
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["CHANGELOG.md"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - name: Add env vars
+        run: |
+          echo GORELEASER_CURRENT_TAG=$(changie latest) >> $GITHUB_ENV
+          echo RELEASE_NOTES_PATH=.changes/$(changie latest).md >> $GITHUB_ENV
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6.0.0
+        with:
+          version: latest
+          args: --clean --release-notes=${{ env.RELEASE_NOTES_PATH }} --skip=validate --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

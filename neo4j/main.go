@@ -19,11 +19,12 @@ var Version = "dev"
 
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "neo4j",
-		Short: "Allows you to manage Neo4j resources",
+		Use:     "neo4j",
+		Short:   "Allows you to manage Neo4j resources",
+		Version: Version,
 	}
 
-	cmd.AddCommand(aura.NewCmd())
+	cmd.AddCommand(aura.NewCmd(""))
 	return cmd
 }
 

@@ -13,12 +13,17 @@ before:
     - go mod tidy
 
 builds:
-  - env:
+  - main: ./neo4j
+    id: "neo4j"
+    binary: neo4j
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
       - windows
       - darwin
+    ldflags:
+      - -X "main.Version={{.Env.GORELEASER_CURRENT_TAG}}"
 
 archives:
   - format: tar.gz
@@ -36,8 +41,4 @@ archives:
         format: zip
 
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"
+  disable: false

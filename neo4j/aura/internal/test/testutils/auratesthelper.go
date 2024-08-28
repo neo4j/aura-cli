@@ -163,7 +163,7 @@ func NewAuraTestHelper(t *testing.T) AuraTestHelper {
 
 	helper.t = t
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd("test")
 
 	out := bytes.NewBufferString("")
 	err := bytes.NewBufferString("")

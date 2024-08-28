@@ -15,7 +15,7 @@ import (
 func TestUseCredential(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd("test")
 	cmd.SetArgs([]string{"credential", "use", "test"})
 
 	fs, err := testfs.GetTestFs(`{"aura":{"credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret"}]}}`)
@@ -39,7 +39,7 @@ func TestUseCredential(t *testing.T) {
 func TestUseCredentialIfDoesNotExist(t *testing.T) {
 	assert := assert.New(t)
 
-	cmd := aura.NewCmd()
+	cmd := aura.NewCmd("test")
 	cmd.SetArgs([]string{"credential", "use", "test"})
 
 	fs, err := testfs.GetDefaultTestFs()
