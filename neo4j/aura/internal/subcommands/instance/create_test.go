@@ -112,6 +112,7 @@ func TestCreateProfessionalInstanceNoMemory(t *testing.T) {
   aura instance create [flags]
 
 Flags:
+      --await                            Waits until created instance is ready.
       --cloud-provider string            The cloud provider hosting the instance.
       --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
   -h, --help                             help for create
@@ -186,6 +187,7 @@ Usage:
   aura instance create [flags]
 
 Flags:
+      --await                            Waits until created instance is ready.
       --cloud-provider string            The cloud provider hosting the instance.
       --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
   -h, --help                             help for create

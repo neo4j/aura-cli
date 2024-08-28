@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -20,6 +21,7 @@ func NewCreateCmd() *cobra.Command {
 		tenantId             string
 		cloudProvider        string
 		customerManagedKeyId string
+		await                bool
 	)
 
 	const (
@@ -31,6 +33,7 @@ func NewCreateCmd() *cobra.Command {
 		tenantIdFlag             = "tenant-id"
 		cloudProviderFlag        = "cloud-provider"
 		customerManagedKeyIdFlag = "customer-managed-key-id"
+		awaitFlag                = "await"
 	)
 
 	cmd := &cobra.Command{
@@ -99,13 +102,26 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				return err
 			}
 
-			// NOTE: Instance create should not return OK (200), it always returns 202
+			// NOTE: Instance create should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
-				if err != nil {
+				if err := output.PrintBody(cmd, resBody); err != nil {
 					return err
 				}
 
+				if await {
+					cmd.Println("Waiting for instance to be ready...")
+					var response api.CreateInstanceResponse
+					if err := json.Unmarshal(resBody, &response); err != nil {
+						return err
+					}
+
+					pollResponse, err := api.PollInstance(cmd, response.Data.Id, api.InstanceStatusCreating)
+					if err != nil {
+						return err
+					}
+
+					cmd.Println("Instance Status:", pollResponse.Data.Status)
+				}
 			}
 
 			return nil
@@ -131,6 +147,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.MarkFlagRequired(cloudProviderFlag)
 
 	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "An optional customer managed key to be used for instance creation.")
+	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created instance is ready.")
 
 	return cmd
 }
