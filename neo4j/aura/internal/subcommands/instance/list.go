@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
+	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +19,27 @@ func NewListCmd() *cobra.Command {
 
 You can filter instances in a particular tenant using --tenant-id. If the tenant flag is not specified, this subcommand lists all instances a user has access to across all tenants.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var path string
+
 			if tenantId != "" {
-				return api.MakeRequest(cmd, http.MethodGet, fmt.Sprintf("/instances?tenantId=%s", tenantId), nil)
+				path = fmt.Sprintf("/instances?tenantId=%s", tenantId)
 			} else {
-				return api.MakeRequest(cmd, "GET", "/instances", nil)
+				path = "/instances"
 			}
+
+			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodGet, path, nil)
+			if err != nil {
+				return err
+			}
+
+			if statusCode == http.StatusOK {
+				err = output.PrintBody(cmd, resBody)
+				if err != nil {
+					return err
+				}
+
+			}
+			return nil
 		},
 	}
 

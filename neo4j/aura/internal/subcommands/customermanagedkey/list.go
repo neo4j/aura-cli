@@ -2,8 +2,10 @@ package customermanagedkey
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
+	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +20,25 @@ func NewListCmd() *cobra.Command {
 You can filter keys in a particular tenant using --tenant-id. If the tenant flag is not specified, this endpoint lists all keys a user has access to across all tenants.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var path string
+
 			if tenantId != "" {
-				return api.MakeRequest(cmd, "GET", fmt.Sprintf("/customer-managed-keys?tenantId=%s", tenantId), nil)
+				path = fmt.Sprintf("/customer-managed-keys?tenantId=%s", tenantId)
 			} else {
-				return api.MakeRequest(cmd, "GET", "/customer-managed-keys", nil)
+				path = "/customer-managed-keys"
 			}
+
+			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodGet, path, nil)
+			if err != nil {
+				return err
+			}
+
+			if statusCode == http.StatusOK {
+				output.PrintBody(cmd, resBody)
+
+			}
+
+			return nil
 		},
 	}
 

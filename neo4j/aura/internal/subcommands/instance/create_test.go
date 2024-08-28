@@ -12,7 +12,7 @@ func TestCreateFreeInstance(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -51,7 +51,7 @@ func TestCreateProfessionalInstance(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -103,6 +103,7 @@ func TestCreateProfessionalInstanceNoMemory(t *testing.T) {
   aura instance create [flags]
 
 Flags:
+      --await                            Waits until created instance is ready.
       --cloud-provider string            The cloud provider hosting the instance.
       --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
   -h, --help                             help for create
@@ -137,6 +138,7 @@ func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
   aura instance create [flags]
 
 Flags:
+      --await                            Waits until created instance is ready.
       --cloud-provider string            The cloud provider hosting the instance.
       --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
   -h, --help                             help for create
@@ -210,7 +212,7 @@ func TestInstanceWithCmkId(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
@@ -261,7 +263,7 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 		}
 	}`)
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
 				"id": "db1d1234",
 				"connection_url": "YOUR_CONNECTION_URL",
