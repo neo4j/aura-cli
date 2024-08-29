@@ -178,22 +178,21 @@ func getHeaders(ctx context.Context) (http.Header, error) {
 }
 
 // Response types
-type InstanceStatus string
 
 const (
-	InstanceStatusCreating      InstanceStatus = "creating"
-	InstanceStatusDestroying    InstanceStatus = "destroying"
-	InstanceStatusRunning       InstanceStatus = "running"
-	InstanceStatusPausing       InstanceStatus = "pausing"
-	InstanceStatusPaused        InstanceStatus = "paused"
-	InstanceStatusSuspending    InstanceStatus = "suspending"
-	InstanceStatusSuspended     InstanceStatus = "suspended"
-	InstanceStatusResuming      InstanceStatus = "resuming"
-	InstanceStatusLoading       InstanceStatus = "loading"
-	InstanceStatusLoadingFailed InstanceStatus = "loading failed"
-	InstanceStatusRestoring     InstanceStatus = "restoring"
-	InstanceStatusUpdating      InstanceStatus = "updating"
-	InstanceStatusOverwriting   InstanceStatus = "overwriting"
+	InstanceStatusCreating      string = "creating"
+	InstanceStatusDestroying    string = "destroying"
+	InstanceStatusRunning       string = "running"
+	InstanceStatusPausing       string = "pausing"
+	InstanceStatusPaused        string = "paused"
+	InstanceStatusSuspending    string = "suspending"
+	InstanceStatusSuspended     string = "suspended"
+	InstanceStatusResuming      string = "resuming"
+	InstanceStatusLoading       string = "loading"
+	InstanceStatusLoadingFailed string = "loading failed"
+	InstanceStatusRestoring     string = "restoring"
+	InstanceStatusUpdating      string = "updating"
+	InstanceStatusOverwriting   string = "overwriting"
 )
 
 // Response Body of Create and Get Instance for successful requests
@@ -211,11 +210,15 @@ type CreateInstanceResponse struct {
 	}
 }
 
-type GetInstanceResponse struct {
+const (
+	CMKStatusReady   = "ready"
+	CMKStatusPending = "pending"
+)
+
+// Response Body of Create and Get Instance for successful requests
+type CreateCMKResponse struct {
 	Data struct {
-		Id       string
-		Name     string
-		TenantId string `json:"tenant_id"`
-		Status   InstanceStatus
+		Id     string
+		Status string
 	}
 }

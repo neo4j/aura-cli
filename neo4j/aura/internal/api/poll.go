@@ -12,17 +12,32 @@ import (
 const maxPollRetries = 100
 const pollWaitSeconds = 20
 
-func PollInstance(cmd *cobra.Command, instanceId string, waitingStatus InstanceStatus) (*GetInstanceResponse, error) {
-	path := fmt.Sprintf("/instances/%s", instanceId)
+type PollResponse struct {
+	Data struct {
+		Id     string
+		Status string
+	}
+}
 
+func PollInstance(cmd *cobra.Command, instanceId string, waitingStatus string) (*PollResponse, error) {
+	path := fmt.Sprintf("/instances/%s", instanceId)
+	return poll(cmd, path, waitingStatus)
+}
+
+func PollCMK(cmd *cobra.Command, cmkId string, waitingStatus string) (*PollResponse, error) {
+	path := fmt.Sprintf("/customer-managed-keys/%s", cmkId)
+	return poll(cmd, path, waitingStatus)
+}
+
+func poll(cmd *cobra.Command, url string, waitingStatus string) (*PollResponse, error) {
 	for i := 0; i < maxPollRetries; i++ {
-		resBody, statusCode, err := MakeRequest(cmd, http.MethodGet, path, nil)
+		resBody, statusCode, err := MakeRequest(cmd, http.MethodGet, url, nil)
 		if err != nil {
 			return nil, err
 		}
 
 		if statusCode == http.StatusOK {
-			var response GetInstanceResponse
+			var response PollResponse
 			if err := json.Unmarshal(resBody, &response); err != nil {
 				return nil, err
 			}

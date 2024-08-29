@@ -1,6 +1,7 @@
 package customermanagedkey
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -18,6 +19,7 @@ func NewCreateCmd() *cobra.Command {
 		tenantId      string
 		cloudProvider string
 		keyId         string
+		await         bool
 	)
 
 	const (
@@ -27,6 +29,7 @@ func NewCreateCmd() *cobra.Command {
 		tenantIdFlag      = "tenant-id"
 		cloudProviderFlag = "cloud-provider"
 		keyIdFlag         = "key-id"
+		awaitFlag         = "await"
 	)
 
 	cmd := &cobra.Command{
@@ -81,6 +84,21 @@ Once the key has a status of ready you can use it for creating new instances by 
 					return err
 				}
 
+				if await {
+					cmd.Println("Waiting for customer managed key to be ready...")
+					var response api.CreateCMKResponse
+					if err := json.Unmarshal(resBody, &response); err != nil {
+						return err
+					}
+
+					pollResponse, err := api.PollCMK(cmd, response.Data.Id, api.CMKStatusPending)
+					if err != nil {
+						return err
+					}
+
+					cmd.Println("CMK Status:", pollResponse.Data.Status)
+				}
+
 			}
 
 			return nil
@@ -104,6 +122,8 @@ Once the key has a status of ready you can use it for creating new instances by 
 
 	cmd.Flags().StringVar(&keyId, keyIdFlag, "", "")
 	cmd.MarkFlagRequired(keyIdFlag)
+
+	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created customer managed key is ready.")
 
 	return cmd
 }
