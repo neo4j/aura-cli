@@ -42,11 +42,14 @@ func poll(cmd *cobra.Command, url string, waitingStatus string) (*PollResponse, 
 				return nil, err
 			}
 
-			if response.Data.Status == waitingStatus {
+			if response.Data.Status == "" || response.Data.Status == waitingStatus {
 				time.Sleep(time.Second * pollWaitSeconds)
 			} else {
 				return &response, nil
 			}
+		} else {
+			// Edge case of a status code 2xx is returned different of 200
+			time.Sleep(time.Second * pollWaitSeconds)
 		}
 	}
 
