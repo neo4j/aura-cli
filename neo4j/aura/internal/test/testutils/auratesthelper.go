@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/google/shlex"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clictx"
@@ -20,56 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type call struct {
-	Method string
-	Path   string
-	Body   map[string]interface{}
-}
-
-type requestHandlerMock struct {
-	Calls []call
-	t     *testing.T
-}
-
-func (mock *requestHandlerMock) AssertCalledTimes(times int) {
-	calls := len(mock.Calls)
-
-	assert.Equal(mock.t, times, calls, "Request handler mock not called the expected number of times")
-}
-
-func (mock *requestHandlerMock) AssertCalledWithMethod(method string) {
-	methods := ""
-
-	for _, call := range mock.Calls {
-		if call.Method == method {
-			return
-		}
-
-		methods += call.Method
-	}
-
-	assert.Fail(mock.t, fmt.Sprintf("Handler not called with method:\nexpected: %s, actual: %s", method, methods))
-}
-
-func (mock *requestHandlerMock) AssertCalledWithBody(body string) {
-	unmarshalled, err := UmarshalJson([]byte(body))
-	assert.Nil(mock.t, err)
-
-	bodies := ""
-
-	for _, call := range mock.Calls {
-		if cmp.Equal(call.Body, unmarshalled) {
-			return
-		}
-		data, err := MarshalJson(call.Body)
-		assert.Nil(mock.t, err)
-
-		bodies += data + "\n"
-	}
-
-	assert.Fail(mock.t, fmt.Sprintf("Handler not called with body:\nexpected: %s\nactual: %s", body, bodies))
-}
-
 type AuraTestHelper struct {
 	mux    *http.ServeMux
 	Server *httptest.Server
@@ -78,10 +27,6 @@ type AuraTestHelper struct {
 	err    *bytes.Buffer
 	cfg    string
 	t      *testing.T
-}
-
-func (helper *AuraTestHelper) AddRequestHandler(path string, handler func(res http.ResponseWriter, req *http.Request)) {
-	helper.mux.HandleFunc(path, handler)
 }
 
 func (helper *AuraTestHelper) Close() {
@@ -101,6 +46,8 @@ func (helper *AuraTestHelper) ExecuteCommand(command string) {
 
 	cfg, err := clicfg.NewConfig(fs)
 	assert.Nil(helper.t, err)
+
+	cfg.Aura.SetPollingConfig(2, 0)
 
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(helper.t, err)
@@ -126,6 +73,19 @@ func (helper *AuraTestHelper) AssertOut(expected string) {
 	assert.Equal(helper.t, strings.TrimSpace(expected), strings.TrimSpace(string(out)))
 }
 
+func (helper *AuraTestHelper) PrintOut() string {
+	out, err := io.ReadAll(helper.out)
+	assert.Nil(helper.t, err)
+
+	return string(out)
+}
+func (helper *AuraTestHelper) PrintErr() string {
+	out, err := io.ReadAll(helper.err)
+	assert.Nil(helper.t, err)
+
+	return string(out)
+}
+
 func (helper *AuraTestHelper) AssertOutJson(expected string) {
 	out, err := io.ReadAll(helper.out)
 	assert.Nil(helper.t, err)
@@ -137,7 +97,9 @@ func (helper *AuraTestHelper) AssertOutJson(expected string) {
 }
 
 func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, body string) *requestHandlerMock {
-	mock := requestHandlerMock{Calls: []call{}, t: helper.t}
+	mock := requestHandlerMock{Calls: []call{}, t: helper.t, Responses: []response{
+		{status: status, body: body},
+	}}
 
 	helper.mux.HandleFunc(path, func(res http.ResponseWriter, req *http.Request) {
 		requestBody, err := io.ReadAll(req.Body)
@@ -149,10 +111,17 @@ func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, bod
 			assert.Nil(helper.t, err)
 		}
 
+		requestCount := len(mock.Calls)
 		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: unmarshalledBody})
 
-		res.WriteHeader(status)
-		res.Write([]byte(body))
+		if requestCount >= len(mock.Responses) {
+			res.WriteHeader(404)
+		} else {
+			response := mock.Responses[requestCount]
+
+			res.WriteHeader(response.status)
+			res.Write([]byte(response.body))
+		}
 	})
 
 	return &mock
