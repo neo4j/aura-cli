@@ -47,6 +47,8 @@ func (helper *AuraTestHelper) ExecuteCommand(command string) {
 	cfg, err := clicfg.NewConfig(fs)
 	assert.Nil(helper.t, err)
 
+	cfg.Aura.SetPollingConfig(2, 0)
+
 	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
 	assert.Nil(helper.t, err)
 

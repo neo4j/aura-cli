@@ -6,11 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/neo4j/cli/common/clictx"
 	"github.com/spf13/cobra"
 )
-
-const maxPollRetries = 100
-const pollWaitSeconds = 20
 
 type PollResponse struct {
 	Data struct {
@@ -30,7 +28,14 @@ func PollCMK(cmd *cobra.Command, cmkId string, waitingStatus string) (*PollRespo
 }
 
 func poll(cmd *cobra.Command, url string, waitingStatus string) (*PollResponse, error) {
-	for i := 0; i < maxPollRetries; i++ {
+	config, ok := clictx.Config(cmd.Context())
+	if !ok {
+		return nil, fmt.Errorf("config not found")
+	}
+
+	pollingConfig := config.Aura.GetPollingConfig()
+
+	for i := 0; i < pollingConfig.MaxRetries; i++ {
 		resBody, statusCode, err := MakeRequest(cmd, http.MethodGet, url, nil)
 		if err != nil {
 			return nil, err
@@ -43,13 +48,13 @@ func poll(cmd *cobra.Command, url string, waitingStatus string) (*PollResponse, 
 			}
 
 			if response.Data.Status == "" || response.Data.Status == waitingStatus {
-				time.Sleep(time.Second * pollWaitSeconds)
+				time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
 			} else {
 				return &response, nil
 			}
 		} else {
 			// Edge case of a status code 2xx is returned different of 200
-			time.Sleep(time.Second * pollWaitSeconds)
+			time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
 		}
 	}
 

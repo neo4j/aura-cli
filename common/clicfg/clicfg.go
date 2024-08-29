@@ -25,6 +25,70 @@ type Config struct {
 	Aura  AuraConfig `mapstructure:"aura" json:"aura"`
 }
 
+func NewConfig(fs afero.Fs) (*Config, error) {
+	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli", "config.json")
+
+	if err := fs.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+		return nil, err
+	}
+
+	f, err := fs.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return &Config{}, err
+	}
+	defer f.Close()
+
+	fi, err := fs.Stat(configPath)
+
+	if err != nil {
+		return &Config{}, err
+	}
+
+	if fi.Size() == 0 {
+		if _, err := f.Write([]byte("{}")); err != nil {
+			return nil, err
+		}
+		if err := f.Sync(); err != nil {
+			return nil, err
+		}
+	}
+
+	in, err := fs.Open(configPath)
+	if err != nil {
+		return &Config{}, err
+	}
+	defer in.Close()
+
+	Viper := viper.New()
+
+	Viper.SetConfigType("json")
+
+	bindEnvironmentVariables(Viper)
+	setDefaultValues(Viper)
+
+	if err := Viper.ReadConfig(in); err != nil {
+		return &Config{}, err
+	}
+
+	var config Config
+	err = Viper.Unmarshal(&config)
+
+	if err != nil {
+		return &Config{}, err
+	}
+
+	config.viper = Viper
+	config.fs = fs
+
+	// Default Polling config
+	config.Aura.polling = PollingConfig{
+		MaxRetries: 60,
+		Interval:   20,
+	}
+
+	return &config, nil
+}
+
 func (config *Config) Get(key string) (interface{}, error) {
 	val := config.viper.Get(key)
 
@@ -83,6 +147,11 @@ func (config *Config) BindPFlag(key string, flag *pflag.Flag) error {
 	return config.viper.BindPFlag(key, flag)
 }
 
+type PollingConfig struct {
+	Interval   int
+	MaxRetries int
+}
+
 type AuraConfig struct {
 	BaseUrl           string           `mapstructure:"base-url" json:"base-url"`
 	AuthUrl           string           `mapstructure:"auth-url" json:"auth-url"`
@@ -90,6 +159,7 @@ type AuraConfig struct {
 	DefaultTenant     string           `mapstructure:"default-tenant" json:"default-tenant,omitempty"`
 	DefaultCredential string           `mapstructure:"default-credential" json:"default-credential,omitempty"`
 	Credentials       []AuraCredential `mapstructure:"credentials" json:"credentials"`
+	polling           PollingConfig
 }
 
 func (auraConfig *AuraConfig) AddCredential(name string, clientId string, clientSecret string) error {
@@ -172,6 +242,17 @@ func (auraConfig *AuraConfig) Print(cmd *cobra.Command) error {
 	return nil
 }
 
+func (auraConfig *AuraConfig) GetPollingConfig() PollingConfig {
+	return auraConfig.polling
+}
+
+func (auraConfig *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
+	auraConfig.polling = PollingConfig{
+		MaxRetries: maxRetries,
+		Interval:   interval,
+	}
+}
+
 type AuraCredential struct {
 	Name         string `mapstructure:"name" json:"name"`
 	ClientId     string `mapstructure:"client-id" json:"client-id"`
@@ -201,64 +282,6 @@ func (credential *AuraCredential) IsAccessTokenValid() bool {
 	}
 
 	return true
-}
-
-func NewConfig(fs afero.Fs) (*Config, error) {
-	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli", "config.json")
-
-	if err := fs.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
-		return nil, err
-	}
-
-	f, err := fs.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		return &Config{}, err
-	}
-	defer f.Close()
-
-	fi, err := fs.Stat(configPath)
-
-	if err != nil {
-		return &Config{}, err
-	}
-
-	if fi.Size() == 0 {
-		if _, err := f.Write([]byte("{}")); err != nil {
-			return nil, err
-		}
-		if err := f.Sync(); err != nil {
-			return nil, err
-		}
-	}
-
-	in, err := fs.Open(configPath)
-	if err != nil {
-		return &Config{}, err
-	}
-	defer in.Close()
-
-	Viper := viper.New()
-
-	Viper.SetConfigType("json")
-
-	bindEnvironmentVariables(Viper)
-	setDefaultValues(Viper)
-
-	if err := Viper.ReadConfig(in); err != nil {
-		return &Config{}, err
-	}
-
-	var config Config
-	err = Viper.Unmarshal(&config)
-
-	if err != nil {
-		return &Config{}, err
-	}
-
-	config.viper = Viper
-	config.fs = fs
-
-	return &config, nil
 }
 
 func bindEnvironmentVariables(Viper *viper.Viper) {
