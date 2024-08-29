@@ -297,3 +297,61 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 		}
 	}`)
 }
+
+func TestCreateFreeInstanceWithAwait(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	createMock := helper.NewRequestHandlerMock("POST /v1/instances", http.StatusAccepted, `{
+			"data": {
+				"id": "db1d1234",
+				"connection_url": "YOUR_CONNECTION_URL",
+				"username": "neo4j",
+				"password": "letMeIn123!",
+				"tenant_id": "YOUR_TENANT_ID",
+				"cloud_provider": "gcp",
+				"region": "europe-west1",
+				"type": "free-db",
+				"name": "Instance01"
+			}
+		}`)
+
+	getMock := helper.NewRequestHandlerMock("GET /v1/instances/db1d1234", http.StatusOK, `{
+			"data": {
+				"id": "db1d1234",
+				"status": "creating"
+			}
+		}`).AddResponse(http.StatusOK, `{
+			"data": {
+				"id": "db1d1234",
+				"status": "ready"
+			}
+		}`)
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --await")
+
+	createMock.AssertCalledTimes(1)
+	createMock.AssertCalledWithMethod(http.MethodPost)
+	createMock.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
+
+	getMock.AssertCalledTimes(2)
+	getMock.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertOut(`
+{
+	"data": {
+		"id": "db1d1234",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"username": "neo4j",
+		"password": "letMeIn123!",
+		"tenant_id": "YOUR_TENANT_ID",
+		"cloud_provider": "gcp",
+		"region": "europe-west1",
+		"type": "free-db",
+		"name": "Instance01"
+	}
+}
+Waiting for instance to be ready...
+Instance Status: ready
+	`)
+}

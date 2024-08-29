@@ -25,11 +25,13 @@ type requestHandlerMock struct {
 	t         *testing.T
 }
 
-func (mock *requestHandlerMock) AddResponse(status int, body string) {
+func (mock *requestHandlerMock) AddResponse(status int, body string) *requestHandlerMock {
 	mock.Responses = append(mock.Responses, response{
 		body:   body,
 		status: status,
 	})
+
+	return mock
 }
 
 func (mock *requestHandlerMock) AssertCalledTimes(times int) {
