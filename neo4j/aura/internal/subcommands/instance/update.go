@@ -46,7 +46,7 @@ Resizing an instance is an asynchronous operation. The instance remains availabl
 			}
 
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody2(cmd, resBody, []string{"id", "name", "status", "tenant_id", "connection_url", "cloud_provider", "region", "type", "memory"})
+				err = output.PrintBody2(cmd, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory"})
 				if err != nil {
 					return err
 				}

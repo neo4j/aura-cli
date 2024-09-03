@@ -28,7 +28,7 @@ If another operation is being performed on the instance you are trying to delete
 			}
 			// NOTE: Instance delete should not return OK (200), it always returns 202
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody2(cmd, resBody, []string{"id", "name", "status", "tenant_id", "connection_url", "cloud_provider", "region", "type", "memory"})
+				err = output.PrintBody2(cmd, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory"})
 				if err != nil {
 					return err
 				}

@@ -79,7 +79,7 @@ Once the key has a status of ready you can use it for creating new instances by 
 			}
 			// NOTE: Instance delete should not return OK (200), it always returns 202
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
+				err = output.PrintBody2(cmd, resBody, []string{"id", "name", "tenant_id", "status", "created", "cloud_provider", "key_id", "region", "type"})
 				if err != nil {
 					return err
 				}
