@@ -37,5 +37,5 @@ func TestListConfigDefault(t *testing.T) {
 	out, err := io.ReadAll(b)
 	assert.Nil(err)
 
-	assert.Equal(fmt.Sprintf("{\n\t\"base-url\": \"%s\",\n\t\"auth-url\": \"%s\",\n\t\"output\": \"json\",\n\t\"credentials\": []\n}\n", clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
+	assert.Equal(fmt.Sprintf("{\n\t\"base-url\": \"%s\",\n\t\"auth-url\": \"%s\",\n\t\"output\": \"default\",\n\t\"credentials\": []\n}\n", clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
 }

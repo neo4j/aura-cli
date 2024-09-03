@@ -53,6 +53,56 @@ func TestGetInstance(t *testing.T) {
 	`)
 }
 
+func TestGetInstanceWithTableOutput(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	instanceId := "2f49c2b3"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s", instanceId), http.StatusOK, `{
+			"data": {
+				"id": "2f49c2b3",
+				"name": "Production",
+				"status": "running",
+				"tenant_id": "YOUR_TENANT_ID",
+				"cloud_provider": "gcp",
+				"connection_url": "YOUR_CONNECTION_URL",
+				"metrics_integration_url": "YOUR_METRICS_INTEGRATION_ENDPOINT",
+				"region": "europe-west1",
+				"type": "enterprise-db",
+				"memory": "8GB",
+				"storage": "16GB"
+			}
+		}`)
+
+	// TODO: Make a better way to override config
+	helper.SetConfig(`{
+			"aura": {
+				"credentials": [{
+					"name": "test-cred",
+					"access-token": "dsa",
+					"token-expiry": 123
+				}],
+				"default-credential": "test-cred",
+				"output": "default"
+				}
+			}`)
+
+	helper.ExecuteCommand(fmt.Sprintf("instance get %s", instanceId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertOut(`
+┌──────────┬────────────┬─────────┬────────────────┬─────────────────────┬────────────────┬──────────────┬───────────────┬────────┬─────────┬─────────────────────────┐
+│ ID       │ NAME       │ STATUS  │ TENANT_ID      │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE          │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │
+├──────────┼────────────┼─────────┼────────────────┼─────────────────────┼────────────────┼──────────────┼───────────────┼────────┼─────────┼─────────────────────────┤
+│ 2f49c2b3 │ Production │ running │ YOUR_TENANT_ID │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ enterprise-db │ 8GB    │ 16GB    │                         │
+└──────────┴────────────┴─────────┴────────────────┴─────────────────────┴────────────────┴──────────────┴───────────────┴────────┴─────────┴─────────────────────────┘	
+`)
+
+}
+
 func TestGetInstanceNotFoundError(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()

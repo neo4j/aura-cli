@@ -151,7 +151,8 @@ func NewAuraTestHelper(t *testing.T) AuraTestHelper {
 						"access-token": "dsa",
 						"token-expiry": 123
 					}],
-					"default-credential": "test-cred"
+					"default-credential": "test-cred",
+					"output": "json"
 					}
 				}`
 

@@ -104,7 +104,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 
 			// NOTE: Instance create should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				if err := output.PrintBody(cmd, resBody); err != nil {
+				if err := output.PrintBody2(cmd, resBody, []string{"id", "name", "tenant_id", "connection_url", "username", "password", "cloud_provider", "region", "type"}); err != nil {
 					return err
 				}
 

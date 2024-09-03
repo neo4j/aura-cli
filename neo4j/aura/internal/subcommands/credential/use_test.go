@@ -33,7 +33,7 @@ func TestUseCredential(t *testing.T) {
 	out, err := testfs.GetTestConfig(fs)
 	assert.Nil(err)
 
-	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","default-credential":"test","credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret","access-token":"","token-expiry":0}]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), out)
+	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"default","default-credential":"test","credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret","access-token":"","token-expiry":0}]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), out)
 }
 
 func TestUseCredentialIfDoesNotExist(t *testing.T) {

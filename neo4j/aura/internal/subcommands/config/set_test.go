@@ -33,5 +33,5 @@ func TestSetConfig(t *testing.T) {
 	out, err := testfs.GetTestConfig(fs)
 	assert.Nil(err)
 
-	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"test","output":"json","credentials":[]}}`, clicfg.DefaultAuraBaseUrl), out)
+	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"test","output":"default","credentials":[]}}`, clicfg.DefaultAuraBaseUrl), out)
 }
