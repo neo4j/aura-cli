@@ -33,7 +33,7 @@ You can filter instances in a particular tenant using --tenant-id. If the tenant
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody2(cmd, resBody, []string{"id", "name", "tenant_id", "cloud_provider"})
+				err = output.PrintBody(cmd, resBody, []string{"id", "name", "tenant_id", "cloud_provider"})
 				if err != nil {
 					return err
 				}

@@ -4,19 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"reflect"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/neo4j/cli/common/clictx"
 	"github.com/spf13/cobra"
 )
 
-func PrintBody(cmd *cobra.Command, body []byte) error {
-	return PrintBody2(cmd, body, []string{})
-}
-
 // Prints a response body
-func PrintBody2(cmd *cobra.Command, body []byte, fields []string) error {
+func PrintBody(cmd *cobra.Command, body []byte, fields []string) error {
 	config, ok := clictx.Config(cmd.Context())
 	if !ok {
 		return errors.New("error fetching cli configuration values")
@@ -36,16 +31,14 @@ func PrintBody2(cmd *cobra.Command, body []byte, fields []string) error {
 				return err
 			}
 			cmd.Println(pretty.String())
-		case "table":
+		case "table", "default":
 			err := PrintTable(cmd, body, fields)
 			if err != nil {
 				return err
 			}
+
 		default:
-			err := PrintTable(cmd, body, fields)
-			if err != nil {
-				return err
-			}
+			cmd.Println(string(body))
 		}
 	}
 
@@ -94,8 +87,4 @@ func PrintTable(cmd *cobra.Command, body []byte, fields []string) error {
 	t.SetStyle(table.StyleLight)
 	cmd.Println(t.Render())
 	return nil
-}
-
-func isSlice(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Slice
 }

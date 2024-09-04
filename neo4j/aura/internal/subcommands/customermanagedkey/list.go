@@ -34,7 +34,7 @@ You can filter keys in a particular tenant using --tenant-id. If the tenant flag
 			}
 
 			if statusCode == http.StatusOK {
-				output.PrintBody2(cmd, resBody, []string{"id", "name", "tenant_id"})
+				output.PrintBody(cmd, resBody, []string{"id", "name", "tenant_id"})
 
 			}
 
