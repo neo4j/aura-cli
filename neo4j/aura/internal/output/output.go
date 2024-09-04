@@ -22,7 +22,10 @@ func PrintBody2(cmd *cobra.Command, body []byte, fields []string) error {
 		return errors.New("error fetching cli configuration values")
 	}
 
-	outputType := config.Aura.Output
+	outputType, err := config.GetString("aura.output")
+	if err != nil {
+		return err
+	}
 
 	if len(body) > 0 {
 		switch output := outputType; output {

@@ -24,7 +24,7 @@ func NewGetCmd() *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
+				err = output.PrintBody2(cmd, resBody, []string{"id, name", "instance_configurations"})
 				if err != nil {
 					return err
 				}
