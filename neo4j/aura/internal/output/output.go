@@ -38,6 +38,7 @@ func PrintBody(cmd *cobra.Command, body []byte, fields []string) error {
 			}
 
 		default:
+			// This is in case the value is unknown
 			cmd.Println(string(body))
 		}
 	}
@@ -46,22 +47,11 @@ func PrintBody(cmd *cobra.Command, body []byte, fields []string) error {
 }
 
 func PrintTable(cmd *cobra.Command, body []byte, fields []string) error {
-	var values []map[string]any
-	var jsonWithArray struct{ Data []map[string]any }
-
-	err := json.Unmarshal(body, &jsonWithArray)
-
-	// Try unmarshalling array first, if not it creates an array from the single item
-	if err == nil {
-		values = jsonWithArray.Data
-	} else {
-		var jsonWithSingleItem struct{ Data map[string]any }
-		err := json.Unmarshal(body, &jsonWithSingleItem)
-		if err != nil {
-			return err
-		}
-		values = []map[string]any{jsonWithSingleItem.Data}
+	values, err := parseBody(body)
+	if err != nil {
+		return err
 	}
+
 	t := table.NewWriter()
 
 	header := table.Row{}
@@ -87,4 +77,25 @@ func PrintTable(cmd *cobra.Command, body []byte, fields []string) error {
 	t.SetStyle(table.StyleLight)
 	cmd.Println(t.Render())
 	return nil
+}
+
+func parseBody(body []byte) ([]map[string]any, error) {
+	var values []map[string]any
+	var jsonWithArray struct{ Data []map[string]any }
+
+	err := json.Unmarshal(body, &jsonWithArray)
+
+	// Try unmarshalling array first, if not it creates an array from the single item
+	if err == nil {
+		values = jsonWithArray.Data
+	} else {
+		var jsonWithSingleItem struct{ Data map[string]any }
+		err := json.Unmarshal(body, &jsonWithSingleItem)
+		if err != nil {
+			return nil, err
+		}
+		values = []map[string]any{jsonWithSingleItem.Data}
+	}
+
+	return values, nil
 }
