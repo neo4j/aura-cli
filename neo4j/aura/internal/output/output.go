@@ -32,7 +32,7 @@ func PrintBody(cmd *cobra.Command, body []byte, fields []string) error {
 			}
 			cmd.Println(pretty.String())
 		case "table", "default":
-			err := PrintTable(cmd, body, fields)
+			err := printTable(cmd, body, fields)
 			if err != nil {
 				return err
 			}
@@ -46,7 +46,7 @@ func PrintBody(cmd *cobra.Command, body []byte, fields []string) error {
 	return nil
 }
 
-func PrintTable(cmd *cobra.Command, body []byte, fields []string) error {
+func printTable(cmd *cobra.Command, body []byte, fields []string) error {
 	values, err := parseBody(body)
 	if err != nil {
 		return err
