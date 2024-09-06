@@ -23,7 +23,7 @@ func NewGetCmd() *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				output.PrintBody(cmd, resBody)
+				output.PrintBody(cmd, resBody, []string{"id", "name", "tenant_id", "status", "created", "cloud_provider", "key_id", "region", "type"})
 
 			}
 

@@ -20,7 +20,7 @@ func NewListCmd() *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
+				err = output.PrintBody(cmd, resBody, []string{"id", "name"})
 				if err != nil {
 					return err
 				}

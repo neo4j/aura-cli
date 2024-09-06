@@ -132,13 +132,11 @@ func (config *Config) Write() error {
 		return err
 	}
 
-	n, err := f.Write(content)
+	_, err = f.Write(content)
 
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("wrote %d bytes to config file\n", n)
 
 	return nil
 }
@@ -292,6 +290,6 @@ func bindEnvironmentVariables(Viper *viper.Viper) {
 func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
-	Viper.SetDefault("aura.output", "json")
+	Viper.SetDefault("aura.output", "default")
 	Viper.SetDefault("aura.credentials", []AuraCredential{})
 }

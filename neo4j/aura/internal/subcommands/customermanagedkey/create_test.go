@@ -66,7 +66,8 @@ func TestCreateCustomerManagedKeysWithTenantIDInConfig(t *testing.T) {
 				"name": "test-cred",
 				"access-token": "dsa",
 				"token-expiry": 123
-			}],
+				}],
+			"output": "json",
 			"default-credential": "test-cred"
 			}
 		}`)

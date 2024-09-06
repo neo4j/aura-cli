@@ -14,10 +14,16 @@ require (
 )
 
 require (
+	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+)
+
+require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jedib0t/go-pretty/v6 v6.5.9
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect

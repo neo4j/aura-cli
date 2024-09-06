@@ -33,5 +33,5 @@ func TestRemoveCredential(t *testing.T) {
 	out, err := testfs.GetTestConfig(fs)
 	assert.Nil(err)
 
-	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","credentials":[]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
+	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"default","credentials":[]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
 }
