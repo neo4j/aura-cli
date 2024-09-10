@@ -22,6 +22,11 @@ func PollInstance(cmd *cobra.Command, instanceId string, waitingStatus string) (
 	return poll(cmd, path, waitingStatus)
 }
 
+func PollSnapshot(cmd *cobra.Command, instanceId string, snapshotId string, waitingStatus string) (*PollResponse, error) {
+	path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, snapshotId)
+	return poll(cmd, path, waitingStatus)
+}
+
 func PollCMK(cmd *cobra.Command, cmkId string, waitingStatus string) (*PollResponse, error) {
 	path := fmt.Sprintf("/customer-managed-keys/%s", cmkId)
 	return poll(cmd, path, waitingStatus)

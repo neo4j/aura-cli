@@ -1,17 +1,16 @@
-package instance
+package snapshot
 
 import (
 	"errors"
 
 	"github.com/neo4j/cli/common/clictx"
-	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/instance/snapshot"
 	"github.com/spf13/cobra"
 )
 
 func NewCmd() *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "instance",
-		Short: "Relates to AuraDB or AuraDS instances",
+		Use:   "snapshot",
+		Short: "Relates to an instance snapshots",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			config, ok := clictx.Config(cmd.Context())
 
@@ -33,14 +32,9 @@ func NewCmd() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(NewCreateCmd())
-	cmd.AddCommand(NewDeleteCmd())
-	cmd.AddCommand(NewGetCmd())
 	cmd.AddCommand(NewListCmd())
-	cmd.AddCommand(NewPauseCmd())
-	cmd.AddCommand(NewResumeCmd())
-	cmd.AddCommand(NewUpdateCmd())
-	cmd.AddCommand(snapshot.NewCmd())
+	cmd.AddCommand(NewCreateCmd())
+	cmd.AddCommand(NewGetCmd())
 
 	cmd.PersistentFlags().String("auth-url", "", "")
 	cmd.PersistentFlags().String("base-url", "", "")
