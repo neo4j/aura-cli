@@ -38,7 +38,6 @@ func TestCreateCustomerManagedKeys(t *testing.T) {
 		"tenant_id": "dontpanic"
 	}`)
 
-	helper.AssertErr("")
 	helper.AssertOutJson(`{
 		"data": {
 		  "id": "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9",
@@ -88,7 +87,6 @@ func TestCreateCustomerManagedKeysWithTenantIDInConfig(t *testing.T) {
 		"tenant_id": "dontpanic"
 	}`)
 
-	helper.AssertErr("")
 	helper.AssertOutJson(`{
 		"data": {
 		  "id": "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9",

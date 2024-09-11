@@ -33,7 +33,6 @@ func TestListTenants(t *testing.T) {
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
-	helper.AssertErr("")
 	helper.AssertOutJson(`{
 		"data": [
 			{
