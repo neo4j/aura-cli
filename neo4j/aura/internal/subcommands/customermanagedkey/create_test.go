@@ -59,17 +59,7 @@ func TestCreateCustomerManagedKeysWithTenantIDInConfig(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	helper.SetConfig(`{
-			"aura": {
-			"default-tenant": "dontpanic",
-			"credentials": [{
-				"name": "test-cred",
-				"access-token": "dsa",
-				"token-expiry": 123
-			}],
-			"default-credential": "test-cred"
-			}
-		}`)
+	helper.SetConfigValue("aura.default-tenant", "dontpanic")
 
 	mockHandler := helper.NewRequestHandlerMock("/v1/customer-managed-keys", http.StatusAccepted, `{
 		"data": {

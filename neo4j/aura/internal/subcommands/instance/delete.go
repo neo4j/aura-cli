@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewDeleteCmd() *cobra.Command {
+func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete",
 		Short: "Deletes an instance",
@@ -21,14 +22,15 @@ If another operation is being performed on the instance you are trying to delete
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/instances/%s", args[0])
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodDelete, path, nil)
+			cmd.SilenceUsage = true
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodDelete, path, nil)
 
 			if err != nil {
 				return err
 			}
 			// NOTE: Instance delete should not return OK (200), it always returns 202
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
+				err = output.PrintBody(cmd, cfg, resBody)
 				if err != nil {
 					return err
 				}

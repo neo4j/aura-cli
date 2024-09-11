@@ -2,16 +2,15 @@ package customermanagedkey
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
-	"github.com/neo4j/cli/common/clictx"
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewCreateCmd() *cobra.Command {
+func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		region        string
 		name          string
@@ -43,12 +42,7 @@ You can poll the current status of this operation by periodically getting the ke
 
 Once the key has a status of ready you can use it for creating new instances by setting the --customer-managed-key-id flag.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			config, ok := clictx.Config(cmd.Context())
-
-			if !ok {
-				return errors.New("error fetching cli configuration values")
-			}
-			if config.Aura.DefaultTenant == "" {
+			if cfg.Aura.DefaultTenant() == "" {
 				cmd.MarkFlagRequired(tenantIdFlag)
 			}
 
@@ -64,22 +58,19 @@ Once the key has a status of ready you can use it for creating new instances by 
 			}
 
 			if tenantId == "" {
-				config, ok := clictx.Config(cmd.Context())
-				if !ok {
-					return errors.New("error fetching cli configuration values")
-				}
-				body["tenant_id"] = config.Aura.DefaultTenant
+				body["tenant_id"] = cfg.Aura.DefaultTenant()
 			} else {
 				body["tenant_id"] = tenantId
 			}
 
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPost, "/customer-managed-keys", body)
+			cmd.SilenceUsage = true
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, "/customer-managed-keys", body)
 			if err != nil {
 				return err
 			}
 			// NOTE: Instance delete should not return OK (200), it always returns 202
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
+				err = output.PrintBody(cmd, cfg, resBody)
 				if err != nil {
 					return err
 				}
@@ -91,7 +82,7 @@ Once the key has a status of ready you can use it for creating new instances by 
 						return err
 					}
 
-					pollResponse, err := api.PollCMK(cmd, response.Data.Id, api.CMKStatusPending)
+					pollResponse, err := api.PollCMK(cfg, response.Data.Id, api.CMKStatusPending)
 					if err != nil {
 						return err
 					}

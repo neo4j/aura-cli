@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,16 +9,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/neo4j/cli/common/clictx"
+	"github.com/neo4j/cli/common/clicfg"
 )
 
-func getToken(ctx context.Context) (string, error) {
-	config, ok := clictx.Config(ctx)
-	if !ok {
-		return "", errors.New("error fetching cli configuration values")
-	}
-
-	credential, err := config.Aura.GetDefaultCredential()
+func getToken(cfg *clicfg.Config) (string, error) {
+	credential, err := cfg.Aura.DefaultCredential()
 	if err != nil {
 		return "", err
 	}
@@ -32,21 +26,14 @@ func getToken(ctx context.Context) (string, error) {
 
 	data.Set("grant_type", "client_credentials")
 
-	url, err := config.GetString("aura.auth-url")
-
-	if err != nil {
-		return "", err
-	}
+	url := cfg.Aura.AuthUrl()
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", err
 	}
 
-	version, ok := clictx.Version(ctx)
-	if !ok {
-		return "", errors.New("error fetching version from context")
-	}
+	version := cfg.Version
 
 	req.Header = http.Header{
 		"Content-Type": {"application/x-www-form-urlencoded"},
@@ -88,6 +75,6 @@ func getToken(ctx context.Context) (string, error) {
 	}
 
 	credential.UpdateAccessToken(grant.AccessToken, grant.ExpiresIn)
-	config.Write()
+
 	return grant.AccessToken, nil
 }

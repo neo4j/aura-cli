@@ -1,37 +1,18 @@
 package credential_test
 
 import (
-	"context"
-	"fmt"
 	"testing"
 
-	"github.com/neo4j/cli/common/clicfg"
-	"github.com/neo4j/cli/common/clictx"
-	"github.com/neo4j/cli/neo4j/aura"
-	"github.com/neo4j/cli/test/utils/testfs"
-	"github.com/stretchr/testify/assert"
+	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 )
 
 func TestRemoveCredential(t *testing.T) {
-	assert := assert.New(t)
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
-	cmd := aura.NewCmd("test")
-	cmd.SetArgs([]string{"credential", "remove", "test"})
+	helper.SetConfigValue("aura.credentials", []map[string]string{{"name": "test", "client-id": "testclientid", "client-secret": "testclientsecret"}})
 
-	fs, err := testfs.GetTestFs(`{"aura":{"credentials":[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret"}]}}`)
-	assert.Nil(err)
+	helper.ExecuteCommand("credential remove test")
 
-	cfg, err := clicfg.NewConfig(fs)
-	assert.Nil(err)
-
-	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
-	assert.Nil(err)
-
-	err = cmd.ExecuteContext(ctx)
-	assert.Nil(err)
-
-	out, err := testfs.GetTestConfig(fs)
-	assert.Nil(err)
-
-	assert.Equal(fmt.Sprintf(`{"aura":{"base-url":"%s","auth-url":"%s","output":"json","credentials":[]}}`, clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
+	helper.AssertConfigValue("aura.credentials", "[]")
 }

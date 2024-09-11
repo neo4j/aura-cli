@@ -3,13 +3,11 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/url"
 
-	"github.com/neo4j/cli/common/clictx"
-	"github.com/spf13/cobra"
+	"github.com/neo4j/cli/common/clicfg"
 )
 
 const userAgent = "Neo4jCLI/%s"
@@ -19,9 +17,7 @@ type Grant struct {
 	ExpiresIn   int64  `json:"expires_in"`
 }
 
-func MakeRequest(cmd *cobra.Command, method string, path string, data map[string]any) (responseBody []byte, statusCode int, err error) {
-	cmd.SilenceUsage = true
-
+func MakeRequest(cfg *clicfg.Config, method string, path string, data map[string]any) (responseBody []byte, statusCode int, err error) {
 	client := http.Client{}
 	var body io.Reader
 	if data == nil {
@@ -36,16 +32,7 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		body = bytes.NewBuffer(jsonData)
 	}
 
-	config, ok := clictx.Config(cmd.Context())
-
-	if !ok {
-		return responseBody, 0, errors.New("error fetching cli configuration values")
-	}
-
-	baseUrl, err := config.GetString("aura.base-url")
-	if err != nil {
-		return responseBody, 0, err
-	}
+	baseUrl := cfg.Aura.BaseUrl()
 
 	u, _ := url.ParseRequestURI(baseUrl)
 	u = u.JoinPath(path)
@@ -57,7 +44,7 @@ func MakeRequest(cmd *cobra.Command, method string, path string, data map[string
 		return responseBody, 0, err
 	}
 
-	req.Header, err = getHeaders(cmd.Context())
+	req.Header, err = getHeaders(cfg)
 	if err != nil {
 		return responseBody, 0, err
 	}

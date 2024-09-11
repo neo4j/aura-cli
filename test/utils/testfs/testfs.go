@@ -16,6 +16,10 @@ func GetDefaultTestFs() (afero.Fs, error) {
 func GetTestFs(config string) (afero.Fs, error) {
 	fs := afero.NewMemMapFs()
 
+	if config == "" {
+		return fs, nil
+	}
+
 	configPath := filepath.Join(clicfg.ConfigPrefix, "neo4j", "cli", "config.json")
 
 	if err := fs.MkdirAll(filepath.Dir(configPath), 0755); err != nil {

@@ -1,13 +1,11 @@
 package credential
 
 import (
-	"errors"
-
-	"github.com/neo4j/cli/common/clictx"
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/spf13/cobra"
 )
 
-func NewAddCmd() *cobra.Command {
+func NewAddCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		name         string
 		clientId     string
@@ -24,23 +22,7 @@ func NewAddCmd() *cobra.Command {
 		Use:   "add",
 		Short: "Adds a credential",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, ok := clictx.Config(cmd.Context())
-
-			if !ok {
-				return errors.New("error fetching configuration values")
-			}
-
-			err := config.Aura.AddCredential(name, clientId, clientSecret)
-			if err != nil {
-				return err
-			}
-
-			err = config.Write()
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return cfg.Aura.AddCredential(name, clientId, clientSecret)
 		},
 	}
 

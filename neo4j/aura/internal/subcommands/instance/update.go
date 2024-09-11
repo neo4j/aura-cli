@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewUpdateCmd() *cobra.Command {
+func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		memory string
 		name   string
@@ -40,13 +41,14 @@ Resizing an instance is an asynchronous operation. The instance remains availabl
 
 			path := fmt.Sprintf("/instances/%s", args[0])
 
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPatch, path, body)
+			cmd.SilenceUsage = true
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPatch, path, body)
 			if err != nil {
 				return err
 			}
 
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody)
+				err = output.PrintBody(cmd, cfg, resBody)
 				if err != nil {
 					return err
 				}
