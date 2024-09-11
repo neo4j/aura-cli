@@ -22,7 +22,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody)
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name"})
 				if err != nil {
 					return err
 				}

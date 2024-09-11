@@ -25,7 +25,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				output.PrintBody(cmd, cfg, resBody)
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "status", "created", "cloud_provider", "key_id", "region", "type"})
 
 			}
 

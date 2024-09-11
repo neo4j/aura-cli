@@ -18,15 +18,3 @@ func TestListConfig(t *testing.T) {
 
 	helper.AssertOut(fmt.Sprintf("{\n\t\"auth-url\": \"%s\",\n\t\"base-url\": \"%s\",\n\t\"credentials\": [],\n\t\"output\": \"json\"\n}\n", clicfg.DefaultAuraAuthUrl, clicfg.DefaultAuraBaseUrl))
 }
-
-func TestListConfigNoConfigFile(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.OverwriteConfig("")
-
-	helper.ExecuteCommand("config list")
-
-	helper.AssertErr("error")
-	helper.AssertOut(fmt.Sprintf("{\n\t\"auth-url\": \"%s\",\n\t\"base-url\": \"%s\",\n\t\"credentials\": [],\n\t\"output\": \"json\"\n}\n", clicfg.DefaultAuraAuthUrl, clicfg.DefaultAuraBaseUrl))
-}

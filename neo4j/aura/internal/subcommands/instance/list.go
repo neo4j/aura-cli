@@ -35,11 +35,10 @@ You can filter instances in a particular tenant using --tenant-id. If the tenant
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody)
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "cloud_provider"})
 				if err != nil {
 					return err
 				}
-
 			}
 			return nil
 		},

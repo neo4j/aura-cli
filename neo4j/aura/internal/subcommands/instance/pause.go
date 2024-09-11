@@ -33,7 +33,7 @@ If another operation is being performed on the instance you are trying to pause,
 
 			// NOTE: Instance pause should not return OK (200), it always returns 202
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody)
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "tenant_id", "connection_url", "cloud_provider", "region", "type", "memory"})
 				if err != nil {
 					return err
 				}
