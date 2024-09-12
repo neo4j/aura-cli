@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/spf13/cobra"
 )
 
-func NewDeleteCmd() *cobra.Command {
+func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete",
 		Short: "Deletes a customer managed key",
@@ -18,7 +19,8 @@ Note that you can only delete a Key if it is not being used by any instances, ot
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/customer-managed-keys/%s", args[0])
-			_, statusCode, err := api.MakeRequest(cmd, http.MethodDelete, path, nil)
+			cmd.SilenceUsage = true
+			_, statusCode, err := api.MakeRequest(cfg, http.MethodDelete, path, nil)
 			if err != nil {
 				return err
 			}

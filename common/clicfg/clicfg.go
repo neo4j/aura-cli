@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -19,130 +18,52 @@ var ConfigPrefix string
 const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
 const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
 
-type Config struct {
-	viper *viper.Viper
-	fs    afero.Fs
-	Aura  AuraConfig `mapstructure:"aura" json:"aura"`
-}
-
-func NewConfig(fs afero.Fs) (*Config, error) {
-	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli", "config.json")
-
-	if err := fs.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
-		return nil, err
-	}
-
-	f, err := fs.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		return &Config{}, err
-	}
-	defer f.Close()
-
-	fi, err := fs.Stat(configPath)
-
-	if err != nil {
-		return &Config{}, err
-	}
-
-	if fi.Size() == 0 {
-		if _, err := f.Write([]byte("{}")); err != nil {
-			return nil, err
-		}
-		if err := f.Sync(); err != nil {
-			return nil, err
-		}
-	}
-
-	in, err := fs.Open(configPath)
-	if err != nil {
-		return &Config{}, err
-	}
-	defer in.Close()
+func NewConfig(fs afero.Fs, version string) (*Config, error) {
+	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
 
 	Viper := viper.New()
 
+	Viper.SetFs(fs)
+	Viper.SetConfigName("config")
 	Viper.SetConfigType("json")
+	Viper.AddConfigPath(configPath)
+	Viper.SetConfigPermissions(0600)
 
 	bindEnvironmentVariables(Viper)
 	setDefaultValues(Viper)
 
-	if err := Viper.ReadConfig(in); err != nil {
-		return &Config{}, err
+	if err := Viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			if err := fs.MkdirAll(configPath, 0755); err != nil {
+				return nil, err
+			}
+			if err = Viper.SafeWriteConfig(); err != nil {
+				return nil, err
+			}
+		} else {
+			// Config file was found but another error was produced
+			return nil, err
+		}
 	}
 
-	var config Config
-	err = Viper.Unmarshal(&config)
-
-	if err != nil {
-		return &Config{}, err
-	}
-
-	config.viper = Viper
-	config.fs = fs
-
-	// Default Polling config
-	config.Aura.polling = PollingConfig{
-		MaxRetries: 60,
-		Interval:   20,
-	}
-
-	return &config, nil
+	return &Config{Version: version, Aura: AuraConfig{viper: Viper}}, nil
 }
 
-func (config *Config) Get(key string) (interface{}, error) {
-	val := config.viper.Get(key)
-
-	if val == nil {
-		return nil, fmt.Errorf("could not find config value with key %s", key)
-	}
-
-	return val, nil
+func bindEnvironmentVariables(Viper *viper.Viper) {
+	Viper.BindEnv("aura.base-url", "AURA_BASE_URL")
+	Viper.BindEnv("aura.auth-url", "AURA_AUTH_URL")
 }
 
-func (config *Config) GetString(key string) (string, error) {
-	if !config.viper.IsSet(key) {
-		return "", fmt.Errorf("could not find config value with key %s", key)
-	}
-
-	return config.viper.GetString(key), nil
+func setDefaultValues(Viper *viper.Viper) {
+	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
+	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
+	Viper.SetDefault("aura.output", "json")
+	Viper.SetDefault("aura.credentials", []AuraCredential{})
 }
 
-func (config *Config) Set(key string, value interface{}) error {
-	config.viper.Set(key, value)
-
-	err := config.viper.Unmarshal(config)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (config *Config) Write() error {
-	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli", "config.json")
-
-	f, err := config.fs.OpenFile(configPath, os.O_WRONLY, 0600)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	content, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(content)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (config *Config) BindPFlag(key string, flag *pflag.Flag) error {
-	return config.viper.BindPFlag(key, flag)
+type Config struct {
+	Version string
+	Aura    AuraConfig
 }
 
 type PollingConfig struct {
@@ -151,51 +72,97 @@ type PollingConfig struct {
 }
 
 type AuraConfig struct {
-	BaseUrl           string           `mapstructure:"base-url" json:"base-url"`
-	AuthUrl           string           `mapstructure:"auth-url" json:"auth-url"`
-	Output            string           `mapstructure:"output" json:"output"`
-	DefaultTenant     string           `mapstructure:"default-tenant" json:"default-tenant,omitempty"`
-	DefaultCredential string           `mapstructure:"default-credential" json:"default-credential,omitempty"`
-	Credentials       []AuraCredential `mapstructure:"credentials" json:"credentials"`
-	polling           PollingConfig
+	viper   *viper.Viper
+	polling PollingConfig
 }
 
-func (auraConfig *AuraConfig) AddCredential(name string, clientId string, clientSecret string) error {
-	for _, credential := range auraConfig.Credentials {
-		if credential.Name == name {
-			return fmt.Errorf("already have credential with name %s", name)
-		}
-	}
+func (config *AuraConfig) Get(key string) interface{} {
+	return config.viper.Get(fmt.Sprintf("aura.%s", key))
+}
 
-	auraConfig.Credentials = append(auraConfig.Credentials, AuraCredential{Name: name, ClientId: clientId, ClientSecret: clientSecret})
+func (config *AuraConfig) Set(key string, value string) error {
+	config.viper.Set(fmt.Sprintf("aura.%s", key), value)
+	return config.viper.WriteConfig()
+}
+
+func (config *AuraConfig) Print(cmd *cobra.Command) error {
+	encoder := json.NewEncoder(cmd.OutOrStdout())
+	encoder.SetIndent("", "\t")
+
+	if err := encoder.Encode(config.viper.Get("aura")); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (auraConfig *AuraConfig) RemoveCredential(name string) error {
-	var indexToRemove = -1
+func (config *AuraConfig) BaseUrl() string {
+	return config.viper.GetString("aura.base-url")
+}
 
-	for i, credential := range auraConfig.Credentials {
-		if credential.Name == name {
-			indexToRemove = i
-			break
+func (config *AuraConfig) BindBaseUrl(flag *pflag.Flag) error {
+	return config.viper.BindPFlag("aura.base-url", flag)
+}
+
+func (config *AuraConfig) AuthUrl() string {
+	return config.viper.GetString("aura.auth-url")
+}
+
+func (config *AuraConfig) BindAuthUrl(flag *pflag.Flag) error {
+	return config.viper.BindPFlag("aura.auth-url", flag)
+}
+
+func (config *AuraConfig) Output() string {
+	return config.viper.GetString("aura.output")
+}
+
+func (config *AuraConfig) BindOutput(flag *pflag.Flag) error {
+	return config.viper.BindPFlag("aura.output", flag)
+}
+
+func (config *AuraConfig) DefaultTenant() string {
+	return config.viper.GetString("aura.default-tenant")
+}
+
+func (config *AuraConfig) DefaultCredential() (*AuraCredential, error) {
+	auraConfig := auraConfig{}
+
+	if err := config.viper.UnmarshalKey("aura", &auraConfig); err != nil {
+		return nil, err
+	}
+
+	defaultCredential := config.viper.GetString("aura.default-credential")
+
+	if defaultCredential == "" {
+		return nil, errors.New("no default credential found")
+	}
+
+	for index := range auraConfig.Credentials {
+		var credential = &(auraConfig.Credentials[index])
+		if credential.Name == defaultCredential {
+			credential.viper = config.viper
+			return credential, nil
 		}
 	}
 
-	if indexToRemove == -1 {
-		return fmt.Errorf("could not find credential with name %s to remove", name)
-	}
-
-	if auraConfig.DefaultCredential == name {
-		auraConfig.DefaultCredential = ""
-	}
-
-	auraConfig.Credentials = append(auraConfig.Credentials[:indexToRemove], auraConfig.Credentials[indexToRemove+1:]...)
-
-	return nil
+	return nil, fmt.Errorf("could not find credential with name %s", defaultCredential)
 }
 
-func (auraConfig *AuraConfig) SetDefaultCredential(name string) error {
+func (config *AuraConfig) PollingConfig() PollingConfig {
+	return config.polling
+}
+
+func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
+	config.polling = PollingConfig{
+		MaxRetries: maxRetries,
+		Interval:   interval,
+	}
+}
+
+func (config *AuraConfig) SetDefaultCredential(name string) error {
+	auraConfig := auraConfig{}
+	config.viper.Sub("aura").Unmarshal(&auraConfig)
+
 	var credentialExists = false
 
 	for _, credential := range auraConfig.Credentials {
@@ -209,49 +176,16 @@ func (auraConfig *AuraConfig) SetDefaultCredential(name string) error {
 		return fmt.Errorf("could not find credential with name %s", name)
 	}
 
-	auraConfig.DefaultCredential = name
-
-	return nil
+	config.viper.Set("aura.default-credential", name)
+	return config.viper.WriteConfig()
 }
 
-func (auraConfig *AuraConfig) GetDefaultCredential() (*AuraCredential, error) {
-	if auraConfig.DefaultCredential == "" {
-		return nil, errors.New("no default credential found")
-	}
-
-	for index := range auraConfig.Credentials {
-		var credential = &(auraConfig.Credentials[index])
-		if credential.Name == auraConfig.DefaultCredential {
-			return credential, nil
-		}
-	}
-
-	return nil, fmt.Errorf("could not find credential with name %s", auraConfig.DefaultCredential)
-}
-
-func (auraConfig *AuraConfig) Print(cmd *cobra.Command) error {
-	encoder := json.NewEncoder(cmd.OutOrStdout())
-	encoder.SetIndent("", "\t")
-
-	if err := encoder.Encode(auraConfig); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (auraConfig *AuraConfig) GetPollingConfig() PollingConfig {
-	return auraConfig.polling
-}
-
-func (auraConfig *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
-	auraConfig.polling = PollingConfig{
-		MaxRetries: maxRetries,
-		Interval:   interval,
-	}
+type auraConfig struct {
+	Credentials []AuraCredential
 }
 
 type AuraCredential struct {
+	viper        *viper.Viper
 	Name         string `mapstructure:"name" json:"name"`
 	ClientId     string `mapstructure:"client-id" json:"client-id"`
 	ClientSecret string `mapstructure:"client-secret" json:"client-secret"`
@@ -259,13 +193,49 @@ type AuraCredential struct {
 	TokenExpiry  int64  `mapstructure:"token-expiry" json:"token-expiry"`
 }
 
-func (credential *AuraCredential) UpdateAccessToken(accessToken string, expiresInSeconds int64) {
-	const expireToleranceSeconds = 60
+func (config *AuraConfig) AddCredential(name string, clientId string, clientSecret string) error {
+	auraConfig := auraConfig{}
+	config.viper.Sub("aura").Unmarshal(&auraConfig)
 
-	now := time.Now().UnixMilli()
+	for _, credential := range auraConfig.Credentials {
+		if credential.Name == name {
+			return fmt.Errorf("already have credential with name %s", name)
+		}
+	}
 
-	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
-	credential.AccessToken = accessToken
+	auraConfig.Credentials = append(auraConfig.Credentials, AuraCredential{Name: name, ClientId: clientId, ClientSecret: clientSecret})
+
+	config.viper.Set("aura.credentials", auraConfig.Credentials)
+
+	return config.viper.WriteConfig()
+}
+
+func (config *AuraConfig) RemoveCredential(name string) error {
+	auraConfig := auraConfig{}
+	config.viper.Sub("aura").Unmarshal(&auraConfig)
+
+	var indexToRemove = -1
+
+	for i, credential := range auraConfig.Credentials {
+		if credential.Name == name {
+			indexToRemove = i
+			break
+		}
+	}
+
+	if indexToRemove == -1 {
+		return fmt.Errorf("could not find credential with name %s to remove", name)
+	}
+
+	if config.viper.Get("aura.default-credential") == name {
+		config.viper.Set("aura.default-credential", "")
+	}
+
+	auraConfig.Credentials = append(auraConfig.Credentials[:indexToRemove], auraConfig.Credentials[indexToRemove+1:]...)
+
+	config.viper.Set("aura.credentials", auraConfig.Credentials)
+
+	return config.viper.WriteConfig()
 }
 
 func (credential *AuraCredential) IsAccessTokenValid() bool {
@@ -282,14 +252,26 @@ func (credential *AuraCredential) IsAccessTokenValid() bool {
 	return true
 }
 
-func bindEnvironmentVariables(Viper *viper.Viper) {
-	Viper.BindEnv("aura.base-url", "AURA_BASE_URL")
-	Viper.BindEnv("aura.auth-url", "AURA_AUTH_URL")
-}
+func (credential *AuraCredential) UpdateAccessToken(accessToken string, expiresInSeconds int64) error {
+	const expireToleranceSeconds = 60
 
-func setDefaultValues(Viper *viper.Viper) {
-	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
-	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
-	Viper.SetDefault("aura.output", "default")
-	Viper.SetDefault("aura.credentials", []AuraCredential{})
+	now := time.Now().UnixMilli()
+
+	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
+	credential.AccessToken = accessToken
+
+	auraConfig := auraConfig{}
+	credential.viper.Sub("aura").Unmarshal(&auraConfig)
+
+	for i, c := range auraConfig.Credentials {
+		if c.Name == credential.Name {
+			auraConfig.Credentials[i].AccessToken = accessToken
+			auraConfig.Credentials[i].TokenExpiry = expiresInSeconds
+			break
+		}
+	}
+
+	credential.viper.Set("aura.credentials", auraConfig.Credentials)
+
+	return credential.viper.WriteConfig()
 }

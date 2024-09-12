@@ -4,12 +4,10 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 
 	"github.com/neo4j/cli/common/clicfg"
-	"github.com/neo4j/cli/common/clictx"
 	"github.com/neo4j/cli/neo4j/aura"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -17,14 +15,14 @@ import (
 
 var Version = "dev"
 
-func NewCmd() *cobra.Command {
+func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "neo4j",
 		Short:   "Allows you to manage Neo4j resources",
 		Version: Version,
 	}
 
-	cmd.AddCommand(aura.NewCmd(""))
+	cmd.AddCommand(aura.NewCmd(cfg))
 	return cmd
 }
 
@@ -37,21 +35,14 @@ func main() {
 		}
 	}()
 
-	cmd := NewCmd()
+	cfg, err := clicfg.NewConfig(afero.NewOsFs(), Version)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	cmd := NewCmd(cfg)
 	cmd.SetOut(os.Stdout)
-
-	cfg, err := clicfg.NewConfig(afero.NewOsFs())
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	ctx, err := clictx.NewContext(context.Background(), cfg, Version)
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	cmd.ExecuteContext(ctx)
+	cmd.SetErr(os.Stderr)
+	cmd.Execute()
 }

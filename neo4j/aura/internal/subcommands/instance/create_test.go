@@ -251,18 +251,7 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	helper.SetConfig(`{
-		"aura": {
-		"default-tenant": "YOUR_TENANT_ID",
-		"credentials": [{
-			"name": "test-cred",
-			"access-token": "dsa",
-			"token-expiry": 123
-		}],
-		"output": "json",
-		"default-credential": "test-cred"
-		}
-	}`)
+	helper.SetConfigValue("aura.default-tenant", "YOUR_TENANT_ID")
 
 	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {

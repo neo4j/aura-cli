@@ -3,24 +3,15 @@ package output
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/neo4j/cli/common/clictx"
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/spf13/cobra"
 )
 
 // Prints a response body
-func PrintBody(cmd *cobra.Command, body []byte, fields []string) error {
-	config, ok := clictx.Config(cmd.Context())
-	if !ok {
-		return errors.New("error fetching cli configuration values")
-	}
-
-	outputType, err := config.GetString("aura.output")
-	if err != nil {
-		return err
-	}
+func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []string) error {
+	outputType := cfg.Aura.Output()
 
 	if len(body) > 0 {
 		switch output := outputType; output {

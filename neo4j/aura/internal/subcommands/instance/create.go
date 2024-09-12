@@ -2,16 +2,15 @@ package instance
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
-	"github.com/neo4j/cli/common/clictx"
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewCreateCmd() *cobra.Command {
+func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		version              string
 		region               string
@@ -56,13 +55,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				cmd.MarkFlagRequired(memoryFlag)
 			}
 
-			config, ok := clictx.Config(cmd.Context())
-
-			if !ok {
-				return errors.New("error fetching cli configuration values")
-			}
-
-			if config.Aura.DefaultTenant == "" {
+			if cfg.Aura.DefaultTenant() == "" {
 				cmd.MarkFlagRequired(tenantIdFlag)
 			}
 
@@ -78,11 +71,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 			}
 
 			if tenantId == "" {
-				config, ok := clictx.Config(cmd.Context())
-				if !ok {
-					return errors.New("error fetching cli configuration values")
-				}
-				body["tenant_id"] = config.Aura.DefaultTenant
+				body["tenant_id"] = cfg.Aura.DefaultTenant()
 			} else {
 				body["tenant_id"] = tenantId
 			}
@@ -97,14 +86,15 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				body["customer_managed_key_id"] = customerManagedKeyId
 			}
 
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPost, "/instances", body)
+			cmd.SilenceUsage = true
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, "/instances", body)
 			if err != nil {
 				return err
 			}
 
 			// NOTE: Instance create should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				if err := output.PrintBody(cmd, resBody, []string{"id", "name", "tenant_id", "connection_url", "username", "password", "cloud_provider", "region", "type"}); err != nil {
+				if err := output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "connection_url", "username", "password", "cloud_provider", "region", "type"}); err != nil {
 					return err
 				}
 
@@ -115,7 +105,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 						return err
 					}
 
-					pollResponse, err := api.PollInstance(cmd, response.Data.Id, api.InstanceStatusCreating)
+					pollResponse, err := api.PollInstance(cfg, response.Data.Id, api.InstanceStatusCreating)
 					if err != nil {
 						return err
 					}
