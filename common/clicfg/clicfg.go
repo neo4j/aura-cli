@@ -18,18 +18,6 @@ var ConfigPrefix string
 const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
 const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
 
-func bindEnvironmentVariables(Viper *viper.Viper) {
-	Viper.BindEnv("aura.base-url", "AURA_BASE_URL")
-	Viper.BindEnv("aura.auth-url", "AURA_AUTH_URL")
-}
-
-func setDefaultValues(Viper *viper.Viper) {
-	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
-	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
-	Viper.SetDefault("aura.output", "json")
-	Viper.SetDefault("aura.credentials", []AuraCredential{})
-}
-
 func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
 
@@ -59,6 +47,18 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	}
 
 	return &Config{Version: version, Aura: AuraConfig{viper: Viper}}, nil
+}
+
+func bindEnvironmentVariables(Viper *viper.Viper) {
+	Viper.BindEnv("aura.base-url", "AURA_BASE_URL")
+	Viper.BindEnv("aura.auth-url", "AURA_AUTH_URL")
+}
+
+func setDefaultValues(Viper *viper.Viper) {
+	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
+	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
+	Viper.SetDefault("aura.output", "json")
+	Viper.SetDefault("aura.credentials", []AuraCredential{})
 }
 
 type Config struct {
