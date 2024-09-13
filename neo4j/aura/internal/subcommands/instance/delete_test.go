@@ -33,7 +33,6 @@ func TestDeleteInstance(t *testing.T) {
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodDelete)
 
-	helper.AssertErr("")
 	helper.AssertOutJson(`{
 		"data": {
 		  "id": "2f49c2b3",

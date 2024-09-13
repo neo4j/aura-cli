@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-func FormatJson(unformatted string) (string, error) {
+func FormatJson(unformatted string, indent string) (string, error) {
 	var pretty bytes.Buffer
-	err := json.Indent(&pretty, []byte(strings.TrimSpace(unformatted)), "", "\t")
+	err := json.Indent(&pretty, []byte(strings.TrimSpace(unformatted)), "", indent)
 	if err != nil {
 		return "", err
 	}

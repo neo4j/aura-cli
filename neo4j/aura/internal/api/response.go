@@ -1,15 +1,13 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 
-	"github.com/neo4j/cli/common/clictx"
+	"github.com/neo4j/cli/common/clicfg"
 )
 
 type ErrorResponse struct {
@@ -158,17 +156,14 @@ func handleResponseError(res *http.Response) error {
 	}
 }
 
-func getHeaders(ctx context.Context) (http.Header, error) {
-	token, err := getToken(ctx)
+func getHeaders(cfg *clicfg.Config) (http.Header, error) {
+	token, err := getToken(cfg)
 
 	if err != nil {
 		return nil, err
 	}
 
-	version, ok := clictx.Version(ctx)
-	if !ok {
-		return nil, errors.New("error fetching version from context")
-	}
+	version := cfg.Version
 
 	return http.Header{
 		"Content-Type":  {"application/json"},

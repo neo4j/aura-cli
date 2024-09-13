@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewCreateCmd() *cobra.Command {
+func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
 	var await bool
 	// var date string
@@ -23,13 +24,13 @@ func NewCreateCmd() *cobra.Command {
 
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
 
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPost, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, path, nil)
 			if err != nil {
 				return err
 			}
 
 			if statusCode == http.StatusAccepted {
-				err = output.PrintBody(cmd, resBody, []string{"snapshot_id"})
+				err = output.PrintBody(cmd, cfg, resBody, []string{"snapshot_id"})
 				if err != nil {
 					return err
 				}
@@ -42,7 +43,7 @@ func NewCreateCmd() *cobra.Command {
 					}
 
 					// Snapshot is not ready after pending
-					pollResponse, err := api.PollSnapshot(cmd, instanceId, response.Data.SnapshotId, api.SnapshotStatusPending)
+					pollResponse, err := api.PollSnapshot(cfg, instanceId, response.Data.SnapshotId, api.SnapshotStatusPending)
 					if err != nil {
 						return err
 					}

@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewResumeCmd() *cobra.Command {
+func NewResumeCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		await bool
 	)
@@ -31,14 +32,15 @@ If another operation is being performed on the instance you are trying to resume
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/instances/%s/resume", args[0])
 
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodPost, path, nil)
+			cmd.SilenceUsage = true
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, path, nil)
 			if err != nil {
 				return err
 			}
 
 			// NOTE: Instance resume should not return OK (200), it always returns 202
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory"})
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory"})
 				if err != nil {
 					return err
 				}
@@ -50,7 +52,7 @@ If another operation is being performed on the instance you are trying to resume
 						return err
 					}
 
-					pollResponse, err := api.PollInstance(cmd, response.Data.Id, api.InstanceStatusResuming)
+					pollResponse, err := api.PollInstance(cfg, response.Data.Id, api.InstanceStatusResuming)
 					if err != nil {
 						return err
 					}

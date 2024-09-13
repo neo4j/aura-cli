@@ -76,17 +76,7 @@ func TestGetInstanceWithTableOutput(t *testing.T) {
 		}`)
 
 	// TODO: Make a better way to override config
-	helper.SetConfig(`{
-			"aura": {
-				"credentials": [{
-					"name": "test-cred",
-					"access-token": "dsa",
-					"token-expiry": 123
-				}],
-				"default-credential": "test-cred",
-				"output": "default"
-				}
-			}`)
+	helper.SetConfigValue("aura.output", "default")
 
 	helper.ExecuteCommand(fmt.Sprintf("instance get %s", instanceId))
 

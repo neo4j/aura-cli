@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewGetCmd() *cobra.Command {
+func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
 	// var date string
 
@@ -21,13 +22,13 @@ func NewGetCmd() *cobra.Command {
 
 			path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, args[0])
 
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodGet, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
 			if err != nil {
 				return err
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody, []string{"snapshot_id", "instance_id", "profile", "status", "timestamp", "exportable"})
+				err = output.PrintBody(cmd, cfg, resBody, []string{"snapshot_id", "instance_id", "profile", "status", "timestamp", "exportable"})
 				if err != nil {
 					return err
 				}

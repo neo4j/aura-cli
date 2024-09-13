@@ -6,8 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/neo4j/cli/common/clictx"
-	"github.com/spf13/cobra"
+	"github.com/neo4j/cli/common/clicfg"
 )
 
 type PollResponse struct {
@@ -17,31 +16,26 @@ type PollResponse struct {
 	}
 }
 
-func PollInstance(cmd *cobra.Command, instanceId string, waitingStatus string) (*PollResponse, error) {
+func PollInstance(cfg *clicfg.Config, instanceId string, waitingStatus string) (*PollResponse, error) {
 	path := fmt.Sprintf("/instances/%s", instanceId)
-	return poll(cmd, path, waitingStatus)
+	return poll(cfg, path, waitingStatus)
 }
 
-func PollSnapshot(cmd *cobra.Command, instanceId string, snapshotId string, waitingStatus string) (*PollResponse, error) {
+func PollSnapshot(cfg *clicfg.Config, instanceId string, snapshotId string, waitingStatus string) (*PollResponse, error) {
 	path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, snapshotId)
-	return poll(cmd, path, waitingStatus)
+	return poll(cfg, path, waitingStatus)
 }
 
-func PollCMK(cmd *cobra.Command, cmkId string, waitingStatus string) (*PollResponse, error) {
+func PollCMK(cfg *clicfg.Config, cmkId string, waitingStatus string) (*PollResponse, error) {
 	path := fmt.Sprintf("/customer-managed-keys/%s", cmkId)
-	return poll(cmd, path, waitingStatus)
+	return poll(cfg, path, waitingStatus)
 }
 
-func poll(cmd *cobra.Command, url string, waitingStatus string) (*PollResponse, error) {
-	config, ok := clictx.Config(cmd.Context())
-	if !ok {
-		return nil, fmt.Errorf("config not found")
-	}
-
-	pollingConfig := config.Aura.GetPollingConfig()
+func poll(cfg *clicfg.Config, url string, waitingStatus string) (*PollResponse, error) {
+	pollingConfig := cfg.Aura.PollingConfig()
 
 	for i := 0; i < pollingConfig.MaxRetries; i++ {
-		resBody, statusCode, err := MakeRequest(cmd, http.MethodGet, url, nil)
+		resBody, statusCode, err := MakeRequest(cfg, http.MethodGet, url, nil)
 		if err != nil {
 			return nil, err
 		}

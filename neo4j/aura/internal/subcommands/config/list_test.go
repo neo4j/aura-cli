@@ -1,41 +1,20 @@
 package config_test
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"io"
 	"testing"
 
 	"github.com/neo4j/cli/common/clicfg"
-	"github.com/neo4j/cli/common/clictx"
-	"github.com/neo4j/cli/neo4j/aura"
-	"github.com/neo4j/cli/test/utils/testfs"
-	"github.com/stretchr/testify/assert"
+	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 )
 
-func TestListConfigDefault(t *testing.T) {
-	assert := assert.New(t)
+func TestListConfig(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
-	cmd := aura.NewCmd("test")
-	b := bytes.NewBufferString("")
-	cmd.SetOut(b)
-	cmd.SetArgs([]string{"config", "list"})
+	helper.OverwriteConfig("{}")
 
-	fs, err := testfs.GetDefaultTestFs()
-	assert.Nil(err)
+	helper.ExecuteCommand("config list")
 
-	cfg, err := clicfg.NewConfig(fs)
-	assert.Nil(err)
-
-	ctx, err := clictx.NewContext(context.Background(), cfg, "test")
-	assert.Nil(err)
-
-	err = cmd.ExecuteContext(ctx)
-	assert.Nil(err)
-
-	out, err := io.ReadAll(b)
-	assert.Nil(err)
-
-	assert.Equal(fmt.Sprintf("{\n\t\"base-url\": \"%s\",\n\t\"auth-url\": \"%s\",\n\t\"output\": \"default\",\n\t\"credentials\": []\n}\n", clicfg.DefaultAuraBaseUrl, clicfg.DefaultAuraAuthUrl), string(out))
+	helper.AssertOut(fmt.Sprintf("{\n\t\"auth-url\": \"%s\",\n\t\"base-url\": \"%s\",\n\t\"credentials\": [],\n\t\"output\": \"json\"\n}\n", clicfg.DefaultAuraAuthUrl, clicfg.DefaultAuraBaseUrl))
 }

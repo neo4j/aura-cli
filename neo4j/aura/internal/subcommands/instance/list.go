@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewListCmd() *cobra.Command {
+func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	var tenantId string
 
 	cmd := &cobra.Command{
@@ -27,13 +28,14 @@ You can filter instances in a particular tenant using --tenant-id. If the tenant
 				path = "/instances"
 			}
 
-			resBody, statusCode, err := api.MakeRequest(cmd, http.MethodGet, path, nil)
+			cmd.SilenceUsage = true
+			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
 			if err != nil {
 				return err
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, resBody, []string{"id", "name", "tenant_id", "cloud_provider"})
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "cloud_provider"})
 				if err != nil {
 					return err
 				}
