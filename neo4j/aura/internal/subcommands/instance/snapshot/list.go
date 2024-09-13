@@ -12,7 +12,7 @@ import (
 
 func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
-	// var date string
+	var date string
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -21,7 +21,9 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
-
+			if date != "" {
+				path = fmt.Sprintf("%s?date=%s", path, date)
+			}
 			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
 			if err != nil {
 				return err
@@ -39,7 +41,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
 	cmd.MarkFlagRequired("instance-id")
-	// cmd.Flags().StringVar(&tenantId, "tenant-id", "", "An optional Tenant ID to filter instances in a tenant")
+	cmd.Flags().StringVar(&date, "date", "", "An optional date to list snapshots for a given day, defaults to today. Must be formatted with an ISO formatted date string (YYYY-MM-DD)")
 
 	return cmd
 }

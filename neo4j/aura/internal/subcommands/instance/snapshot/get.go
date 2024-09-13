@@ -12,7 +12,6 @@ import (
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
-	// var date string
 
 	cmd := &cobra.Command{
 		Use:   "get",
@@ -39,7 +38,6 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
 	cmd.MarkFlagRequired("instance-id")
-	// cmd.Flags().StringVar(&tenantId, "tenant-id", "", "An optional Tenant ID to filter instances in a tenant")
 
 	return cmd
 }

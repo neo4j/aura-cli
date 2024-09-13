@@ -40,7 +40,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Creates a new instance",
 		Long: `This subcommand starts the creation process of an Aura instance.
 
-Creating an instance is an asynchronous operation. Supported instance configurations for your tenant can be obtained by calling the tenant get subcommand.
+Creating an instance is an asynchronous operation that can be awaited with --await. Supported instance configurations for your tenant can be obtained by calling the tenant get subcommand.
 
 You can poll the current status of this operation by periodically getting the instance details for the instance ID using the get subcommand. Once the status transitions from "creating" to "running" you may begin to use your instance.
 

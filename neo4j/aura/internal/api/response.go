@@ -68,11 +68,12 @@ func handleResponseError(res *http.Response) error {
 		return fmt.Errorf("%s", messages)
 	case http.StatusForbidden:
 		var serverError ServerError
-
 		err := json.Unmarshal(resBody, &serverError)
-
 		if err != nil {
 			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		}
+		if serverError.Error != "" {
+			return fmt.Errorf(serverError.Error)
 		}
 
 		// TODO: clear the token?
