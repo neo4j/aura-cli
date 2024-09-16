@@ -26,7 +26,9 @@ If another operation is being performed on the instance you are trying to pause,
 			path := fmt.Sprintf("/instances/%s/pause", args[0])
 
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method: http.MethodPost,
+			})
 			if err != nil {
 				return err
 			}

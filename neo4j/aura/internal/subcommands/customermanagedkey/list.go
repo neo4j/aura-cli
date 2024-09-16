@@ -1,7 +1,6 @@
 package customermanagedkey
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -21,16 +20,16 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 You can filter keys in a particular tenant using --tenant-id. If the tenant flag is not specified, this endpoint lists all keys a user has access to across all tenants.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var path string
-
+			path := "/customer-managed-keys"
+			queryParams := make(map[string]string)
 			if tenantId != "" {
-				path = fmt.Sprintf("/customer-managed-keys?tenantId=%s", tenantId)
-			} else {
-				path = "/customer-managed-keys"
+				queryParams["tenantId"] = tenantId
 			}
-
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method:      http.MethodGet,
+				QueryParams: queryParams,
+			})
 			if err != nil {
 				return err
 			}

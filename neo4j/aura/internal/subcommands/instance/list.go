@@ -1,7 +1,6 @@
 package instance
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -20,16 +19,18 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 
 You can filter instances in a particular tenant using --tenant-id. If the tenant flag is not specified, this subcommand lists all instances a user has access to across all tenants.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var path string
+			path := "/instances"
 
+			queryParams := make(map[string]string)
 			if tenantId != "" {
-				path = fmt.Sprintf("/instances?tenantId=%s", tenantId)
-			} else {
-				path = "/instances"
+				queryParams["tenantId"] = tenantId
 			}
 
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method:      http.MethodGet,
+				QueryParams: queryParams,
+			})
 			if err != nil {
 				return err
 			}

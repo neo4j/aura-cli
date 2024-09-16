@@ -23,7 +23,9 @@ If another operation is being performed on the instance you are trying to delete
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/instances/%s", args[0])
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodDelete, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method: http.MethodDelete,
+			})
 
 			if err != nil {
 				return err

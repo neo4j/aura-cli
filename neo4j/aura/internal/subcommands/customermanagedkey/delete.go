@@ -20,7 +20,9 @@ Note that you can only delete a Key if it is not being used by any instances, ot
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/customer-managed-keys/%s", args[0])
 			cmd.SilenceUsage = true
-			_, statusCode, err := api.MakeRequest(cfg, http.MethodDelete, path, nil)
+			_, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method: http.MethodDelete,
+			})
 			if err != nil {
 				return err
 			}

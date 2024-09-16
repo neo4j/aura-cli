@@ -87,7 +87,10 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 			}
 
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, "/instances", body)
+			resBody, statusCode, err := api.MakeRequest(cfg, "/instances", &api.RequestConfig{
+				PostBody: body,
+				Method:   http.MethodPost,
+			})
 			if err != nil {
 				return err
 			}

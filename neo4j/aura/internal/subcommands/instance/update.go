@@ -42,7 +42,10 @@ Resizing an instance is an asynchronous operation. The instance remains availabl
 			path := fmt.Sprintf("/instances/%s", args[0])
 
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPatch, path, body)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method:   http.MethodPatch,
+				PostBody: body,
+			})
 			if err != nil {
 				return err
 			}

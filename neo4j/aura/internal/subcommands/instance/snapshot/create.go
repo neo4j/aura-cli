@@ -26,7 +26,9 @@ Creating a snapshot is an asynchronous operation that can be awaited with --awai
 
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
 
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method: http.MethodPost,
+			})
 			if err != nil {
 				return err
 			}

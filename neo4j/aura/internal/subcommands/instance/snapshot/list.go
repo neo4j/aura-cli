@@ -21,10 +21,15 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
+			var queryParams map[string]string
 			if date != "" {
-				path = fmt.Sprintf("%s?date=%s", path, date)
+				queryParams = make(map[string]string)
+				queryParams["date"] = date
 			}
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method:      http.MethodGet,
+				QueryParams: queryParams,
+			})
 			if err != nil {
 				return err
 			}

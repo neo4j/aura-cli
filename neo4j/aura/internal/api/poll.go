@@ -35,7 +35,9 @@ func poll(cfg *clicfg.Config, url string, waitingStatus string) (*PollResponse, 
 	pollingConfig := cfg.Aura.PollingConfig()
 
 	for i := 0; i < pollingConfig.MaxRetries; i++ {
-		resBody, statusCode, err := MakeRequest(cfg, http.MethodGet, url, nil)
+		resBody, statusCode, err := MakeRequest(cfg, url, &RequestConfig{
+			Method: http.MethodGet,
+		})
 		if err != nil {
 			return nil, err
 		}
