@@ -204,9 +204,10 @@ func (config *AuraConfig) AddCredential(name string, clientId string, clientSecr
 	}
 
 	auraConfig.Credentials = append(auraConfig.Credentials, AuraCredential{Name: name, ClientId: clientId, ClientSecret: clientSecret})
-
 	config.viper.Set("aura.credentials", auraConfig.Credentials)
-
+	if len(auraConfig.Credentials) == 1 {
+		config.viper.Set("aura.default-credential", name)
+	}
 	return config.viper.WriteConfig()
 }
 
