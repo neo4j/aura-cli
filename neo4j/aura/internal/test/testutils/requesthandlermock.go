@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -9,9 +10,10 @@ import (
 )
 
 type call struct {
-	Method string
-	Path   string
-	Body   map[string]interface{}
+	Method      string
+	Path        string
+	Body        map[string]interface{}
+	QueryParams url.Values
 }
 
 type response struct {
@@ -52,6 +54,16 @@ func (mock *requestHandlerMock) AssertCalledWithMethod(method string) {
 	}
 
 	assert.Fail(mock.t, fmt.Sprintf("Handler not called with method:\nexpected: %s, actual: %s", method, methods))
+}
+
+func (mock *requestHandlerMock) AssertCalledWithQueryParam(param string, value string) {
+	for _, call := range mock.Calls {
+		if call.QueryParams.Has(param) && call.QueryParams.Get(param) == value {
+			return
+		}
+	}
+
+	assert.Fail(mock.t, fmt.Sprintf("Handler not called with query param:\nexpected: %s:%s", param, value))
 }
 
 func (mock *requestHandlerMock) AssertCalledWithBody(body string) {

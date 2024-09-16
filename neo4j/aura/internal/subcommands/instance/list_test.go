@@ -80,7 +80,7 @@ func TestListInstancesWithTenantId(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances?tenantId=my-tenant-id", http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
 			"data": [
 				{
 					"id": "2f49c2b3",
@@ -113,6 +113,7 @@ func TestListInstancesWithTenantId(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
+	mockHandler.AssertCalledWithQueryParam("tenantId", "my-tenant-id")
 
 	helper.AssertOutJson(`{
 		"data": [

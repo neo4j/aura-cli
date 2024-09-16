@@ -49,7 +49,7 @@ func TestListSnapshotWithDate(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 	instanceId := "2f49c2b3"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/snapshots?date=2024-02-13", instanceId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/snapshots", instanceId), http.StatusOK, `{
 		"data": [
 			{
 				"exportable": true,
@@ -66,6 +66,7 @@ func TestListSnapshotWithDate(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
+	mockHandler.AssertCalledWithQueryParam("date", "2024-02-13")
 
 	helper.AssertOutJson(`{
 		"data": [

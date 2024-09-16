@@ -56,7 +56,7 @@ func TestListCustomerManagedKeysWithTenantId(t *testing.T) {
 		helper := testutils.NewAuraTestHelper(t)
 		defer helper.Close()
 
-		mockHandler := helper.NewRequestHandlerMock("/v1/customer-managed-keys?tenantId=1234", http.StatusOK, `{
+		mockHandler := helper.NewRequestHandlerMock("/v1/customer-managed-keys", http.StatusOK, `{
 		"data": [
 			{
 				"id": "f15cc45b-1c29-44e8-911f-3ba719f70ed7",
@@ -75,6 +75,7 @@ func TestListCustomerManagedKeysWithTenantId(t *testing.T) {
 
 		mockHandler.AssertCalledTimes(1)
 		mockHandler.AssertCalledWithMethod(http.MethodGet)
+		mockHandler.AssertCalledWithQueryParam("tenantId", "1234")
 
 		helper.AssertOutJson(`{
 			"data": [

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
 )
@@ -38,6 +39,8 @@ func MakeRequest(cfg *clicfg.Config, method string, path string, data map[string
 	u = u.JoinPath(path)
 	urlString := u.String()
 
+	// Quick fix
+	urlString = strings.Replace(urlString, "%3F", "?", 1)
 	req, err := http.NewRequest(method, urlString, body)
 
 	if err != nil {
