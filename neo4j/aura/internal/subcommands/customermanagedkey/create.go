@@ -85,7 +85,7 @@ Once the key has a status of ready you can use it for creating new instances by 
 						return err
 					}
 
-					pollResponse, err := api.PollCMK(cfg, response.Data.Id, api.CMKStatusPending)
+					pollResponse, err := api.PollCMK(cfg, response.Data.Id)
 					if err != nil {
 						return err
 					}

@@ -47,7 +47,7 @@ Creating a snapshot is an asynchronous operation that can be awaited with --awai
 					}
 
 					// Snapshot is not ready after pending
-					pollResponse, err := api.PollSnapshot(cfg, instanceId, response.Data.SnapshotId, api.SnapshotStatusPending)
+					pollResponse, err := api.PollSnapshot(cfg, instanceId, response.Data.SnapshotId)
 					if err != nil {
 						return err
 					}
