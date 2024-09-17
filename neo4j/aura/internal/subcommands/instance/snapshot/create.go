@@ -23,7 +23,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 Creating a snapshot is an asynchronous operation that can be awaited with --await.
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
+			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{

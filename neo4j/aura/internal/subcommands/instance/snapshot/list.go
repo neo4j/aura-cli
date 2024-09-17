@@ -19,7 +19,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Returns a list of snapshots",
 		Long:  `This subcommand returns a list containing a summary of each snapshot of an Aura instance. To find out more about a specific snapshot, retrieve the details using the get subcommand.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
+			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
 			var queryParams map[string]string
 			if date != "" {

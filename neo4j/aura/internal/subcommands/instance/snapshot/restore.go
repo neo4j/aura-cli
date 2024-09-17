@@ -10,30 +10,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
+func NewRestoreCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
 
 	cmd := &cobra.Command{
-		Use:   "get",
-		Short: "Returns details of a snapshot",
-		Long:  `This subcommand returns a list containing a summary of each snapshot of an Aura instance. To find out more about a specific snapshot, retrieve the details using the get subcommand.`,
+		Use:   "restore",
+		Short: "Restores a snapshot",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, args[0])
+			path := fmt.Sprintf("/instances/%s/snapshots/%s/restore", instanceId, args[0])
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method: http.MethodGet,
+				Method: http.MethodPost,
 			})
 			if err != nil {
 				return err
 			}
 
-			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"snapshot_id", "instance_id", "profile", "status", "timestamp", "exportable"})
+			if statusCode == http.StatusAccepted {
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "tenant_id", "connection_url", "cloud_provider", "type", "region", "memory"})
 				if err != nil {
 					return err
 				}
 			}
+
 			return nil
 		},
 	}
