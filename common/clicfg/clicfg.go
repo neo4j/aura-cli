@@ -59,6 +59,8 @@ func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
 	Viper.SetDefault("aura.output", "json")
 	Viper.SetDefault("aura.credentials", []AuraCredential{})
+	Viper.SetDefault("aura.polling.max-retries", 20)
+	Viper.SetDefault("aura.polling.interval", 30)
 }
 
 type Config struct {
@@ -72,8 +74,8 @@ type PollingConfig struct {
 }
 
 type AuraConfig struct {
-	viper   *viper.Viper
-	polling PollingConfig
+	viper           *viper.Viper
+	pollingOverride *PollingConfig
 }
 
 func (config *AuraConfig) Get(key string) interface{} {
@@ -148,15 +150,24 @@ func (config *AuraConfig) DefaultCredential() (*AuraCredential, error) {
 	return nil, fmt.Errorf("could not find credential with name %s", defaultCredential)
 }
 
-func (config *AuraConfig) PollingConfig() PollingConfig {
-	return config.polling
+func (config *AuraConfig) PollingConfig() *PollingConfig {
+	if config.pollingOverride != nil {
+		return config.pollingOverride
+	}
+
+	return &PollingConfig{
+		MaxRetries: config.viper.GetInt("aura.polling.max-retries"),
+		Interval:   config.viper.GetInt("aura.polling.interval"),
+	}
 }
 
-func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
-	config.polling = PollingConfig{
+func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) error {
+	config.pollingOverride = &PollingConfig{
 		MaxRetries: maxRetries,
 		Interval:   interval,
 	}
+
+	return nil
 }
 
 func (config *AuraConfig) SetDefaultCredential(name string) error {

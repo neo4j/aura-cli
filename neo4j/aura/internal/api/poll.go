@@ -65,5 +65,5 @@ func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollR
 		}
 	}
 
-	return nil, fmt.Errorf("hit max retries for polling")
+	return nil, fmt.Errorf("hit max retries [%d] for polling", pollingConfig.MaxRetries)
 }

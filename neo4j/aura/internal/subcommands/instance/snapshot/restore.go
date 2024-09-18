@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -12,7 +13,7 @@ import (
 
 func NewRestoreCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
-
+	var await bool
 	cmd := &cobra.Command{
 		Use:   "restore",
 		Short: "Restores a snapshot",
@@ -31,6 +32,22 @@ func NewRestoreCmd(cfg *clicfg.Config) *cobra.Command {
 				if err != nil {
 					return err
 				}
+
+				if await {
+					cmd.Println("Waiting for instance to be restored...")
+					var response api.CreateSnapshotResponse
+					if err := json.Unmarshal(resBody, &response); err != nil {
+						return err
+					}
+
+					// Snapshot is not ready after pending
+					pollResponse, err := api.PollSnapshot(cfg, instanceId, response.Data.SnapshotId)
+					if err != nil {
+						return err
+					}
+
+					cmd.Println("Instance Status:", pollResponse.Data.Status)
+				}
 			}
 
 			return nil
@@ -39,6 +56,7 @@ func NewRestoreCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
 	cmd.MarkFlagRequired("instance-id")
+	cmd.Flags().BoolVar(&await, "await", false, "Waits until created snapshot is ready.")
 
 	return cmd
 }
