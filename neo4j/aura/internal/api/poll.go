@@ -39,7 +39,6 @@ func PollCMK(cfg *clicfg.Config, cmkId string) (*PollResponse, error) {
 
 func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollResponse, error) {
 	pollingConfig := cfg.Aura.PollingConfig()
-
 	for i := 0; i < pollingConfig.MaxRetries; i++ {
 		resBody, statusCode, err := MakeRequest(cfg, url, &RequestConfig{
 			Method: http.MethodGet,

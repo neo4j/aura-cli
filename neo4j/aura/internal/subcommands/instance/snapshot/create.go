@@ -41,17 +41,17 @@ Creating a snapshot is an asynchronous operation that can be awaited with --awai
 
 				if await {
 					cmd.Println("Waiting for snapshot to be ready...")
-					var response api.CreateInstanceResponse
+					var response api.CreateSnapshotResponse
 					if err := json.Unmarshal(resBody, &response); err != nil {
 						return err
 					}
 
-					pollResponse, err := api.PollInstance(cfg, response.Data.Id, api.InstanceStatusRestoring)
+					pollResponse, err := api.PollSnapshot(cfg, instanceId, response.Data.SnapshotId)
 					if err != nil {
 						return err
 					}
 
-					cmd.Println("Instance Status:", pollResponse.Data.Status)
+					cmd.Println("Snapshot Status:", pollResponse.Data.Status)
 				}
 			}
 			return nil

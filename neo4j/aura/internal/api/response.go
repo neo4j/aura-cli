@@ -35,14 +35,14 @@ func handleResponseError(res *http.Response) error {
 	switch statusCode := res.StatusCode; statusCode {
 	// redirection messages
 	case http.StatusPermanentRedirect:
-		return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 	// client error responses
 	case http.StatusBadRequest:
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 
 		messages := []string{}
@@ -57,7 +57,7 @@ func handleResponseError(res *http.Response) error {
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 
 		messages := []string{}
@@ -70,7 +70,7 @@ func handleResponseError(res *http.Response) error {
 		var serverError ServerError
 		err := json.Unmarshal(resBody, &serverError)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 		if serverError.Error != "" {
 			return fmt.Errorf(serverError.Error)
@@ -81,7 +81,7 @@ func handleResponseError(res *http.Response) error {
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 
 		messages := []string{}
@@ -95,7 +95,7 @@ func handleResponseError(res *http.Response) error {
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 
 		messages := []string{}
@@ -109,7 +109,7 @@ func handleResponseError(res *http.Response) error {
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 
 		messages := []string{}
@@ -123,7 +123,7 @@ func handleResponseError(res *http.Response) error {
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 
 		messages := []string{}
@@ -133,7 +133,7 @@ func handleResponseError(res *http.Response) error {
 
 		return fmt.Errorf("%s", messages)
 	case http.StatusUnsupportedMediaType:
-		return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+		return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 	case http.StatusTooManyRequests:
 		retryAfter := res.Header.Get("Retry-After")
 		return fmt.Errorf("server rate limit exceeded, suggested cool-off period is %s seconds before rerunning the command", retryAfter)
@@ -143,7 +143,7 @@ func handleResponseError(res *http.Response) error {
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
-			return fmt.Errorf("unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli", os.Args[1:])
+			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
 		}
 
 		messages := []string{}
