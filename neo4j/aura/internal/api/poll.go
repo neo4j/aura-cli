@@ -40,6 +40,7 @@ func PollCMK(cfg *clicfg.Config, cmkId string) (*PollResponse, error) {
 func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollResponse, error) {
 	pollingConfig := cfg.Aura.PollingConfig()
 	for i := 0; i < pollingConfig.MaxRetries; i++ {
+		time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
 		resBody, statusCode, err := MakeRequest(cfg, url, &RequestConfig{
 			Method: http.MethodGet,
 		})
@@ -53,14 +54,10 @@ func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollR
 				return nil, err
 			}
 
-			if response.Data.Status == "" || !cond(response.Data.Status) {
-				time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
-			} else {
+			// Successful poll, return last response
+			if cond(response.Data.Status) {
 				return &response, nil
 			}
-		} else {
-			// Edge case of a status code 2xx is returned different of 200
-			time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
 		}
 	}
 

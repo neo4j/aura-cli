@@ -1,7 +1,6 @@
 package snapshot
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -18,6 +17,7 @@ func NewRestoreCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "restore",
 		Short: "Restores a snapshot",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/snapshots/%s/restore", instanceId, args[0])
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
@@ -35,13 +35,8 @@ func NewRestoreCmd(cfg *clicfg.Config) *cobra.Command {
 
 				if await {
 					cmd.Println("Waiting for instance to be restored...")
-					var response api.CreateSnapshotResponse
-					if err := json.Unmarshal(resBody, &response); err != nil {
-						return err
-					}
 
-					// Snapshot is not ready after pending
-					pollResponse, err := api.PollSnapshot(cfg, instanceId, response.Data.SnapshotId)
+					pollResponse, err := api.PollInstance(cfg, instanceId, api.InstanceStatusRestoring)
 					if err != nil {
 						return err
 					}

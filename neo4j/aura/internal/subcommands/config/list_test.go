@@ -16,5 +16,5 @@ func TestListConfig(t *testing.T) {
 
 	helper.ExecuteCommand("config list")
 
-	helper.AssertOutJson(fmt.Sprintf(`{"auth-url": "%s","base-url": "%s","credentials": [],"output": "json", "polling": {"interval": 30, "max-retries": 20}}`, clicfg.DefaultAuraAuthUrl, clicfg.DefaultAuraBaseUrl))
+	helper.AssertOutJson(fmt.Sprintf(`{"auth-url": "%s","base-url": "%s","credentials": [],"output": "json", "polling": {"interval": 15, "max-retries": 60}}`, clicfg.DefaultAuraAuthUrl, clicfg.DefaultAuraBaseUrl))
 }
