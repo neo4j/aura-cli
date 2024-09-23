@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/spf13/cobra"
+
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
-	"github.com/spf13/cobra"
 )
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
@@ -26,7 +27,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"})
+				fmt.Println(string(resBody))
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id", "metrics_integration_url"})
 				if err != nil {
 					return err
 				}
