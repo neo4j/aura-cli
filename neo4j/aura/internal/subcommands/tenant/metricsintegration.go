@@ -1,4 +1,4 @@
-package customermetricsintegration
+package tenant
 
 import (
 	"fmt"
@@ -11,14 +11,28 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 )
 
-func NewGetTenantEndpointUrlCmd(cfg *clicfg.Config) *cobra.Command {
-	return &cobra.Command{
-		Use:   "get-tenant-endpoint-url",
+func NewMetricsIntegrationCmd(cfg *clicfg.Config) *cobra.Command {
+	var tenantId string
+
+	const tenantIdFlag = "tenant-id"
+
+	cmd := &cobra.Command{
+		Use:   "metrics-integration",
 		Short: "Returns tenant metric endpoint URL",
 		Long:  "This subcommand returns the Prometheus metric endpoint URL for the specified tenant.",
-		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cfg.Aura.DefaultTenant() == "" {
+				cmd.MarkFlagRequired(tenantIdFlag)
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/tenants/%s/metrics-integration", args[0])
+			if tenantId == "" {
+				tenantId = cfg.Aura.DefaultTenant()
+			}
+
+			path := fmt.Sprintf("/tenants/%s/metrics-integration", tenantId)
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
 			if err != nil {
@@ -37,4 +51,8 @@ func NewGetTenantEndpointUrlCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
+
+	return cmd
 }

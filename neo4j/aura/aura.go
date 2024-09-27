@@ -10,7 +10,6 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/config"
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/credential"
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/customermanagedkey"
-	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/customermetricsintegration"
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/instance"
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/tenant"
 )
@@ -27,7 +26,6 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(customermanagedkey.NewCmd(cfg))
 	cmd.AddCommand(instance.NewCmd(cfg))
 	cmd.AddCommand(tenant.NewCmd(cfg))
-	cmd.AddCommand(customermetricsintegration.NewCmd(cfg))
 
 	return cmd
 }

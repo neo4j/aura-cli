@@ -1,4 +1,4 @@
-package customermetricsintegration_test
+package tenant_test
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 )
 
-func TestGetTenantEndpointUrl(t *testing.T) {
+func TestMetricsIntegration(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -17,7 +17,7 @@ func TestGetTenantEndpointUrl(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("customer-metrics-integration get-tenant-endpoint-url TENANT_ID")
+	helper.ExecuteCommand("tenant metrics-integration --tenant-id TENANT_ID")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)

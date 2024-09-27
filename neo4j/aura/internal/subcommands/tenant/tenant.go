@@ -1,8 +1,9 @@
 package tenant
 
 import (
-	"github.com/neo4j/cli/common/clicfg"
 	"github.com/spf13/cobra"
+
+	"github.com/neo4j/cli/common/clicfg"
 )
 
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
@@ -30,6 +31,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.AddCommand(NewGetCmd(cfg))
 	cmd.AddCommand(NewListCmd(cfg))
+	cmd.AddCommand(NewMetricsIntegrationCmd(cfg))
 
 	return cmd
 }
