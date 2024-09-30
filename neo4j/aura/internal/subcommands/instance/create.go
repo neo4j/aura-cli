@@ -53,6 +53,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 			typeValue, _ := cmd.Flags().GetString("type")
 			if typeValue != "free-db" {
 				cmd.MarkFlagRequired(memoryFlag)
+				cmd.MarkFlagRequired(regionFlag)
 			}
 
 			if cfg.Aura.DefaultTenant() == "" {
@@ -78,8 +79,10 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 
 			if _type == "free-db" {
 				body["memory"] = "1GB"
+				body["region"] = "europe-west1"
 			} else {
 				body["memory"] = memory
+				body["region"] = region
 			}
 
 			if customerManagedKeyId != "" {
@@ -121,7 +124,6 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.Flags().StringVar(&version, versionFlag, "5", "The Neo4j version of the instance.")
 
 	cmd.Flags().StringVar(&region, regionFlag, "", "The region where the instance is hosted.")
-	cmd.MarkFlagRequired(regionFlag)
 
 	cmd.Flags().StringVar(&memory, memoryFlag, "", "The size of the instance memory in GB.")
 
