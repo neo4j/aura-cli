@@ -149,7 +149,7 @@ func TestUpdateErrorsWithNoFlags(t *testing.T) {
 	helper.AssertErr(`Error: at least one of the flags in the group [memory name] is required
 `)
 	helper.AssertOut(`Usage:
-  aura instance update [flags]
+  aura instance update <id> [flags]
 
 Flags:
   -h, --help            help for update

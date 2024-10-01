@@ -12,7 +12,7 @@ import (
 
 func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "delete",
+		Use:   "delete <id>",
 		Short: "Deletes an instance",
 		Long: `Starts the deletion process of an Aura instance.
 

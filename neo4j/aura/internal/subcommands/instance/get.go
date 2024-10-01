@@ -12,7 +12,7 @@ import (
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "get",
+		Use:   "get <id>",
 		Short: "Returns instance details",
 		Long:  "This endpoint returns details about a specific Aura Instance.",
 		Args:  cobra.ExactArgs(1),

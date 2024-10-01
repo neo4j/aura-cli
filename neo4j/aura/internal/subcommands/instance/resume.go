@@ -21,7 +21,7 @@ func NewResumeCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "resume",
+		Use:   "resume <id>",
 		Short: "Resumes an instance",
 		Long: `Starts the resume process of an Aura instance.
 
