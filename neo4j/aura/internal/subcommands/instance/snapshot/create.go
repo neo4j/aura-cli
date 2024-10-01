@@ -14,12 +14,13 @@ import (
 func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
 	var await bool
-	// var date string
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a snapshot",
-		// Long:  `This subcommand returns a list containing a summary of each snapshot of an Aura instance. To find out more about a specific snapshot, retrieve the details using the get subcommand.`,
+		Short: "Takes an on-demand snapshot",
+		Long: `This subcommand starts the on-demand snapshot creation process for an Aura instance.
+Creating a snapshot is an asynchronous operation. You can poll the current status of this operation by periodically getting the snapshots details for the instance ID using the get subcommand.
+The time taken to complete a snapshot depends on the amount of data stored in the instance; larger quantities of data will take longer. The exact time this will take is dependent on the size of your data store.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
@@ -58,8 +59,6 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
 	cmd.MarkFlagRequired("instance-id")
 	cmd.Flags().BoolVar(&await, "await", false, "Waits until created snapshot is ready.")
-
-	// cmd.Flags().StringVar(&tenantId, "tenant-id", "", "An optional Tenant ID to filter instances in a tenant")
 
 	return cmd
 }

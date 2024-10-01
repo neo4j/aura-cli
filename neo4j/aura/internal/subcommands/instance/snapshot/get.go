@@ -12,12 +12,11 @@ import (
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
-	// var date string
 
 	cmd := &cobra.Command{
 		Use:   "get",
-		Short: "Returns details of a snapshot",
-		Long:  `This subcommand returns a list containing a summary of each snapshot of an Aura instance. To find out more about a specific snapshot, retrieve the details using the get subcommand.`,
+		Short: "Get details of a snapshot",
+		Long:  `This endpoint returns details about a specific snapshot.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, args[0])
@@ -39,7 +38,6 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
 	cmd.MarkFlagRequired("instance-id")
-	// cmd.Flags().StringVar(&tenantId, "tenant-id", "", "An optional Tenant ID to filter instances in a tenant")
 
 	return cmd
 }

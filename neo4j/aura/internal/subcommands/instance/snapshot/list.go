@@ -12,12 +12,11 @@ import (
 
 func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
-	// var date string
 
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Returns a list of snapshots",
-		Long:  `This subcommand returns a list containing a summary of each snapshot of an Aura instance. To find out more about a specific snapshot, retrieve the details using the get subcommand.`,
+		Long:  `This subcommand returns a list of available snapshots from the current day.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
@@ -39,7 +38,6 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
 	cmd.MarkFlagRequired("instance-id")
-	// cmd.Flags().StringVar(&tenantId, "tenant-id", "", "An optional Tenant ID to filter instances in a tenant")
 
 	return cmd
 }
