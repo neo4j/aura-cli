@@ -1,7 +1,6 @@
 package tenant
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -96,6 +95,6 @@ func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (stri
 	case statusCode == http.StatusBadRequest:
 		return "", nil
 	default:
-		return "", errors.New(fmt.Sprintf("Unexpected statusCode %d", statusCode))
+		return "", fmt.Errorf("Unexpected statusCode %d", statusCode)
 	}
 }
