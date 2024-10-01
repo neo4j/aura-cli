@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/instance"
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 )
 
@@ -153,4 +156,20 @@ func TestGetInstanceNotFoundError(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertErr(fmt.Sprintf("Error: [DB not found: %s]", instanceId))
+}
+
+func TestGetHasCmiEndpoint(t *testing.T) {
+	assert.True(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": "https://neo4j.io/abc",
+	}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": "",
+	}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": 1,
+	}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": nil,
+	}))
 }

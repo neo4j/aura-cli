@@ -49,15 +49,17 @@ func getFields(resBody []byte) ([]string, error) {
 		return nil, err
 	}
 	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
-	if hasCmiEndpoint(instances[0]["type"].(string)) {
+	if HasCmiEndpoint(instances[0]) {
 		fields = append(fields, "metrics_integration_url")
 	}
 	return fields, nil
 }
 
-func hasCmiEndpoint(instanceType string) bool {
-	if instanceType == "enterprise-db" || instanceType == "business-critical" {
-		return true
+func HasCmiEndpoint(instance map[string]any) bool {
+	cmiEndpointUrl := instance["metrics_integration_url"]
+	switch cmiEndpointUrl.(type) {
+	case string:
+		return len(cmiEndpointUrl.(string)) > 0
 	}
 	return false
 }
