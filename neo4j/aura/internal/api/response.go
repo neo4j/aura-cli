@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -245,7 +244,7 @@ type ListResponseData struct {
 
 func (d ListResponseData) GetOne() (map[string]any, error) {
 	if len(d.Data) != 1 {
-		return nil, errors.New(fmt.Sprintf("expected 1 array value: %v", len(d.Data)))
+		return nil, fmt.Errorf("expected 1 array value: %v", len(d.Data))
 	}
 	return d.Data[0], nil
 }
