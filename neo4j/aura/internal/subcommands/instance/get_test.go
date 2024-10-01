@@ -158,17 +158,17 @@ func TestGetInstanceNotFoundError(t *testing.T) {
 }
 
 func TestGetHasCmiEndpoint(t *testing.T) {
-	assert.True(t, instance.HasCmiEndpoint(map[string]any{
+	assert.True(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": "https://neo4j.io/abc",
 	}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{}))
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": "",
 	}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": 1,
 	}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": nil,
 	}))
 }

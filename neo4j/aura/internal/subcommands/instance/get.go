@@ -52,13 +52,16 @@ func getFields(resBody []byte) ([]string, error) {
 	}
 	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
 	instance, err := responseBody.GetOne()
-	if HasCmiEndpoint(instance) {
+	if err != nil {
+		return nil, err
+	}
+	if HasMetricsIntegrationEndpointUrl(instance) {
 		fields = append(fields, "metrics_integration_url")
 	}
 	return fields, nil
 }
 
-func HasCmiEndpoint(instance map[string]any) bool {
+func HasMetricsIntegrationEndpointUrl(instance map[string]any) bool {
 	cmiEndpointUrl := instance["metrics_integration_url"]
 	switch cmiEndpointUrl := cmiEndpointUrl.(type) {
 	case string:
