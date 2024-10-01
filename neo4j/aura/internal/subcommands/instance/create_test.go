@@ -33,17 +33,17 @@ func TestCreateFreeInstance(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "db1d1234",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"username": "neo4j",
-			"password": "letMeIn123!",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"region": "europe-west1",
-			"type": "free-db",
-			"name": "Instance01"
-		}
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "db1d1234",
+		"name": "Instance01",
+		"password": "letMeIn123!",
+		"region": "europe-west1",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "free-db",
+		"username": "neo4j"
+	  }
 	}`)
 }
 
@@ -72,19 +72,18 @@ func TestCreateProfessionalInstance(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"professional-db","version":"5"}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "db1d1234",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"username": "neo4j",
-			"password": "letMeIn123!",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"region": "europe-west1",
-			"type": "professional-db",
-			"name": "Instance01"
-		}
-	}
-	`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "db1d1234",
+		"name": "Instance01",
+		"password": "letMeIn123!",
+		"region": "europe-west1",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "professional-db",
+		"username": "neo4j"
+	  }
+	}`)
 }
 
 func TestCreateProfessionalInstanceNoMemory(t *testing.T) {
@@ -233,18 +232,18 @@ func TestInstanceWithCmkId(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY"}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "db1d1234",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"username": "neo4j",
-			"password": "letMeIn123!",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"region": "europe-west1",
-			"type": "enterprise-db",
-			"name": "Instance01"
-		}
-	}`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "db1d1234",
+		"name": "Instance01",
+		"password": "letMeIn123!",
+		"region": "europe-west1",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "enterprise-db",
+		"username": "neo4j"
+	  }
+	} `)
 }
 
 func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
@@ -274,17 +273,17 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "db1d1234",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"username": "neo4j",
-			"password": "letMeIn123!",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"region": "europe-west1",
-			"type": "free-db",
-			"name": "Instance01"
-		}
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "db1d1234",
+		"name": "Instance01",
+		"password": "letMeIn123!",
+		"region": "europe-west1",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "free-db",
+		"username": "neo4j"
+	  }
 	}`)
 }
 
@@ -330,15 +329,15 @@ func TestCreateFreeInstanceWithAwait(t *testing.T) {
 	helper.AssertOut(`
 {
 	"data": {
-		"id": "db1d1234",
-		"connection_url": "YOUR_CONNECTION_URL",
-		"username": "neo4j",
-		"password": "letMeIn123!",
-		"tenant_id": "YOUR_TENANT_ID",
 		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "db1d1234",
+		"name": "Instance01",
+		"password": "letMeIn123!",
 		"region": "europe-west1",
+		"tenant_id": "YOUR_TENANT_ID",
 		"type": "free-db",
-		"name": "Instance01"
+		"username": "neo4j"
 	}
 }
 Waiting for instance to be ready...

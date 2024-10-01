@@ -46,34 +46,33 @@ func TestListInstances(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertOutJson(`{
-		"data": [
-			{
-				"id": "2f49c2b3",
-				"name": "Production",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "gcp"
-			},
-			{
-				"id": "b51dc964",
-				"name": "Instance01",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "aws"
-			},
-			{
-				"id": "432392ae",
-				"name": "Recommendations",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "azure"
-			},
-			{
-				"id": "524b7d8d",
-				"name": "Northwind",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "gcp"
-			}
-		]
-	}
-	`)
+	  "data": [
+		{
+		  "cloud_provider": "gcp",
+		  "id": "2f49c2b3",
+		  "name": "Production",
+		  "tenant_id": "YOUR_TENANT_ID"
+		},
+		{
+		  "cloud_provider": "aws",
+		  "id": "b51dc964",
+		  "name": "Instance01",
+		  "tenant_id": "YOUR_TENANT_ID"
+		},
+		{
+		  "cloud_provider": "azure",
+		  "id": "432392ae",
+		  "name": "Recommendations",
+		  "tenant_id": "YOUR_TENANT_ID"
+		},
+		{
+		  "cloud_provider": "gcp",
+		  "id": "524b7d8d",
+		  "name": "Northwind",
+		  "tenant_id": "YOUR_TENANT_ID"
+		}
+	  ]
+	}`)
 }
 
 func TestListInstancesWithTenantId(t *testing.T) {
@@ -116,32 +115,31 @@ func TestListInstancesWithTenantId(t *testing.T) {
 	mockHandler.AssertCalledWithQueryParam("tenantId", "my-tenant-id")
 
 	helper.AssertOutJson(`{
-		"data": [
-			{
-				"id": "2f49c2b3",
-				"name": "Production",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "gcp"
-			},
-			{
-				"id": "b51dc964",
-				"name": "Instance01",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "aws"
-			},
-			{
-				"id": "432392ae",
-				"name": "Recommendations",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "azure"
-			},
-			{
-				"id": "524b7d8d",
-				"name": "Northwind",
-				"tenant_id": "YOUR_TENANT_ID",
-				"cloud_provider": "gcp"
-			}
-		]
-	}
-	`)
+	  "data": [
+		{
+		  "cloud_provider": "gcp",
+		  "id": "2f49c2b3",
+		  "name": "Production",
+		  "tenant_id": "YOUR_TENANT_ID"
+		},
+		{
+		  "cloud_provider": "aws",
+		  "id": "b51dc964",
+		  "name": "Instance01",
+		  "tenant_id": "YOUR_TENANT_ID"
+		},
+		{
+		  "cloud_provider": "azure",
+		  "id": "432392ae",
+		  "name": "Recommendations",
+		  "tenant_id": "YOUR_TENANT_ID"
+		},
+		{
+		  "cloud_provider": "gcp",
+		  "id": "524b7d8d",
+		  "name": "Northwind",
+		  "tenant_id": "YOUR_TENANT_ID"
+		}
+	  ]
+	}`)
 }

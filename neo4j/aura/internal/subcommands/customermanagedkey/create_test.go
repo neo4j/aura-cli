@@ -39,19 +39,18 @@ func TestCreateCustomerManagedKeys(t *testing.T) {
 	}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-		  "id": "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9",
-		  "name": "Instance01",
-		  "created": "2024-01-31T14:06:57Z",
-		  "cloud_provider": "aws",
-		  "key_id": "arn:aws:kms:us-east-1:123456789:key/11111-a222-1212-x789-1212f1212f",
-		  "region": "us-east-1",
-		  "type": "enterprise-db",
-		  "tenant_id": "dontpanic",
-		  "status": "pending"
-		}
+	  "data": {
+		"cloud_provider": "aws",
+		"created": "2024-01-31T14:06:57Z",
+		"id": "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9",
+		"key_id": "arn:aws:kms:us-east-1:123456789:key/11111-a222-1212-x789-1212f1212f",
+		"name": "Instance01",
+		"region": "us-east-1",
+		"status": "pending",
+		"tenant_id": "dontpanic",
+		"type": "enterprise-db"
 	  }
-		`)
+	}`)
 }
 
 func TestCreateCustomerManagedKeysWithTenantIDInConfig(t *testing.T) {
@@ -88,19 +87,18 @@ func TestCreateCustomerManagedKeysWithTenantIDInConfig(t *testing.T) {
 	}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-		  "id": "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9",
-		  "name": "Instance01",
-		  "created": "2024-01-31T14:06:57Z",
-		  "cloud_provider": "aws",
-		  "key_id": "arn:aws:kms:us-east-1:123456789:key/11111-a222-1212-x789-1212f1212f",
-		  "region": "us-east-1",
-		  "type": "enterprise-db",
-		  "tenant_id": "dontpanic",
-		  "status": "pending"
-		}
+	  "data": {
+		"cloud_provider": "aws",
+		"created": "2024-01-31T14:06:57Z",
+		"id": "8c764aed-8eb3-4a1c-92f6-e4ef0c7a6ed9",
+		"key_id": "arn:aws:kms:us-east-1:123456789:key/11111-a222-1212-x789-1212f1212f",
+		"name": "Instance01",
+		"region": "us-east-1",
+		"status": "pending",
+		"tenant_id": "dontpanic",
+		"type": "enterprise-db"
 	  }
-		`)
+	}`)
 }
 
 func TestCreateCustomerManagedKeysWithoutTenantID(t *testing.T) {
