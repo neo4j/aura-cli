@@ -1,7 +1,6 @@
 package output
 
 import (
-	"bytes"
 	"encoding/json"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -11,40 +10,47 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 )
 
-// Prints a response body
-func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []string) error {
+func PrintBodyMap(cmd *cobra.Command, cfg *clicfg.Config, values api.ResponseData, fields []string) error {
 	outputType := cfg.Aura.Output()
 
-	if len(body) > 0 {
-		switch output := outputType; output {
-		case "json":
-			var pretty bytes.Buffer
-			err := json.Indent(&pretty, body, "", "\t")
-			if err != nil {
-				return err
-			}
-			cmd.Println(pretty.String())
-		case "table", "default":
-			err := printTable(cmd, body, fields)
-			if err != nil {
-				return err
-			}
-
-		default:
-			// This is in case the value is unknown
-			cmd.Println(string(body))
+	switch output := outputType; output {
+	case "json":
+		bytes, err := json.MarshalIndent(values, "", "\t")
+		if err != nil {
+			return err
 		}
+		cmd.Println(string(bytes))
+	case "table", "default":
+		err := printTable(cmd, values, fields)
+		if err != nil {
+			return err
+		}
+
+	default:
+		// This is in case the value is unknown
+		cmd.Println(values)
 	}
 
 	return nil
 }
 
-func printTable(cmd *cobra.Command, body []byte, fields []string) error {
+func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []string) error {
+	if len(body) == 0 {
+		return nil
+	}
 	values, err := api.ParseBody(body)
 	if err != nil {
 		return err
 	}
+	err = PrintBodyMap(cmd, cfg, values, fields)
+	if err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []string) error {
 	t := table.NewWriter()
 
 	header := table.Row{}
@@ -53,7 +59,7 @@ func printTable(cmd *cobra.Command, body []byte, fields []string) error {
 	}
 
 	t.AppendHeader(header)
-	for _, v := range values {
+	for _, v := range responseData.Data {
 		row := table.Row{}
 		for _, f := range fields {
 			formattedValue := v[f]

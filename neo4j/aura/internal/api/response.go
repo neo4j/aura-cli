@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -233,7 +234,28 @@ type CreateSnapshotResponse struct {
 	}
 }
 
-func ParseBody(body []byte) ([]map[string]any, error) {
+type ResponseData struct {
+	Data []map[string]any `json:"data"`
+}
+
+func NewSingleValueResponseData(data map[string]any) ResponseData {
+	return NewResponseData([]map[string]any{data})
+}
+
+func NewResponseData(data []map[string]any) ResponseData {
+	return ResponseData{
+		Data: data,
+	}
+}
+
+func (d ResponseData) GetOne() (map[string]any, error) {
+	if len(d.Data) != 1 {
+		return nil, errors.New(fmt.Sprintf("expected 1 array value: %v", len(d.Data)))
+	}
+	return d.Data[0], nil
+}
+
+func ParseBody(body []byte) (ResponseData, error) {
 	var values []map[string]any
 	var jsonWithArray struct{ Data []map[string]any }
 
@@ -246,10 +268,10 @@ func ParseBody(body []byte) ([]map[string]any, error) {
 		var jsonWithSingleItem struct{ Data map[string]any }
 		err := json.Unmarshal(body, &jsonWithSingleItem)
 		if err != nil {
-			return nil, err
+			return ResponseData{}, err
 		}
 		values = []map[string]any{jsonWithSingleItem.Data}
 	}
 
-	return values, nil
+	return NewResponseData(values), nil
 }

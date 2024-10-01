@@ -31,7 +31,6 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.AddCommand(NewGetCmd(cfg))
 	cmd.AddCommand(NewListCmd(cfg))
-	cmd.AddCommand(NewMetricsIntegrationCmd(cfg))
 
 	return cmd
 }
