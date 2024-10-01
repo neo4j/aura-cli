@@ -59,7 +59,7 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 	}
 
 	t.AppendHeader(header)
-	for _, v := range responseData.Data {
+	for _, v := range responseData.AsArray() {
 		row := table.Row{}
 		for _, f := range fields {
 			formattedValue := v[f]

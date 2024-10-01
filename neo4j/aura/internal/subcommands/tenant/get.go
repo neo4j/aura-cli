@@ -52,25 +52,26 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 
 func postProcessResponseValues(cfg *clicfg.Config, tenantId string, responseData api.ResponseData) ([]string, api.ResponseData, error) {
 	resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, fmt.Sprintf("/tenants/%s/metrics-integration", tenantId), nil)
-	if err != nil {
-		return nil, api.ResponseData{}, err
+	if err != nil && statusCode != http.StatusBadRequest {
+		return nil, nil, err
 	}
-	if statusCode == http.StatusOK {
+	fields := []string{"id", "name"}
+	switch {
+	case statusCode == http.StatusOK:
 		metricsIntegrationResponse, err := api.ParseBody(resBody)
 		if err != nil {
-			return nil, api.ResponseData{}, err
+			return nil, nil, err
 		}
 		metricsIntegration, err := metricsIntegrationResponse.GetOne()
 		if err != nil {
-			return nil, api.ResponseData{}, err
+			return nil, nil, err
 		}
-		fields := []string{"id", "name"}
 		switch cmiEndpointUrl := metricsIntegration["endpoint"].(type) {
 		case string:
 			if len(cmiEndpointUrl) > 0 {
 				tenant, err := responseData.GetOne()
 				if err != nil {
-					return nil, api.ResponseData{}, err
+					return nil, nil, err
 				}
 				tenant["metrics_integration_url"] = cmiEndpointUrl
 				return append(fields, "metrics_integration_url"), api.NewSingleValueResponseData(tenant), nil
@@ -78,8 +79,10 @@ func postProcessResponseValues(cfg *clicfg.Config, tenantId string, responseData
 		default:
 			return fields, responseData, nil
 		}
-		return nil, api.ResponseData{}, err
-	} else {
-		return nil, api.ResponseData{}, errors.New(fmt.Sprintf("Unexpected statusCode %d", statusCode))
+		return nil, nil, err
+	case statusCode == http.StatusBadRequest:
+		return fields, responseData, nil
+	default:
+		return nil, nil, errors.New(fmt.Sprintf("Unexpected statusCode %d", statusCode))
 	}
 }

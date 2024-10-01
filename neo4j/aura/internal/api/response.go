@@ -234,44 +234,64 @@ type CreateSnapshotResponse struct {
 	}
 }
 
-type ResponseData struct {
+type ResponseData interface {
+	AsArray() []map[string]any
+	GetOne() (map[string]any, error)
+}
+
+type ListResponseData struct {
 	Data []map[string]any `json:"data"`
 }
 
-func NewSingleValueResponseData(data map[string]any) ResponseData {
-	return NewResponseData([]map[string]any{data})
-}
-
-func NewResponseData(data []map[string]any) ResponseData {
-	return ResponseData{
-		Data: data,
-	}
-}
-
-func (d ResponseData) GetOne() (map[string]any, error) {
+func (d ListResponseData) GetOne() (map[string]any, error) {
 	if len(d.Data) != 1 {
 		return nil, errors.New(fmt.Sprintf("expected 1 array value: %v", len(d.Data)))
 	}
 	return d.Data[0], nil
 }
 
-func ParseBody(body []byte) (ResponseData, error) {
-	var values []map[string]any
-	var jsonWithArray struct{ Data []map[string]any }
+func (d ListResponseData) AsArray() []map[string]any {
+	return d.Data
+}
 
-	err := json.Unmarshal(body, &jsonWithArray)
+type SingleValueResponseData struct {
+	Data map[string]any `json:"data"`
+}
+
+func (d SingleValueResponseData) GetOne() (map[string]any, error) {
+	return d.Data, nil
+}
+
+func (d SingleValueResponseData) AsArray() []map[string]any {
+	return []map[string]any{d.Data}
+}
+
+func NewSingleValueResponseData(data map[string]any) ResponseData {
+	return SingleValueResponseData{
+		Data: data,
+	}
+}
+
+func NewResponseData(data []map[string]any) ResponseData {
+	return ListResponseData{
+		Data: data,
+	}
+}
+
+func ParseBody(body []byte) (ResponseData, error) {
+	var listResponseData ListResponseData
+
+	err := json.Unmarshal(body, &listResponseData)
 
 	// Try unmarshalling array first, if not it creates an array from the single item
 	if err == nil {
-		values = jsonWithArray.Data
+		return listResponseData, nil
 	} else {
-		var jsonWithSingleItem struct{ Data map[string]any }
-		err := json.Unmarshal(body, &jsonWithSingleItem)
+		var singleValueResponseData SingleValueResponseData
+		err := json.Unmarshal(body, &singleValueResponseData)
 		if err != nil {
-			return ResponseData{}, err
+			return nil, err
 		}
-		values = []map[string]any{jsonWithSingleItem.Data}
+		return singleValueResponseData, nil
 	}
-
-	return NewResponseData(values), nil
 }
