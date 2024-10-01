@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/neo4j/cli/common/clicfg"
 	"github.com/spf13/cobra"
+
+	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/neo4j/aura/internal/api"
 )
 
 // Prints a response body
@@ -38,7 +40,7 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 }
 
 func printTable(cmd *cobra.Command, body []byte, fields []string) error {
-	values, err := parseBody(body)
+	values, err := api.ParseBody(body)
 	if err != nil {
 		return err
 	}
@@ -68,25 +70,4 @@ func printTable(cmd *cobra.Command, body []byte, fields []string) error {
 	t.SetStyle(table.StyleLight)
 	cmd.Println(t.Render())
 	return nil
-}
-
-func parseBody(body []byte) ([]map[string]any, error) {
-	var values []map[string]any
-	var jsonWithArray struct{ Data []map[string]any }
-
-	err := json.Unmarshal(body, &jsonWithArray)
-
-	// Try unmarshalling array first, if not it creates an array from the single item
-	if err == nil {
-		values = jsonWithArray.Data
-	} else {
-		var jsonWithSingleItem struct{ Data map[string]any }
-		err := json.Unmarshal(body, &jsonWithSingleItem)
-		if err != nil {
-			return nil, err
-		}
-		values = []map[string]any{jsonWithSingleItem.Data}
-	}
-
-	return values, nil
 }

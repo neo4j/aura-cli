@@ -18,7 +18,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Long:  "This endpoint returns details about a specific Aura Instance.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/instances/%s", args[0])
+			instanceId := args[0]
+			path := fmt.Sprintf("/instances/%s", instanceId)
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
@@ -27,14 +28,36 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id", "metrics_integration_url"})
+				fields, err := getFields(resBody)
 				if err != nil {
 					return err
 				}
-
+				err = output.PrintBody(cmd, cfg, resBody, fields)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
 		},
 	}
+}
+
+func getFields(resBody []byte) ([]string, error) {
+	instances, err := api.ParseBody(resBody)
+	if err != nil {
+		return nil, err
+	}
+	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
+	if hasCmiEndpoint(instances[0]["type"].(string)) {
+		fields = append(fields, "metrics_integration_url")
+	}
+	return fields, nil
+}
+
+func hasCmiEndpoint(instanceType string) bool {
+	if instanceType == "enterprise-db" || instanceType == "business-critical" {
+		return true
+	}
+	return false
 }
