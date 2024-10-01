@@ -57,9 +57,9 @@ func getFields(resBody []byte) ([]string, error) {
 
 func HasCmiEndpoint(instance map[string]any) bool {
 	cmiEndpointUrl := instance["metrics_integration_url"]
-	switch cmiEndpointUrl.(type) {
+	switch cmiEndpointUrl := cmiEndpointUrl.(type) {
 	case string:
-		return len(cmiEndpointUrl.(string)) > 0
+		return len(cmiEndpointUrl) > 0
 	}
 	return false
 }
