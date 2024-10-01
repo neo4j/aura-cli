@@ -16,7 +16,7 @@ func NewSetCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			if clicfg.IsValidConfigKey(args[0]) {
+			if cfg.Aura.IsValidConfigKey(args[0]) {
 				return nil
 			}
 

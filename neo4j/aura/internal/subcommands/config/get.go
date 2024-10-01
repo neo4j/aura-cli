@@ -9,7 +9,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:       "get",
 		Short:     "Displays the specified configuration value",
-		ValidArgs: clicfg.ValidConfigKeys[:],
+		ValidArgs: cfg.Aura.ValidConfigKeys[:],
 		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value := cfg.Aura.Get(args[0])
