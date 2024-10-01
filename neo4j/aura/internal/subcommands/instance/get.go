@@ -48,6 +48,9 @@ func getFields(resBody []byte) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(instances) != 1 {
+		return nil, fmt.Errorf("expected 1 instance, got %d", len(instances))
+	}
 	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
 	if HasCmiEndpoint(instances[0]) {
 		fields = append(fields, "metrics_integration_url")
