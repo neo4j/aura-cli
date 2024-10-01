@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/spf13/cobra"
+
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
-	"github.com/spf13/cobra"
 )
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
@@ -45,15 +46,13 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 }
 
 func getFields(resBody []byte) ([]string, error) {
-	instances, err := api.ParseBody(resBody)
+	responseBody, err := api.ParseBody(resBody)
 	if err != nil {
 		return nil, err
 	}
-	if len(instances) != 1 {
-		return nil, fmt.Errorf("expected 1 instance, got %d", len(instances))
-	}
 	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
-	if HasCmiEndpoint(instances[0]) {
+	instance, err := responseBody.GetOne()
+	if HasCmiEndpoint(instance) {
 		fields = append(fields, "metrics_integration_url")
 	}
 	return fields, nil
