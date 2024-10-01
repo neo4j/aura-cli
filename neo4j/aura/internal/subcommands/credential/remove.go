@@ -7,7 +7,7 @@ import (
 
 func NewRemoveCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "remove",
+		Use:   "remove <name>",
 		Short: "Removes a credential",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
