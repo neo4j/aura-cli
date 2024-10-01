@@ -190,6 +190,13 @@ const (
 	InstanceStatusOverwriting   string = "overwriting"
 )
 
+const (
+	SnapshotStatusPending    string = "Pending"
+	SnapshotStatusCompleted  string = "Completed"
+	SnapshotStatusInProgress string = "InProgress"
+	SnapshotStatusFailed     string = "Failed"
+)
+
 // Response Body of Create and Get Instance for successful requests
 type CreateInstanceResponse struct {
 	Data struct {
@@ -215,5 +222,12 @@ type CreateCMKResponse struct {
 	Data struct {
 		Id     string
 		Status string
+	}
+}
+
+// Response Body of Create and Get Instance for successful requests
+type CreateSnapshotResponse struct {
+	Data struct {
+		SnapshotId string `json:"snapshot_id"`
 	}
 }

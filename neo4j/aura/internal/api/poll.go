@@ -21,6 +21,11 @@ func PollInstance(cfg *clicfg.Config, instanceId string, waitingStatus string) (
 	return poll(cfg, path, waitingStatus)
 }
 
+func PollSnapshot(cfg *clicfg.Config, instanceId string, snapshotId string, waitingStatus string) (*PollResponse, error) {
+	path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, snapshotId)
+	return poll(cfg, path, waitingStatus)
+}
+
 func PollCMK(cfg *clicfg.Config, cmkId string, waitingStatus string) (*PollResponse, error) {
 	path := fmt.Sprintf("/customer-managed-keys/%s", cmkId)
 	return poll(cfg, path, waitingStatus)
