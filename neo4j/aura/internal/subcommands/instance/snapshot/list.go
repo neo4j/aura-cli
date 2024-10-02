@@ -19,7 +19,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Returns a list of snapshots",
 		Long:  `This subcommand returns a list of available snapshots from the current day.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
+			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
 			var queryParams map[string]string
 			if date != "" {

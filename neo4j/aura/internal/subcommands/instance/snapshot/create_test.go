@@ -12,7 +12,7 @@ func TestCreateSnapshot(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 	instanceId := "2f49c2b3"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/snapshots", instanceId), http.StatusAccepted, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("POST /v1/instances/%s/snapshots", instanceId), http.StatusAccepted, `{
 		"data": {
 		  "snapshot_id": "snap123"
 		}
@@ -28,4 +28,51 @@ func TestCreateSnapshot(t *testing.T) {
 		  "snapshot_id": "snap123"
 		}
 	  }`)
+}
+
+func TestCreateSnapshotWithAwait(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+	instanceId := "2f49c2b3"
+	createMock := helper.NewRequestHandlerMock(fmt.Sprintf("POST /v1/instances/%s/snapshots", instanceId), http.StatusAccepted, `{
+		"data": {
+		  "snapshot_id": "snap123"
+		}
+	  }`)
+
+	getMock := helper.NewRequestHandlerMock(fmt.Sprintf("GET /v1/instances/%s/snapshots/snap123", instanceId), http.StatusOK, `{
+			"data": {
+				"id": "db1d1234",
+				"status": "Pending"
+			}
+		}`).AddResponse(http.StatusOK, `{
+			"data": {
+				"id": "db1d1234",
+				"status": "InProgress"
+			}
+		}`).AddResponse(http.StatusOK, `{
+			"data": {
+				"id": "db1d1234",
+				"status": "Completed"
+			}
+		}`)
+
+	helper.ExecuteCommand(fmt.Sprintf("instance snapshot create --instance-id %s --await", instanceId))
+
+	createMock.AssertCalledTimes(1)
+	createMock.AssertCalledWithMethod(http.MethodPost)
+
+	getMock.AssertCalledTimes(3)
+	getMock.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertErr("")
+	helper.AssertOut(`
+{
+	"data": {
+		"snapshot_id": "snap123"
+	}
+}
+Waiting for snapshot to be ready...
+Snapshot Status: Completed
+	`)
 }

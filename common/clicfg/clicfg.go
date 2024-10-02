@@ -46,7 +46,10 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 		}
 	}
 
-	return &Config{Version: version, Aura: AuraConfig{viper: Viper, ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output"}}}, nil
+	return &Config{Version: version, Aura: AuraConfig{viper: Viper, pollingOverride: PollingConfig{
+		MaxRetries: 60,
+		Interval:   20,
+	}, ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output"}}}, nil
 }
 
 func bindEnvironmentVariables(Viper *viper.Viper) {
@@ -73,7 +76,7 @@ type PollingConfig struct {
 
 type AuraConfig struct {
 	viper           *viper.Viper
-	polling         PollingConfig
+	pollingOverride PollingConfig
 	ValidConfigKeys []string
 }
 
@@ -160,11 +163,11 @@ func (config *AuraConfig) DefaultCredential() (*AuraCredential, error) {
 }
 
 func (config *AuraConfig) PollingConfig() PollingConfig {
-	return config.polling
+	return config.pollingOverride
 }
 
 func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
-	config.polling = PollingConfig{
+	config.pollingOverride = PollingConfig{
 		MaxRetries: maxRetries,
 		Interval:   interval,
 	}
