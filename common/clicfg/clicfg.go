@@ -155,13 +155,11 @@ func (config *AuraConfig) PollingConfig() PollingConfig {
 	return config.pollingOverride
 }
 
-func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) error {
+func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
 	config.pollingOverride = PollingConfig{
 		MaxRetries: maxRetries,
 		Interval:   interval,
 	}
-
-	return nil
 }
 
 func (config *AuraConfig) SetDefaultCredential(name string) error {
