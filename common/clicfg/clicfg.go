@@ -46,7 +46,10 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 		}
 	}
 
-	return &Config{Version: version, Aura: AuraConfig{viper: Viper}}, nil
+	return &Config{Version: version, Aura: AuraConfig{viper: Viper, pollingOverride: PollingConfig{
+		MaxRetries: 60,
+		Interval:   20,
+	}}}, nil
 }
 
 func bindEnvironmentVariables(Viper *viper.Viper) {
@@ -73,7 +76,7 @@ type PollingConfig struct {
 
 type AuraConfig struct {
 	viper           *viper.Viper
-	pollingOverride *PollingConfig
+	pollingOverride PollingConfig
 }
 
 func (config *AuraConfig) Get(key string) interface{} {
@@ -148,19 +151,12 @@ func (config *AuraConfig) DefaultCredential() (*AuraCredential, error) {
 	return nil, fmt.Errorf("could not find credential with name %s", defaultCredential)
 }
 
-func (config *AuraConfig) PollingConfig() *PollingConfig {
-	if config.pollingOverride != nil {
-		return config.pollingOverride
-	}
-
-	return &PollingConfig{
-		MaxRetries: config.viper.GetInt("aura.polling.max-retries"),
-		Interval:   config.viper.GetInt("aura.polling.interval"),
-	}
+func (config *AuraConfig) PollingConfig() PollingConfig {
+	return config.pollingOverride
 }
 
 func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) error {
-	config.pollingOverride = &PollingConfig{
+	config.pollingOverride = PollingConfig{
 		MaxRetries: maxRetries,
 		Interval:   interval,
 	}
