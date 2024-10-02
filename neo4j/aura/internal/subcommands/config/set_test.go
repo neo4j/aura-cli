@@ -16,3 +16,14 @@ func TestSetConfig(t *testing.T) {
 
 	helper.AssertConfigValue("aura.auth-url", "test")
 }
+
+func TestSetConfigWithInvalidConfigKey(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.OverwriteConfig("{}")
+
+	helper.ExecuteCommand("config set invalid test")
+
+	helper.AssertErr("Error: invalid config key specified: invalid")
+}
