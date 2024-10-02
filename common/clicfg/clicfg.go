@@ -59,8 +59,6 @@ func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
 	Viper.SetDefault("aura.output", "json")
 	Viper.SetDefault("aura.credentials", []AuraCredential{})
-	Viper.SetDefault("aura.polling.max-retries", 60)
-	Viper.SetDefault("aura.polling.interval", 15)
 }
 
 type Config struct {
