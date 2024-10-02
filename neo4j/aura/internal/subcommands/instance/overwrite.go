@@ -11,9 +11,16 @@ import (
 )
 
 func NewOverwriteCmd(cfg *clicfg.Config) *cobra.Command {
-	var sourceInstanceId string
-	var sourceSnapshotId string
-	var await bool
+	var (
+		sourceInstanceId string
+		sourceSnapshotId string
+		await            bool
+	)
+
+	const (
+		sourceInstanceIdFlag = "source-instance-id"
+		sourceSnapshotIdFlag = "source-snapshot-id"
+	)
 
 	cmd := &cobra.Command{
 		Use:   "overwrite",
@@ -70,8 +77,11 @@ If only a source_instance_id is provided, a new snapshot of that instance is cre
 		},
 	}
 
-	cmd.Flags().StringVar(&sourceInstanceId, "source-instance-id", "", "The id of the source instance")
-	cmd.Flags().StringVar(&sourceSnapshotId, "source-snapshot-id", "", "The id of the snapshot to use")
+	cmd.Flags().StringVar(&sourceInstanceId, sourceInstanceIdFlag, "", "The id of the source instance")
+	cmd.Flags().StringVar(&sourceSnapshotId, sourceSnapshotIdFlag, "", "The id of the snapshot to use")
+
+	cmd.MarkFlagsOneRequired(sourceInstanceIdFlag, sourceSnapshotIdFlag)
+
 	cmd.Flags().BoolVar(&await, "await", false, "Waits until created snapshot is ready.")
 
 	return cmd
