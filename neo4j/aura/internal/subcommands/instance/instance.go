@@ -32,6 +32,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(NewPauseCmd(cfg))
 	cmd.AddCommand(NewResumeCmd(cfg))
 	cmd.AddCommand(NewUpdateCmd(cfg))
+	cmd.AddCommand(NewOverwriteCmd(cfg))
 	cmd.AddCommand(snapshot.NewCmd(cfg))
 
 	cmd.PersistentFlags().String("auth-url", "", "")

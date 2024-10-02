@@ -46,7 +46,7 @@ func (helper *AuraTestHelper) ExecuteCommand(command string) {
 	cfg, err := clicfg.NewConfig(fs, "test")
 	assert.Nil(helper.t, err)
 
-	cfg.Aura.SetPollingConfig(2, 0)
+	cfg.Aura.SetPollingConfig(5, 0)
 
 	cmd := aura.NewCmd(cfg)
 
@@ -70,6 +70,11 @@ func (helper *AuraTestHelper) SetConfigValue(key string, value interface{}) {
 	cfg, err := sjson.Set(helper.cfg, key, value)
 	assert.Nil(helper.t, err)
 	helper.cfg = cfg
+}
+
+// Assets no errors were returned
+func (helper *AuraTestHelper) AsssertOk() {
+	helper.AssertErr("")
 }
 
 func (helper *AuraTestHelper) AssertErr(expected string) {
@@ -103,10 +108,14 @@ func (helper *AuraTestHelper) AssertOutJson(expected string) {
 	out, err := io.ReadAll(helper.out)
 	assert.Nil(helper.t, err)
 
-	formatted, err := FormatJson(expected, "\t")
+	formattedExpected, err := FormatJson(expected, "\t")
+	if err != nil {
+		panic(fmt.Errorf("invalid json in AssertOutJSON: %d", err))
+	}
+
 	assert.Nil(helper.t, err)
 
-	assert.Equal(helper.t, formatted, string(out))
+	assert.Equal(helper.t, formattedExpected, string(out))
 }
 
 func (helper *AuraTestHelper) AssertConfig(expected string) {

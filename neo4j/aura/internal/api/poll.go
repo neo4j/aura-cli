@@ -18,23 +18,29 @@ type PollResponse struct {
 
 func PollInstance(cfg *clicfg.Config, instanceId string, waitingStatus string) (*PollResponse, error) {
 	path := fmt.Sprintf("/instances/%s", instanceId)
-	return poll(cfg, path, waitingStatus)
+	return Poll(cfg, path, func(status string) bool {
+		return status != waitingStatus
+	})
 }
 
-func PollSnapshot(cfg *clicfg.Config, instanceId string, snapshotId string, waitingStatus string) (*PollResponse, error) {
+func PollSnapshot(cfg *clicfg.Config, instanceId string, snapshotId string) (*PollResponse, error) {
 	path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, snapshotId)
-	return poll(cfg, path, waitingStatus)
+	return Poll(cfg, path, func(status string) bool {
+		return status != SnapshotStatusPending && status != SnapshotStatusInProgress
+	})
 }
 
-func PollCMK(cfg *clicfg.Config, cmkId string, waitingStatus string) (*PollResponse, error) {
+func PollCMK(cfg *clicfg.Config, cmkId string) (*PollResponse, error) {
 	path := fmt.Sprintf("/customer-managed-keys/%s", cmkId)
-	return poll(cfg, path, waitingStatus)
+	return Poll(cfg, path, func(status string) bool {
+		return status != CMKStatusPending
+	})
 }
 
-func poll(cfg *clicfg.Config, url string, waitingStatus string) (*PollResponse, error) {
+func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollResponse, error) {
 	pollingConfig := cfg.Aura.PollingConfig()
-
 	for i := 0; i < pollingConfig.MaxRetries; i++ {
+		time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
 		resBody, statusCode, err := MakeRequest(cfg, url, &RequestConfig{
 			Method: http.MethodGet,
 		})
@@ -48,16 +54,12 @@ func poll(cfg *clicfg.Config, url string, waitingStatus string) (*PollResponse, 
 				return nil, err
 			}
 
-			if response.Data.Status == "" || response.Data.Status == waitingStatus {
-				time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
-			} else {
+			// Successful poll, return last response
+			if cond(response.Data.Status) {
 				return &response, nil
 			}
-		} else {
-			// Edge case of a status code 2xx is returned different of 200
-			time.Sleep(time.Second * time.Duration(pollingConfig.Interval))
 		}
 	}
 
-	return nil, fmt.Errorf("hit max retries for polling")
+	return nil, fmt.Errorf("hit max retries [%d] for polling", pollingConfig.MaxRetries)
 }
