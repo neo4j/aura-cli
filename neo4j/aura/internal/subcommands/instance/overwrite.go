@@ -28,7 +28,7 @@ func NewOverwriteCmd(cfg *clicfg.Config) *cobra.Command {
 		Long: `Starts the process of overwriting the specified instance with data from the source instance provided.
 		The overwrite process mimics the 'Clone to existing' functionality of the Aura Console.
 
-If only a source_instance_id is provided, a new snapshot of that instance is created and used for overwriting. Alternatively, you can specify an additional source_snapshot_id to use a specific snapshot of the source instance for overwriting.
+If only --source-instance-id is provided, a new snapshot of that instance is created and used for overwriting. Alternatively, you can specify an additional --source-snapshot-id to use a specific snapshot for overwriting, from --source-instance-id provided, otherwise as a snapshot of the instance being overwritten.
 		`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
