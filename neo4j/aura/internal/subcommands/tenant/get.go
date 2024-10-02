@@ -86,11 +86,9 @@ func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (stri
 		if endpointUrl, ok := metricsIntegration["endpoint"].(string); ok {
 			if len(endpointUrl) > 0 {
 				return endpointUrl, nil
-			} else {
-				return "", nil
 			}
 		}
-		return "", err
+		return "", nil
 	case statusCode == http.StatusBadRequest:
 		return "", nil
 	default:
