@@ -12,7 +12,7 @@ import (
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "get",
+		Use:   "get <id>",
 		Short: "Returns a customer managed key details",
 		Long:  `This subcommand returns details about a specific Customer Managed Key.`,
 		Args:  cobra.ExactArgs(1),

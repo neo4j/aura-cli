@@ -12,7 +12,7 @@ import (
 
 func NewPauseCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "pause",
+		Use:   "pause <id>",
 		Short: "Pauses an instance",
 		Long: `Starts the pause process of an Aura instance.
 

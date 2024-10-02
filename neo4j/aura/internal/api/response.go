@@ -232,3 +232,24 @@ type CreateSnapshotResponse struct {
 		SnapshotId string `json:"snapshot_id"`
 	}
 }
+
+func ParseBody(body []byte) ([]map[string]any, error) {
+	var values []map[string]any
+	var jsonWithArray struct{ Data []map[string]any }
+
+	err := json.Unmarshal(body, &jsonWithArray)
+
+	// Try unmarshalling array first, if not it creates an array from the single item
+	if err == nil {
+		values = jsonWithArray.Data
+	} else {
+		var jsonWithSingleItem struct{ Data map[string]any }
+		err := json.Unmarshal(body, &jsonWithSingleItem)
+		if err != nil {
+			return nil, err
+		}
+		values = []map[string]any{jsonWithSingleItem.Data}
+	}
+
+	return values, nil
+}

@@ -15,8 +15,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "get",
-		Short: "Returns details of a snapshot",
-		Long:  `This subcommand returns a list containing a summary of each snapshot of an Aura instance. To find out more about a specific snapshot, retrieve the details using the get subcommand.`,
+		Short: "Get details of a snapshot",
+		Long:  `This endpoint returns details about a specific snapshot.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, args[0])

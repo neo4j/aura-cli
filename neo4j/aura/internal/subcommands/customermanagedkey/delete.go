@@ -11,7 +11,7 @@ import (
 
 func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "delete",
+		Use:   "delete <id>",
 		Short: "Deletes a customer managed key",
 		Long: `Deletes a Customer Managed Key from Aura.
 

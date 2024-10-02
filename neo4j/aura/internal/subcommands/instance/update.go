@@ -22,7 +22,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "update",
+		Use:   "update <id>",
 		Short: "Updates an instance",
 		Long: `This command allows you to rename and/or resize an Aura instance.
 

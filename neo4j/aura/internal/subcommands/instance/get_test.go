@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/instance"
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 )
 
@@ -53,7 +56,7 @@ func TestGetInstance(t *testing.T) {
 	`)
 }
 
-func TestGetInstanceWithTableOutput(t *testing.T) {
+func TestGetEnterpriseInstanceWithTableOutput(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -84,12 +87,50 @@ func TestGetInstanceWithTableOutput(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertOut(`
-┌──────────┬────────────┬────────────────┬─────────┬─────────────────────┬────────────────┬──────────────┬───────────────┬────────┬─────────┬─────────────────────────┐
-│ ID       │ NAME       │ TENANT_ID      │ STATUS  │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE          │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │
-├──────────┼────────────┼────────────────┼─────────┼─────────────────────┼────────────────┼──────────────┼───────────────┼────────┼─────────┼─────────────────────────┤
-│ 2f49c2b3 │ Production │ YOUR_TENANT_ID │ running │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ enterprise-db │ 8GB    │ 16GB    │                         │
-└──────────┴────────────┴────────────────┴─────────┴─────────────────────┴────────────────┴──────────────┴───────────────┴────────┴─────────┴─────────────────────────┘
+┌──────────┬────────────┬────────────────┬─────────┬─────────────────────┬────────────────┬──────────────┬───────────────┬────────┬─────────┬─────────────────────────┬───────────────────────────────────┐
+│ ID       │ NAME       │ TENANT_ID      │ STATUS  │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE          │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │ METRICS_INTEGRATION_URL           │
+├──────────┼────────────┼────────────────┼─────────┼─────────────────────┼────────────────┼──────────────┼───────────────┼────────┼─────────┼─────────────────────────┼───────────────────────────────────┤
+│ 2f49c2b3 │ Production │ YOUR_TENANT_ID │ running │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ enterprise-db │ 8GB    │ 16GB    │                         │ YOUR_METRICS_INTEGRATION_ENDPOINT │
+└──────────┴────────────┴────────────────┴─────────┴─────────────────────┴────────────────┴──────────────┴───────────────┴────────┴─────────┴─────────────────────────┴───────────────────────────────────┘
+`)
 
+}
+
+func TestGetProfessionalInstanceWithTableOutput(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	instanceId := "2f49c2b3"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s", instanceId), http.StatusOK, `{
+			"data": {
+				"id": "2f49c2b3",
+				"name": "Production",
+				"status": "running",
+				"tenant_id": "YOUR_TENANT_ID",
+				"cloud_provider": "gcp",
+				"connection_url": "YOUR_CONNECTION_URL",
+				"region": "europe-west1",
+				"type": "professional-db",
+				"memory": "8GB",
+				"storage": "16GB"
+			}
+		}`)
+
+	// TODO: Make a better way to override config
+	helper.SetConfigValue("aura.output", "default")
+
+	helper.ExecuteCommand(fmt.Sprintf("instance get %s", instanceId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertOut(`
+┌──────────┬────────────┬────────────────┬─────────┬─────────────────────┬────────────────┬──────────────┬─────────────────┬────────┬─────────┬─────────────────────────┐
+│ ID       │ NAME       │ TENANT_ID      │ STATUS  │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE            │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │
+├──────────┼────────────┼────────────────┼─────────┼─────────────────────┼────────────────┼──────────────┼─────────────────┼────────┼─────────┼─────────────────────────┤
+│ 2f49c2b3 │ Production │ YOUR_TENANT_ID │ running │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ professional-db │ 8GB    │ 16GB    │                         │
+└──────────┴────────────┴────────────────┴─────────┴─────────────────────┴────────────────┴──────────────┴─────────────────┴────────┴─────────┴─────────────────────────┘
 `)
 
 }
@@ -115,4 +156,20 @@ func TestGetInstanceNotFoundError(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertErr(fmt.Sprintf("Error: [DB not found: %s]", instanceId))
+}
+
+func TestGetHasCmiEndpoint(t *testing.T) {
+	assert.True(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": "https://neo4j.io/abc",
+	}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": "",
+	}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": 1,
+	}))
+	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+		"metrics_integration_url": nil,
+	}))
 }
