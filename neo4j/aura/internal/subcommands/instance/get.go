@@ -22,7 +22,9 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			path := fmt.Sprintf("/instances/%s", instanceId)
 
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method: http.MethodGet,
+			})
 			if err != nil {
 				return err
 			}

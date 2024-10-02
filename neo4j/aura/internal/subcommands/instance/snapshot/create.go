@@ -25,7 +25,10 @@ The time taken to complete a snapshot depends on the amount of data stored in th
 
 			path := fmt.Sprintf("/instances/%s/snapshots", instanceId)
 
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, path, nil)
+			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+				Method: http.MethodPost,
+			})
+
 			if err != nil {
 				return err
 			}

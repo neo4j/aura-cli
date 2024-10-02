@@ -64,7 +64,10 @@ Once the key has a status of ready you can use it for creating new instances by 
 			}
 
 			cmd.SilenceUsage = true
-			resBody, statusCode, err := api.MakeRequest(cfg, http.MethodPost, "/customer-managed-keys", body)
+			resBody, statusCode, err := api.MakeRequest(cfg, "/customer-managed-keys", &api.RequestConfig{
+				Method:   http.MethodPost,
+				PostBody: body,
+			})
 			if err != nil {
 				return err
 			}

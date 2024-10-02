@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,27 +18,32 @@ type Grant struct {
 	ExpiresIn   int64  `json:"expires_in"`
 }
 
-func MakeRequest(cfg *clicfg.Config, method string, path string, data map[string]any) (responseBody []byte, statusCode int, err error) {
+type RequestConfig struct {
+	Method      string
+	PostBody    map[string]any
+	QueryParams map[string]string
+}
+
+func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (responseBody []byte, statusCode int, err error) {
 	client := http.Client{}
-	var body io.Reader
-	if data == nil {
-		body = nil
-	} else {
-		jsonData, err := json.Marshal(data)
+	var method = config.Method
+	if method == "" {
+		panic(fmt.Sprintf("method not set in requests %s", path))
+	}
 
-		if err != nil {
-			return responseBody, 0, err
-		}
-
-		body = bytes.NewBuffer(jsonData)
+	body, err := createBody(config.PostBody)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	baseUrl := cfg.Aura.BaseUrl()
 
 	u, _ := url.ParseRequestURI(baseUrl)
 	u = u.JoinPath(path)
-	urlString := u.String()
 
+	addQueryParams(u, config.QueryParams)
+
+	urlString := u.String()
 	req, err := http.NewRequest(method, urlString, body)
 
 	if err != nil {
@@ -67,6 +73,30 @@ func MakeRequest(cfg *clicfg.Config, method string, path string, data map[string
 	}
 
 	return responseBody, res.StatusCode, handleResponseError(res)
+}
+
+func createBody(data map[string]any) (io.Reader, error) {
+	if data == nil {
+		return nil, nil
+	} else {
+		jsonData, err := json.Marshal(data)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return bytes.NewBuffer(jsonData), nil
+	}
+}
+
+func addQueryParams(u *url.URL, params map[string]string) {
+	if params != nil {
+		q := u.Query()
+		for key, val := range params {
+			q.Add(key, val)
+		}
+		u.RawQuery = q.Encode()
+	}
 }
 
 // Checks status code is 2xx

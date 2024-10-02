@@ -162,7 +162,7 @@ func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, bod
 		}
 
 		requestCount := len(mock.Calls)
-		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: unmarshalledBody})
+		mock.Calls = append(mock.Calls, call{Method: req.Method, Path: req.URL.Path, Body: unmarshalledBody, QueryParams: req.URL.Query()})
 
 		if requestCount >= len(mock.Responses) {
 			res.WriteHeader(404)
