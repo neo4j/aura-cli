@@ -35,19 +35,18 @@ func TestUpdateMemory(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{"memory":"8GB"}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "2f49c2b3",
-			"name": "Production",
-			"status": "updating",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"memory": "8GB",
-			"region": "europe-west1",
-			"type": "enterprise-db"
-		}
-	}
-	`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "2f49c2b3",
+		"memory": "8GB",
+		"name": "Production",
+		"region": "europe-west1",
+		"status": "updating",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "enterprise-db"
+	  }
+	}`)
 }
 
 func TestUpdateName(t *testing.T) {
@@ -77,19 +76,18 @@ func TestUpdateName(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{"name":"New Name"}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "2f49c2b3",
-			"name": "New Name",
-			"status": "updating",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"memory": "4GB",
-			"region": "europe-west1",
-			"type": "enterprise-db"
-		}
-	}
-	`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "2f49c2b3",
+		"memory": "4GB",
+		"name": "New Name",
+		"region": "europe-west1",
+		"status": "updating",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "enterprise-db"
+	  }
+	}`)
 }
 
 func TestUpdateMemoryAndName(t *testing.T) {
@@ -119,19 +117,18 @@ func TestUpdateMemoryAndName(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{"memory":"8GB","name":"New Name"}`)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "2f49c2b3",
-			"name": "New Name",
-			"status": "updating",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"memory": "8GB",
-			"region": "europe-west1",
-			"type": "enterprise-db"
-		}
-	}
-	`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "2f49c2b3",
+		"memory": "8GB",
+		"name": "New Name",
+		"region": "europe-west1",
+		"status": "updating",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "enterprise-db"
+	  }
+	}`)
 }
 
 func TestUpdateErrorsWithNoFlags(t *testing.T) {

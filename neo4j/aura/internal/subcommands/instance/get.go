@@ -46,21 +46,22 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 }
 
 func getFields(resBody []byte) ([]string, error) {
-	instances, err := api.ParseBody(resBody)
+	responseBody, err := api.ParseBody(resBody)
 	if err != nil {
 		return nil, err
 	}
-	if len(instances) != 1 {
-		return nil, fmt.Errorf("expected 1 instance, got %d", len(instances))
-	}
 	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
-	if HasCmiEndpoint(instances[0]) {
+	instance, err := responseBody.GetSingleOrError()
+	if err != nil {
+		return nil, err
+	}
+	if HasMetricsIntegrationEndpointUrl(instance) {
 		fields = append(fields, "metrics_integration_url")
 	}
 	return fields, nil
 }
 
-func HasCmiEndpoint(instance map[string]any) bool {
+func HasMetricsIntegrationEndpointUrl(instance map[string]any) bool {
 	cmiEndpointUrl := instance["metrics_integration_url"]
 	switch cmiEndpointUrl := cmiEndpointUrl.(type) {
 	case string:

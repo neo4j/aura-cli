@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/spf13/cobra"
+
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
-	"github.com/spf13/cobra"
 )
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
@@ -17,7 +18,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Long:  "This subcommand returns details about a specific Aura Tenant.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/tenants/%s", args[0])
+			tenantId := args[0]
+			path := fmt.Sprintf("/tenants/%s", tenantId)
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
@@ -28,14 +30,70 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name"})
+				responseData, err := api.ParseBody(resBody)
 				if err != nil {
 					return err
 				}
-
+				fields, values, err := postProcessResponseValues(cfg, tenantId, responseData)
+				if err != nil {
+					return err
+				}
+				err = output.PrintBodyMap(cmd, cfg, values, fields)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
 		},
+	}
+}
+
+func postProcessResponseValues(cfg *clicfg.Config, tenantId string, responseData api.ResponseData) ([]string, api.ResponseData, error) {
+	metricsIntegrationEndpointUrl, err := getMetricsIntegrationEndpointUrl(cfg, tenantId)
+	if err != nil {
+		return nil, nil, err
+	}
+	fields := []string{"id", "name"}
+	if len(metricsIntegrationEndpointUrl) > 0 {
+		tenant, err := responseData.GetSingleOrError()
+		if err != nil {
+			return nil, nil, err
+		}
+		tenant["metrics_integration_url"] = metricsIntegrationEndpointUrl
+		return append(fields, "metrics_integration_url"), api.NewSingleValueResponseData(tenant), nil
+	} else {
+		return fields, responseData, nil
+	}
+}
+
+func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (string, error) {
+	resBody, statusCode, err := api.MakeRequest(cfg, fmt.Sprintf("/tenants/%s/metrics-integration", tenantId), &api.RequestConfig{
+		Method: http.MethodGet,
+	})
+	// Aura API (in fact Console API returns HTTP 400 when CMI endpoint is not available for the tenant)
+	if err != nil && statusCode != http.StatusBadRequest {
+		return "", err
+	}
+	switch {
+	case statusCode == http.StatusOK:
+		metricsIntegrationResponse, err := api.ParseBody(resBody)
+		if err != nil {
+			return "", err
+		}
+		metricsIntegration, err := metricsIntegrationResponse.GetSingleOrError()
+		if err != nil {
+			return "", err
+		}
+		if endpointUrl, ok := metricsIntegration["endpoint"].(string); ok {
+			if len(endpointUrl) > 0 {
+				return endpointUrl, nil
+			}
+		}
+		return "", nil
+	case statusCode == http.StatusBadRequest:
+		return "", nil
+	default:
+		return "", fmt.Errorf("unexpected statusCode %d", statusCode)
 	}
 }

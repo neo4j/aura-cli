@@ -233,23 +233,64 @@ type CreateSnapshotResponse struct {
 	}
 }
 
-func ParseBody(body []byte) ([]map[string]any, error) {
-	var values []map[string]any
-	var jsonWithArray struct{ Data []map[string]any }
+type ResponseData interface {
+	AsArray() []map[string]any
+	GetSingleOrError() (map[string]any, error)
+}
 
-	err := json.Unmarshal(body, &jsonWithArray)
+type ListResponseData struct {
+	Data []map[string]any `json:"data"`
+}
+
+func (d ListResponseData) GetSingleOrError() (map[string]any, error) {
+	if len(d.Data) != 1 {
+		return nil, fmt.Errorf("expected 1 array value: %v", len(d.Data))
+	}
+	return d.Data[0], nil
+}
+
+func (d ListResponseData) AsArray() []map[string]any {
+	return d.Data
+}
+
+type SingleValueResponseData struct {
+	Data map[string]any `json:"data"`
+}
+
+func (d SingleValueResponseData) GetSingleOrError() (map[string]any, error) {
+	return d.Data, nil
+}
+
+func (d SingleValueResponseData) AsArray() []map[string]any {
+	return []map[string]any{d.Data}
+}
+
+func NewSingleValueResponseData(data map[string]any) ResponseData {
+	return SingleValueResponseData{
+		Data: data,
+	}
+}
+
+func NewResponseData(data []map[string]any) ResponseData {
+	return ListResponseData{
+		Data: data,
+	}
+}
+
+func ParseBody(body []byte) (ResponseData, error) {
+	var listResponseData ListResponseData
+
+	err := json.Unmarshal(body, &listResponseData)
 
 	// Try unmarshalling array first, if not it creates an array from the single item
 	if err == nil {
-		values = jsonWithArray.Data
+		return listResponseData, nil
 	} else {
-		var jsonWithSingleItem struct{ Data map[string]any }
-		err := json.Unmarshal(body, &jsonWithSingleItem)
+		var singleValueResponseData SingleValueResponseData
+		err := json.Unmarshal(body, &singleValueResponseData)
 		if err != nil {
 			return nil, err
 		}
-		values = []map[string]any{jsonWithSingleItem.Data}
+		return singleValueResponseData, nil
 	}
-
-	return values, nil
 }

@@ -39,21 +39,20 @@ func TestGetInstance(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertOutJson(`{
-		"data": {
-			"id": "2f49c2b3",
-			"name": "Production",
-			"status": "running",
-			"tenant_id": "YOUR_TENANT_ID",
-			"cloud_provider": "gcp",
-			"connection_url": "YOUR_CONNECTION_URL",
-			"metrics_integration_url": "YOUR_METRICS_INTEGRATION_ENDPOINT",
-			"region": "europe-west1",
-			"type": "enterprise-db",
-			"memory": "8GB",
-			"storage": "16GB"
-		}
-	}
-	`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "2f49c2b3",
+		"memory": "8GB",
+		"metrics_integration_url": "YOUR_METRICS_INTEGRATION_ENDPOINT",
+		"name": "Production",
+		"region": "europe-west1",
+		"status": "running",
+		"storage": "16GB",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "enterprise-db"
+	  }
+	}`)
 }
 
 func TestGetEnterpriseInstanceWithTableOutput(t *testing.T) {
@@ -159,17 +158,17 @@ func TestGetInstanceNotFoundError(t *testing.T) {
 }
 
 func TestGetHasCmiEndpoint(t *testing.T) {
-	assert.True(t, instance.HasCmiEndpoint(map[string]any{
+	assert.True(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": "https://neo4j.io/abc",
 	}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{}))
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": "",
 	}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": 1,
 	}))
-	assert.False(t, instance.HasCmiEndpoint(map[string]any{
+	assert.False(t, instance.HasMetricsIntegrationEndpointUrl(map[string]any{
 		"metrics_integration_url": nil,
 	}))
 }
