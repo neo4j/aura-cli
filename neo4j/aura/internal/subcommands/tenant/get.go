@@ -56,7 +56,7 @@ func postProcessResponseValues(cfg *clicfg.Config, tenantId string, responseData
 	}
 	fields := []string{"id", "name"}
 	if len(metricsIntegrationEndpointUrl) > 0 {
-		tenant, err := responseData.GetOne()
+		tenant, err := responseData.GetSingleOrError()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -79,7 +79,7 @@ func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (stri
 		if err != nil {
 			return "", err
 		}
-		metricsIntegration, err := metricsIntegrationResponse.GetOne()
+		metricsIntegration, err := metricsIntegrationResponse.GetSingleOrError()
 		if err != nil {
 			return "", err
 		}

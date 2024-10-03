@@ -235,14 +235,14 @@ type CreateSnapshotResponse struct {
 
 type ResponseData interface {
 	AsArray() []map[string]any
-	GetOne() (map[string]any, error)
+	GetSingleOrError() (map[string]any, error)
 }
 
 type ListResponseData struct {
 	Data []map[string]any `json:"data"`
 }
 
-func (d ListResponseData) GetOne() (map[string]any, error) {
+func (d ListResponseData) GetSingleOrError() (map[string]any, error) {
 	if len(d.Data) != 1 {
 		return nil, fmt.Errorf("expected 1 array value: %v", len(d.Data))
 	}
@@ -257,7 +257,7 @@ type SingleValueResponseData struct {
 	Data map[string]any `json:"data"`
 }
 
-func (d SingleValueResponseData) GetOne() (map[string]any, error) {
+func (d SingleValueResponseData) GetSingleOrError() (map[string]any, error) {
 	return d.Data, nil
 }
 

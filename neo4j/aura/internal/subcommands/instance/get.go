@@ -51,7 +51,7 @@ func getFields(resBody []byte) ([]string, error) {
 		return nil, err
 	}
 	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
-	instance, err := responseBody.GetOne()
+	instance, err := responseBody.GetSingleOrError()
 	if err != nil {
 		return nil, err
 	}
