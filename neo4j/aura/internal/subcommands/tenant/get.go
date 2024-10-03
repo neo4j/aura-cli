@@ -68,7 +68,9 @@ func postProcessResponseValues(cfg *clicfg.Config, tenantId string, responseData
 }
 
 func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (string, error) {
-	resBody, statusCode, err := api.MakeRequest(cfg, http.MethodGet, fmt.Sprintf("/tenants/%s/metrics-integration", tenantId), nil)
+	resBody, statusCode, err := api.MakeRequest(cfg, fmt.Sprintf("/tenants/%s/metrics-integration", tenantId), &api.RequestConfig{
+		Method: http.MethodGet,
+	})
 	// Aura API (in fact Console API returns HTTP 400 when CMI endpoint is not available for the tenant)
 	if err != nil && statusCode != http.StatusBadRequest {
 		return "", err

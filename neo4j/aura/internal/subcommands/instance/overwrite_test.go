@@ -36,18 +36,18 @@ func TestOverwriteFromInstance(t *testing.T) {
 	  }`)
 
 	helper.AssertOutJson(`{
-		"data": {
-		  "id": "2f49c2b3",
-		  "name": "Production",
-		  "status": "overwriting",
-		  "connection_url": "YOUR_CONNECTION_URL",
-		  "tenant_id": "YOUR_TENANT_ID",
-		  "cloud_provider": "gcp",
-		  "memory": "8GB",
-		  "region": "europe-west1",
-		  "type": "enterprise-db"
-		}
-	  }`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "2f49c2b3",
+		"memory": "8GB",
+		"name": "Production",
+		"region": "europe-west1",
+		"status": "overwriting",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "enterprise-db"
+	  }
+	}`)
 }
 
 func TestOverwriteFromSnapshot(t *testing.T) {
@@ -80,18 +80,18 @@ func TestOverwriteFromSnapshot(t *testing.T) {
 	  }`)
 
 	helper.AssertOutJson(`{
-		"data": {
-		  "id": "2f49c2b3",
-		  "name": "Production",
-		  "status": "overwriting",
-		  "connection_url": "YOUR_CONNECTION_URL",
-		  "tenant_id": "YOUR_TENANT_ID",
-		  "cloud_provider": "gcp",
-		  "memory": "8GB",
-		  "region": "europe-west1",
-		  "type": "enterprise-db"
-		}
-	  }`)
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "2f49c2b3",
+		"memory": "8GB",
+		"name": "Production",
+		"region": "europe-west1",
+		"status": "overwriting",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "enterprise-db"
+	  }
+	}`)
 }
 
 func TestOverwriteWithAwait(t *testing.T) {
@@ -140,14 +140,14 @@ func TestOverwriteWithAwait(t *testing.T) {
 
 	helper.AssertOut(`{
 	"data": {
-		"id": "2f49c2b3",
-		"name": "Production",
-		"status": "overwriting",
-		"connection_url": "YOUR_CONNECTION_URL",
-		"tenant_id": "YOUR_TENANT_ID",
 		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "2f49c2b3",
 		"memory": "8GB",
+		"name": "Production",
 		"region": "europe-west1",
+		"status": "overwriting",
+		"tenant_id": "YOUR_TENANT_ID",
 		"type": "enterprise-db"
 	}
 }
