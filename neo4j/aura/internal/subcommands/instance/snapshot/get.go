@@ -12,14 +12,17 @@ import (
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
+	var snapshotId string
 
 	cmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get details of a snapshot",
 		Long:  `This endpoint returns details about a specific snapshot.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(len(args))
+
 			cmd.SilenceUsage = true
-			path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, args[0])
+			path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, snapshotId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method: http.MethodGet,
@@ -38,8 +41,10 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance with the snapshot")
+	cmd.Flags().StringVar(&snapshotId, "snapshot-id", "", "The id of the snaphost")
 	cmd.MarkFlagRequired("instance-id")
+	cmd.MarkFlagRequired("snapshot-id")
 
 	return cmd
 }
