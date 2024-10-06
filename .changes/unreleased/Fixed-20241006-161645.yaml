@@ -1,0 +1,3 @@
+kind: Fixed
+body: Ensure that 1 argument is required when getting snapshot details
+time: 2024-10-06T16:16:45.993873+01:00
