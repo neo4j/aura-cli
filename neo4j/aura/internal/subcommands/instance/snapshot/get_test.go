@@ -24,7 +24,7 @@ func TestGetSnapshot(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("instance snapshot get --output json --instance-id %s %s", instanceId, snapshotId))
+	helper.ExecuteCommand(fmt.Sprintf("instance snapshot get --output json --instance-id %s --snapshot-id %s", instanceId, snapshotId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
