@@ -23,7 +23,7 @@ func NewOverwriteCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "overwrite",
+		Use:   "overwrite <id>",
 		Short: "Starts the process of overwriting the specified instance with data from the source instance provided",
 		Long: `Starts the process of overwriting the specified instance with data from the source instance provided.
 		The overwrite process mimics the 'Clone to existing' functionality of the Aura Console.
@@ -41,11 +41,10 @@ If only --source-instance-id is provided, a new snapshot of that instance is cre
 			if sourceInstanceId == "" {
 				sourceInstanceId = instanceId
 			}
-
 			postBody["source_instance_id"] = sourceInstanceId
+
 			if sourceSnapshotId != "" {
 				postBody["source_snapshot_id"] = sourceSnapshotId
-
 			}
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{

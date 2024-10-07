@@ -14,7 +14,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
 
 	cmd := &cobra.Command{
-		Use:   "get",
+		Use:   "get <id>",
 		Short: "Get details of a snapshot",
 		Long:  `This endpoint returns details about a specific snapshot.`,
 		Args:  cobra.ExactArgs(1),
@@ -39,7 +39,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The id of the instance to list its snapshots")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to get the snapshot details of")
 	cmd.MarkFlagRequired("instance-id")
 
 	return cmd
