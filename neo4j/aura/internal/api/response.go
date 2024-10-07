@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
 )
@@ -24,7 +25,7 @@ type ServerError struct {
 	Error string `json:"error"`
 }
 
-func handleResponseError(res *http.Response) error {
+func handleResponseError(res *http.Response, credential *clicfg.AuraCredential) error {
 	var err error
 	resBody, err := io.ReadAll(res.Body)
 
@@ -52,21 +53,9 @@ func handleResponseError(res *http.Response) error {
 
 		return fmt.Errorf("%s", messages)
 	case http.StatusUnauthorized:
-		// TODO: clear the token?
-		var errorResponse ErrorResponse
-
-		err = json.Unmarshal(resBody, &errorResponse)
-		if err != nil {
-			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
-		}
-
-		messages := []string{}
-		for _, e := range errorResponse.Errors {
-			messages = append(messages, e.Message)
-		}
-
-		return fmt.Errorf("%s", messages)
+		return formatAuthorizationError(resBody, statusCode, credential)
 	case http.StatusForbidden:
+		// Requested endpoint is forbidden
 		var serverError ServerError
 		err := json.Unmarshal(resBody, &serverError)
 		if err != nil {
@@ -76,20 +65,7 @@ func handleResponseError(res *http.Response) error {
 			return fmt.Errorf(serverError.Error)
 		}
 
-		// TODO: clear the token?
-		var errorResponse ErrorResponse
-
-		err = json.Unmarshal(resBody, &errorResponse)
-		if err != nil {
-			return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
-		}
-
-		messages := []string{}
-		for _, e := range errorResponse.Errors {
-			messages = append(messages, e.Message)
-		}
-
-		return fmt.Errorf("%s", messages)
+		return formatAuthorizationError(resBody, statusCode, credential)
 	case http.StatusNotFound:
 		var errorResponse ErrorResponse
 
@@ -157,8 +133,8 @@ func handleResponseError(res *http.Response) error {
 	}
 }
 
-func getHeaders(cfg *clicfg.Config) (http.Header, error) {
-	token, err := getToken(cfg)
+func getHeaders(credential *clicfg.AuraCredential, cfg *clicfg.Config) (http.Header, error) {
+	token, err := getToken(credential, cfg)
 
 	if err != nil {
 		return nil, err
@@ -293,4 +269,29 @@ func ParseBody(body []byte) (ResponseData, error) {
 		}
 		return singleValueResponseData, nil
 	}
+}
+
+func formatAuthorizationError(resBody []byte, statusCode int, credential *clicfg.AuraCredential) error {
+	var errorResponse ErrorResponse
+
+	err := json.Unmarshal(resBody, &errorResponse)
+	if err != nil {
+		return fmt.Errorf("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:])
+	}
+
+	messages := []string{}
+	for _, e := range errorResponse.Errors {
+		messages = append(messages, e.Message)
+	}
+
+	err = credential.ClearAccessToken()
+	if err != nil {
+		messages = append(messages, "Request failed authorization - attempted to clear the access token but encountered an error, please report an issue in https://github.com/neo4j/cli")
+	} else {
+		messages = append(messages, "Request failed authorization - access token has been cleared and will be refreshed on next request - please retry the command")
+	}
+
+	return fmt.Errorf(`[
+	%s
+]`, strings.Join(messages, ",\n\t"))
 }

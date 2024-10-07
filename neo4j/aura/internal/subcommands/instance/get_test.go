@@ -172,3 +172,46 @@ func TestGetHasCmiEndpoint(t *testing.T) {
 		"metrics_integration_url": nil,
 	}))
 }
+
+func TestUnauthorizedAccessTokenRefresh(t *testing.T) {
+	statusCodes := []int{http.StatusUnauthorized, http.StatusForbidden}
+
+	for _, statusCode := range statusCodes {
+		t.Run(fmt.Sprintf("access token is cleared on status code %d", statusCode), func(t *testing.T) {
+			helper := testutils.NewAuraTestHelper(t)
+			defer helper.Close()
+
+			instanceId := "2f49c2b3"
+
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s", instanceId), statusCode, `{
+				"errors": [
+					{
+						"message": "string",
+						"reason": "string",
+						"field": "string"
+					}
+				]
+			}`)
+
+			helper.ExecuteCommand(fmt.Sprintf("instance get %s", instanceId))
+
+			mockHandler.AssertCalledTimes(1)
+			mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+			helper.AssertConfigValue("aura.credentials", `[
+	{
+		"name": "test-cred",
+		"client-id": "",
+		"client-secret": "",
+		"access-token": "",
+		"token-expiry": 0
+	}
+]`)
+
+			helper.AssertErr(`Error: [
+	string,
+	Request failed authorization - access token has been cleared and will be refreshed on next request - please retry the command
+]`)
+		})
+	}
+}
