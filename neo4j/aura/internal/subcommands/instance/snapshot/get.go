@@ -17,6 +17,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "get",
 		Short: "Get details of a snapshot",
 		Long:  `This endpoint returns details about a specific snapshot.`,
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/snapshots/%s", instanceId, args[0])
