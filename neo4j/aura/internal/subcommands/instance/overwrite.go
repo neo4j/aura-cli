@@ -26,7 +26,8 @@ func NewOverwriteCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "overwrite <id>",
 		Short: "Starts the process of overwriting the specified instance with data from the source instance provided",
 		Long: `Starts the process of overwriting the specified instance with data from the source instance provided.
-		The overwrite process mimics the 'Clone to existing' functionality of the Aura Console.
+
+The overwrite process mimics the 'Clone to existing' functionality of the Aura Console.
 
 If only --source-instance-id is provided, a new snapshot of that instance is created and used for overwriting. Alternatively, you can specify an additional --source-snapshot-id to use a specific snapshot for overwriting, from --source-instance-id provided, otherwise as a snapshot of the instance being overwritten.
 		`,
@@ -76,12 +77,12 @@ If only --source-instance-id is provided, a new snapshot of that instance is cre
 		},
 	}
 
-	cmd.Flags().StringVar(&sourceInstanceId, sourceInstanceIdFlag, "", "The id of the source instance")
-	cmd.Flags().StringVar(&sourceSnapshotId, sourceSnapshotIdFlag, "", "The id of the snapshot to use")
+	cmd.Flags().StringVar(&sourceInstanceId, sourceInstanceIdFlag, "", "The ID of the instance to overwrite with, from the source snapshot ID if provided, otherwise takes a new snapshot and overwrites")
+	cmd.Flags().StringVar(&sourceSnapshotId, sourceSnapshotIdFlag, "", "The ID of the snapshot to overwrite with, from the source instance ID if provided, otherwise the argument provided instance")
 
 	cmd.MarkFlagsOneRequired(sourceInstanceIdFlag, sourceSnapshotIdFlag)
 
-	cmd.Flags().BoolVar(&await, "await", false, "Waits until created snapshot is ready.")
+	cmd.Flags().BoolVar(&await, "await", false, "Waits until created snapshot is ready")
 
 	return cmd
 }
