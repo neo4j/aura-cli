@@ -1,4 +1,4 @@
-package tenant_test
+package project_test
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 )
 
-func TestListTenants(t *testing.T) {
+func TestListProjects(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -18,7 +18,7 @@ func TestListTenants(t *testing.T) {
 				"name": "Production"
 				},
 				{
-				"id": "YOUR_TENANT_ID",
+				"id": "YOUR_PROJECT_ID",
 				"name": "Staging"
 				},
 				{
@@ -28,7 +28,7 @@ func TestListTenants(t *testing.T) {
 			]
 		}`)
 
-	helper.ExecuteCommand("tenant list")
+	helper.ExecuteCommand("project list")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
@@ -40,7 +40,7 @@ func TestListTenants(t *testing.T) {
 				"name": "Production"
 			},
 			{
-				"id": "YOUR_TENANT_ID",
+				"id": "YOUR_PROJECT_ID",
 				"name": "Staging"
 			},
 			{

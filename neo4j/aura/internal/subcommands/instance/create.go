@@ -17,7 +17,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		memory               string
 		name                 string
 		_type                string
-		tenantId             string
+		projectId            string
 		cloudProvider        string
 		customerManagedKeyId string
 		await                bool
@@ -29,7 +29,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		memoryFlag               = "memory"
 		nameFlag                 = "name"
 		typeFlag                 = "type"
-		tenantIdFlag             = "tenant-id"
+		projectIdFlag            = "project-id"
 		cloudProviderFlag        = "cloud-provider"
 		customerManagedKeyIdFlag = "customer-managed-key-id"
 		awaitFlag                = "await"
@@ -40,11 +40,11 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Creates a new instance",
 		Long: `This subcommand starts the creation process of an Aura instance.
 
-Creating an instance is an asynchronous operation that can be awaited with --await. Supported instance configurations for your tenant can be obtained by calling the tenant get subcommand.
+Creating an instance is an asynchronous operation that can be awaited with --await. Supported instance configurations for your project can be obtained by calling the project get subcommand.
 
 You can poll the current status of this operation by periodically getting the instance details for the instance ID using the get subcommand. Once the status transitions from "creating" to "running" you may begin to use your instance.
 
-This subcommand returns your instance ID, initial credentials, connection URL along with your tenant id, cloud provider, region, instance type, and the instance name for you to use once the instance is running. It is important to store these initial credentials until you have the chance to login to your running instance and change them.
+This subcommand returns your instance ID, initial credentials, connection URL along with your project id, cloud provider, region, instance type, and the instance name for you to use once the instance is running. It is important to store these initial credentials until you have the chance to login to your running instance and change them.
 
 You must also provide a --cloud-provider flag with the subcommand, which specifies which cloud provider the instances will be hosted in. The acceptable values for this field are gcp, aws, or azure.
 
@@ -56,8 +56,8 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				cmd.MarkFlagRequired(regionFlag)
 			}
 
-			if cfg.Aura.DefaultTenant() == "" {
-				cmd.MarkFlagRequired(tenantIdFlag)
+			if cfg.Aura.DefaultProject() == "" {
+				cmd.MarkFlagRequired(projectIdFlag)
 			}
 
 			return nil
@@ -71,10 +71,10 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				"cloud_provider": cloudProvider,
 			}
 
-			if tenantId == "" {
-				body["tenant_id"] = cfg.Aura.DefaultTenant()
+			if projectId == "" {
+				body["tenant_id"] = cfg.Aura.DefaultProject()
 			} else {
-				body["tenant_id"] = tenantId
+				body["tenant_id"] = projectId
 			}
 
 			if _type == "free-db" {
@@ -136,7 +136,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.Flags().StringVar(&_type, typeFlag, "", "The type of the instance.")
 	cmd.MarkFlagRequired(typeFlag)
 
-	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
+	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "")
 
 	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)

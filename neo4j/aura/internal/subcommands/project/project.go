@@ -1,4 +1,4 @@
-package tenant
+package project
 
 import (
 	"github.com/spf13/cobra"
@@ -8,8 +8,8 @@ import (
 
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tenant",
-		Short: "Relates to an Aura Tenant",
+		Use:   "project",
+		Short: "Relates to an Aura Project",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url")); err != nil {
 				return err

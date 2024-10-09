@@ -18,12 +18,12 @@ func TestListCustomerManagedKeys(t *testing.T) {
 			{
 				"id": "f15cc45b-1c29-44e8-911f-3ba719f70ed7",
 				"name": "Production Key",
-				"tenant_id": "YOUR_TENANT_ID"
+				"tenant_id": "YOUR_PROJECT_ID"
 			},
 			{
 				"id": "0d971cc4-f703-40fd-8c5c-f5ec134f6c84",
 				"name": "Dev Key",
-				"tenant_id": "YOUR_TENANT_ID"
+				"tenant_id": "YOUR_PROJECT_ID"
 			}
 		]
 		}`)
@@ -38,12 +38,12 @@ func TestListCustomerManagedKeys(t *testing.T) {
 				{
 					"id": "f15cc45b-1c29-44e8-911f-3ba719f70ed7",
 					"name": "Production Key",
-					"tenant_id": "YOUR_TENANT_ID"
+					"tenant_id": "YOUR_PROJECT_ID"
 				},
 				{
 					"id": "0d971cc4-f703-40fd-8c5c-f5ec134f6c84",
 					"name": "Dev Key",
-					"tenant_id": "YOUR_TENANT_ID"
+					"tenant_id": "YOUR_PROJECT_ID"
 				}
 			]
 		}
@@ -51,7 +51,7 @@ func TestListCustomerManagedKeys(t *testing.T) {
 	}
 }
 
-func TestListCustomerManagedKeysWithTenantId(t *testing.T) {
+func TestListCustomerManagedKeysWithProjectId(t *testing.T) {
 	for _, command := range []string{"customer-managed-key", "cmk"} {
 		helper := testutils.NewAuraTestHelper(t)
 		defer helper.Close()
@@ -61,17 +61,17 @@ func TestListCustomerManagedKeysWithTenantId(t *testing.T) {
 			{
 				"id": "f15cc45b-1c29-44e8-911f-3ba719f70ed7",
 				"name": "Production Key",
-				"tenant_id": "YOUR_TENANT_ID"
+				"tenant_id": "YOUR_PROJECT_ID"
 			},
 			{
 				"id": "0d971cc4-f703-40fd-8c5c-f5ec134f6c84",
 				"name": "Dev Key",
-				"tenant_id": "YOUR_TENANT_ID"
+				"tenant_id": "YOUR_PROJECT_ID"
 			}
 		]
 		}`)
 
-		helper.ExecuteCommand(fmt.Sprintf("%s list --tenant-id 1234", command))
+		helper.ExecuteCommand(fmt.Sprintf("%s list --project-id 1234", command))
 
 		mockHandler.AssertCalledTimes(1)
 		mockHandler.AssertCalledWithMethod(http.MethodGet)
@@ -82,12 +82,12 @@ func TestListCustomerManagedKeysWithTenantId(t *testing.T) {
 				{
 					"id": "f15cc45b-1c29-44e8-911f-3ba719f70ed7",
 					"name": "Production Key",
-					"tenant_id": "YOUR_TENANT_ID"
+					"tenant_id": "YOUR_PROJECT_ID"
 				},
 				{
 					"id": "0d971cc4-f703-40fd-8c5c-f5ec134f6c84",
 					"name": "Dev Key",
-					"tenant_id": "YOUR_TENANT_ID"
+					"tenant_id": "YOUR_PROJECT_ID"
 				}
 			]
 		}

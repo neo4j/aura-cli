@@ -49,7 +49,7 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	return &Config{Version: version, Aura: AuraConfig{viper: Viper, pollingOverride: PollingConfig{
 		MaxRetries: 60,
 		Interval:   20,
-	}, ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output"}}}, nil
+	}, ValidConfigKeys: []string{"auth-url", "base-url", "default-project", "output"}}}, nil
 }
 
 func bindEnvironmentVariables(Viper *viper.Viper) {
@@ -134,8 +134,8 @@ func (config *AuraConfig) BindOutput(flag *pflag.Flag) error {
 	return config.viper.BindPFlag("aura.output", flag)
 }
 
-func (config *AuraConfig) DefaultTenant() string {
-	return config.viper.GetString("aura.default-tenant")
+func (config *AuraConfig) DefaultProject() string {
+	return config.viper.GetString("aura.default-project")
 }
 
 func (config *AuraConfig) DefaultCredential() (*AuraCredential, error) {

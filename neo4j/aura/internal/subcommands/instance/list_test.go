@@ -16,25 +16,25 @@ func TestListInstances(t *testing.T) {
 				{
 					"id": "2f49c2b3",
 					"name": "Production",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "gcp"
 				},
 				{
 					"id": "b51dc964",
 					"name": "Instance01",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "aws"
 				},
 				{
 					"id": "432392ae",
 					"name": "Recommendations",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "azure"
 				},
 				{
 					"id": "524b7d8d",
 					"name": "Northwind",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "gcp"
 				}
 			]
@@ -51,31 +51,31 @@ func TestListInstances(t *testing.T) {
 		  "cloud_provider": "gcp",
 		  "id": "2f49c2b3",
 		  "name": "Production",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		},
 		{
 		  "cloud_provider": "aws",
 		  "id": "b51dc964",
 		  "name": "Instance01",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		},
 		{
 		  "cloud_provider": "azure",
 		  "id": "432392ae",
 		  "name": "Recommendations",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		},
 		{
 		  "cloud_provider": "gcp",
 		  "id": "524b7d8d",
 		  "name": "Northwind",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		}
 	  ]
 	}`)
 }
 
-func TestListInstancesWithTenantId(t *testing.T) {
+func TestListInstancesWithProjectId(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -84,35 +84,35 @@ func TestListInstancesWithTenantId(t *testing.T) {
 				{
 					"id": "2f49c2b3",
 					"name": "Production",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "gcp"
 				},
 				{
 					"id": "b51dc964",
 					"name": "Instance01",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "aws"
 				},
 				{
 					"id": "432392ae",
 					"name": "Recommendations",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "azure"
 				},
 				{
 					"id": "524b7d8d",
 					"name": "Northwind",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"cloud_provider": "gcp"
 				}
 			]
 		}`)
 
-	helper.ExecuteCommand("instance list --tenant-id my-tenant-id")
+	helper.ExecuteCommand("instance list --project-id my-project-id")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
-	mockHandler.AssertCalledWithQueryParam("tenantId", "my-tenant-id")
+	mockHandler.AssertCalledWithQueryParam("tenantId", "my-project-id")
 
 	helper.AssertOutJson(`{
 	  "data": [
@@ -120,25 +120,25 @@ func TestListInstancesWithTenantId(t *testing.T) {
 		  "cloud_provider": "gcp",
 		  "id": "2f49c2b3",
 		  "name": "Production",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		},
 		{
 		  "cloud_provider": "aws",
 		  "id": "b51dc964",
 		  "name": "Instance01",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		},
 		{
 		  "cloud_provider": "azure",
 		  "id": "432392ae",
 		  "name": "Recommendations",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		},
 		{
 		  "cloud_provider": "gcp",
 		  "id": "524b7d8d",
 		  "name": "Northwind",
-		  "tenant_id": "YOUR_TENANT_ID"
+		  "tenant_id": "YOUR_PROJECT_ID"
 		}
 	  ]
 	}`)

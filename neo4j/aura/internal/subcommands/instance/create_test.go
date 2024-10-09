@@ -18,7 +18,7 @@ func TestCreateFreeInstance(t *testing.T) {
 				"connection_url": "YOUR_CONNECTION_URL",
 				"username": "neo4j",
 				"password": "letMeIn123!",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"region": "europe-west1",
 				"type": "free-db",
@@ -26,11 +26,11 @@ func TestCreateFreeInstance(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("instance create --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp")
+	helper.ExecuteCommand("instance create --name Instance01 --type free-db --project-id YOUR_PROJECT_ID --cloud-provider gcp")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_PROJECT_ID","type":"free-db","version":"5"}`)
 
 	helper.AssertOutJson(`{
 	  "data": {
@@ -40,7 +40,7 @@ func TestCreateFreeInstance(t *testing.T) {
 		"name": "Instance01",
 		"password": "letMeIn123!",
 		"region": "europe-west1",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "free-db",
 		"username": "neo4j"
 	  }
@@ -57,7 +57,7 @@ func TestCreateProfessionalInstance(t *testing.T) {
 				"connection_url": "YOUR_CONNECTION_URL",
 				"username": "neo4j",
 				"password": "letMeIn123!",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"region": "europe-west1",
 				"type": "professional-db",
@@ -65,11 +65,11 @@ func TestCreateProfessionalInstance(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --memory 4GB")
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --project-id YOUR_PROJECT_ID --cloud-provider gcp --memory 4GB")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"professional-db","version":"5"}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_PROJECT_ID","type":"professional-db","version":"5"}`)
 
 	helper.AssertOutJson(`{
 	  "data": {
@@ -79,7 +79,7 @@ func TestCreateProfessionalInstance(t *testing.T) {
 		"name": "Instance01",
 		"password": "letMeIn123!",
 		"region": "europe-west1",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "professional-db",
 		"username": "neo4j"
 	  }
@@ -92,7 +92,7 @@ func TestCreateProfessionalInstanceNoMemory(t *testing.T) {
 
 	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
 
-	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp")
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --project-id YOUR_PROJECT_ID --cloud-provider gcp")
 
 	mockHandler.AssertCalledTimes(0)
 
@@ -108,8 +108,8 @@ Flags:
   -h, --help                             help for create
       --memory string                    The size of the instance memory in GB.
       --name string                      The name of the instance (any UTF-8 characters with no trailing or leading whitespace).
+      --project-id string                
       --region string                    The region where the instance is hosted.
-      --tenant-id string                 
       --type string                      The type of the instance.
       --version string                   The Neo4j version of the instance. (default "5")
 
@@ -121,7 +121,7 @@ Global Flags:
 `)
 }
 
-func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
+func TestCreateProfessionalInstanceNoProject(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -131,7 +131,7 @@ func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(0)
 
-	helper.AssertErr(`Error: required flag(s) "tenant-id" not set
+	helper.AssertErr(`Error: required flag(s) "project-id" not set
 `)
 	helper.AssertOut(`Usage:
   aura instance create [flags]
@@ -143,8 +143,8 @@ Flags:
   -h, --help                             help for create
       --memory string                    The size of the instance memory in GB.
       --name string                      The name of the instance (any UTF-8 characters with no trailing or leading whitespace).
+      --project-id string                
       --region string                    The region where the instance is hosted.
-      --tenant-id string                 
       --type string                      The type of the instance.
       --version string                   The Neo4j version of the instance. (default "5")
 
@@ -196,7 +196,7 @@ func TestCreateInstanceError(t *testing.T) {
 
 			mockHandler := helper.NewRequestHandlerMock("/v1/instances", testCase.statusCode, testCase.returnBody)
 
-			helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --memory 4GB")
+			helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --project-id YOUR_PROJECT_ID --cloud-provider gcp --memory 4GB")
 
 			mockHandler.AssertCalledTimes(1)
 			mockHandler.AssertCalledWithMethod(http.MethodPost)
@@ -217,7 +217,7 @@ func TestInstanceWithCmkId(t *testing.T) {
 				"connection_url": "YOUR_CONNECTION_URL",
 				"username": "neo4j",
 				"password": "letMeIn123!",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"region": "europe-west1",
 				"type": "enterprise-db",
@@ -225,11 +225,11 @@ func TestInstanceWithCmkId(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type enterprise-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --memory 16GB --customer-managed-key-id UUID_OF_YOUR_KEY")
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type enterprise-db --project-id YOUR_PROJECT_ID --cloud-provider gcp --memory 16GB --customer-managed-key-id UUID_OF_YOUR_KEY")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY"}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_PROJECT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY"}`)
 
 	helper.AssertOutJson(`{
 	  "data": {
@@ -239,18 +239,18 @@ func TestInstanceWithCmkId(t *testing.T) {
 		"name": "Instance01",
 		"password": "letMeIn123!",
 		"region": "europe-west1",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db",
 		"username": "neo4j"
 	  }
 	} `)
 }
 
-func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
+func TestCreateFreeInstanceWithConfigProjectId(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	helper.SetConfigValue("aura.default-tenant", "YOUR_TENANT_ID")
+	helper.SetConfigValue("aura.default-project", "YOUR_PROJECT_ID")
 
 	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
 			"data": {
@@ -258,7 +258,7 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 				"connection_url": "YOUR_CONNECTION_URL",
 				"username": "neo4j",
 				"password": "letMeIn123!",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"region": "europe-west1",
 				"type": "free-db",
@@ -270,7 +270,7 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_PROJECT_ID","type":"free-db","version":"5"}`)
 
 	helper.AssertOutJson(`{
 	  "data": {
@@ -280,7 +280,7 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 		"name": "Instance01",
 		"password": "letMeIn123!",
 		"region": "europe-west1",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "free-db",
 		"username": "neo4j"
 	  }
@@ -297,7 +297,7 @@ func TestCreateFreeInstanceWithAwait(t *testing.T) {
 				"connection_url": "YOUR_CONNECTION_URL",
 				"username": "neo4j",
 				"password": "letMeIn123!",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"region": "europe-west1",
 				"type": "free-db",
@@ -317,11 +317,11 @@ func TestCreateFreeInstanceWithAwait(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --await")
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type free-db --project-id YOUR_PROJECT_ID --cloud-provider gcp --await")
 
 	createMock.AssertCalledTimes(1)
 	createMock.AssertCalledWithMethod(http.MethodPost)
-	createMock.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
+	createMock.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_PROJECT_ID","type":"free-db","version":"5"}`)
 
 	getMock.AssertCalledTimes(2)
 	getMock.AssertCalledWithMethod(http.MethodGet)
@@ -335,7 +335,7 @@ func TestCreateFreeInstanceWithAwait(t *testing.T) {
 		"name": "Instance01",
 		"password": "letMeIn123!",
 		"region": "europe-west1",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "free-db",
 		"username": "neo4j"
 	}

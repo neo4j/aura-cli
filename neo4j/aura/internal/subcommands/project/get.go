@@ -1,4 +1,4 @@
-package tenant
+package project
 
 import (
 	"fmt"
@@ -14,12 +14,12 @@ import (
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "get <id>",
-		Short: "Returns tenant details",
-		Long:  "This subcommand returns details about a specific Aura Tenant.",
+		Short: "Returns project details",
+		Long:  "This subcommand returns details about a specific Aura Project.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tenantId := args[0]
-			path := fmt.Sprintf("/tenants/%s", tenantId)
+			projectId := args[0]
+			path := fmt.Sprintf("/tenants/%s", projectId)
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
@@ -34,7 +34,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				fields, values, err := postProcessResponseValues(cfg, tenantId, responseData)
+				fields, values, err := postProcessResponseValues(cfg, projectId, responseData)
 				if err != nil {
 					return err
 				}
@@ -49,29 +49,29 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 }
 
-func postProcessResponseValues(cfg *clicfg.Config, tenantId string, responseData api.ResponseData) ([]string, api.ResponseData, error) {
-	metricsIntegrationEndpointUrl, err := getMetricsIntegrationEndpointUrl(cfg, tenantId)
+func postProcessResponseValues(cfg *clicfg.Config, projectId string, responseData api.ResponseData) ([]string, api.ResponseData, error) {
+	metricsIntegrationEndpointUrl, err := getMetricsIntegrationEndpointUrl(cfg, projectId)
 	if err != nil {
 		return nil, nil, err
 	}
 	fields := []string{"id", "name"}
 	if len(metricsIntegrationEndpointUrl) > 0 {
-		tenant, err := responseData.GetSingleOrError()
+		project, err := responseData.GetSingleOrError()
 		if err != nil {
 			return nil, nil, err
 		}
-		tenant["metrics_integration_url"] = metricsIntegrationEndpointUrl
-		return append(fields, "metrics_integration_url"), api.NewSingleValueResponseData(tenant), nil
+		project["metrics_integration_url"] = metricsIntegrationEndpointUrl
+		return append(fields, "metrics_integration_url"), api.NewSingleValueResponseData(project), nil
 	} else {
 		return fields, responseData, nil
 	}
 }
 
-func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (string, error) {
-	resBody, statusCode, err := api.MakeRequest(cfg, fmt.Sprintf("/tenants/%s/metrics-integration", tenantId), &api.RequestConfig{
+func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, projectId string) (string, error) {
+	resBody, statusCode, err := api.MakeRequest(cfg, fmt.Sprintf("/tenants/%s/metrics-integration", projectId), &api.RequestConfig{
 		Method: http.MethodGet,
 	})
-	// Aura API (in fact Console API returns HTTP 400 when CMI endpoint is not available for the tenant)
+	// Aura API (in fact Console API returns HTTP 400 when CMI endpoint is not available for the project)
 	if err != nil && statusCode != http.StatusBadRequest {
 		return "", err
 	}

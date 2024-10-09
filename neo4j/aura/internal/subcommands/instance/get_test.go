@@ -22,7 +22,7 @@ func TestGetInstance(t *testing.T) {
 				"id": "2f49c2b3",
 				"name": "Production",
 				"status": "running",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"connection_url": "YOUR_CONNECTION_URL",
 				"metrics_integration_url": "YOUR_METRICS_INTEGRATION_ENDPOINT",
@@ -49,7 +49,7 @@ func TestGetInstance(t *testing.T) {
 		"region": "europe-west1",
 		"status": "running",
 		"storage": "16GB",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	  }
 	}`)
@@ -66,7 +66,7 @@ func TestGetEnterpriseInstanceWithTableOutput(t *testing.T) {
 				"id": "2f49c2b3",
 				"name": "Production",
 				"status": "running",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"connection_url": "YOUR_CONNECTION_URL",
 				"metrics_integration_url": "YOUR_METRICS_INTEGRATION_ENDPOINT",
@@ -86,11 +86,11 @@ func TestGetEnterpriseInstanceWithTableOutput(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertOut(`
-┌──────────┬────────────┬────────────────┬─────────┬─────────────────────┬────────────────┬──────────────┬───────────────┬────────┬─────────┬─────────────────────────┬───────────────────────────────────┐
-│ ID       │ NAME       │ TENANT_ID      │ STATUS  │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE          │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │ METRICS_INTEGRATION_URL           │
-├──────────┼────────────┼────────────────┼─────────┼─────────────────────┼────────────────┼──────────────┼───────────────┼────────┼─────────┼─────────────────────────┼───────────────────────────────────┤
-│ 2f49c2b3 │ Production │ YOUR_TENANT_ID │ running │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ enterprise-db │ 8GB    │ 16GB    │                         │ YOUR_METRICS_INTEGRATION_ENDPOINT │
-└──────────┴────────────┴────────────────┴─────────┴─────────────────────┴────────────────┴──────────────┴───────────────┴────────┴─────────┴─────────────────────────┴───────────────────────────────────┘
+┌──────────┬────────────┬─────────────────┬─────────┬─────────────────────┬────────────────┬──────────────┬───────────────┬────────┬─────────┬─────────────────────────┬───────────────────────────────────┐
+│ ID       │ NAME       │ TENANT_ID       │ STATUS  │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE          │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │ METRICS_INTEGRATION_URL           │
+├──────────┼────────────┼─────────────────┼─────────┼─────────────────────┼────────────────┼──────────────┼───────────────┼────────┼─────────┼─────────────────────────┼───────────────────────────────────┤
+│ 2f49c2b3 │ Production │ YOUR_PROJECT_ID │ running │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ enterprise-db │ 8GB    │ 16GB    │                         │ YOUR_METRICS_INTEGRATION_ENDPOINT │
+└──────────┴────────────┴─────────────────┴─────────┴─────────────────────┴────────────────┴──────────────┴───────────────┴────────┴─────────┴─────────────────────────┴───────────────────────────────────┘
 `)
 
 }
@@ -106,7 +106,7 @@ func TestGetProfessionalInstanceWithTableOutput(t *testing.T) {
 				"id": "2f49c2b3",
 				"name": "Production",
 				"status": "running",
-				"tenant_id": "YOUR_TENANT_ID",
+				"tenant_id": "YOUR_PROJECT_ID",
 				"cloud_provider": "gcp",
 				"connection_url": "YOUR_CONNECTION_URL",
 				"region": "europe-west1",
@@ -125,11 +125,11 @@ func TestGetProfessionalInstanceWithTableOutput(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertOut(`
-┌──────────┬────────────┬────────────────┬─────────┬─────────────────────┬────────────────┬──────────────┬─────────────────┬────────┬─────────┬─────────────────────────┐
-│ ID       │ NAME       │ TENANT_ID      │ STATUS  │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE            │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │
-├──────────┼────────────┼────────────────┼─────────┼─────────────────────┼────────────────┼──────────────┼─────────────────┼────────┼─────────┼─────────────────────────┤
-│ 2f49c2b3 │ Production │ YOUR_TENANT_ID │ running │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ professional-db │ 8GB    │ 16GB    │                         │
-└──────────┴────────────┴────────────────┴─────────┴─────────────────────┴────────────────┴──────────────┴─────────────────┴────────┴─────────┴─────────────────────────┘
+┌──────────┬────────────┬─────────────────┬─────────┬─────────────────────┬────────────────┬──────────────┬─────────────────┬────────┬─────────┬─────────────────────────┐
+│ ID       │ NAME       │ TENANT_ID       │ STATUS  │ CONNECTION_URL      │ CLOUD_PROVIDER │ REGION       │ TYPE            │ MEMORY │ STORAGE │ CUSTOMER_MANAGED_KEY_ID │
+├──────────┼────────────┼─────────────────┼─────────┼─────────────────────┼────────────────┼──────────────┼─────────────────┼────────┼─────────┼─────────────────────────┤
+│ 2f49c2b3 │ Production │ YOUR_PROJECT_ID │ running │ YOUR_CONNECTION_URL │ gcp            │ europe-west1 │ professional-db │ 8GB    │ 16GB    │                         │
+└──────────┴────────────┴─────────────────┴─────────┴─────────────────────┴────────────────┴──────────────┴─────────────────┴────────┴─────────┴─────────────────────────┘
 `)
 
 }

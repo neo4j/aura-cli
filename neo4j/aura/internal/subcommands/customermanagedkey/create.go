@@ -15,7 +15,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		region        string
 		name          string
 		instanceType  string
-		tenantId      string
+		projectId     string
 		cloudProvider string
 		keyId         string
 		await         bool
@@ -25,7 +25,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		regionFlag        = "region"
 		nameFlag          = "name"
 		instanceTypeFlag  = "type"
-		tenantIdFlag      = "tenant-id"
+		projectIdFlag     = "project-id"
 		cloudProviderFlag = "cloud-provider"
 		keyIdFlag         = "key-id"
 		awaitFlag         = "await"
@@ -42,8 +42,8 @@ You can poll the current status of this operation by periodically getting the ke
 
 Once the key has a status of ready you can use it for creating new instances by setting the --customer-managed-key-id flag.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if cfg.Aura.DefaultTenant() == "" {
-				cmd.MarkFlagRequired(tenantIdFlag)
+			if cfg.Aura.DefaultProject() == "" {
+				cmd.MarkFlagRequired(projectIdFlag)
 			}
 
 			return nil
@@ -57,10 +57,10 @@ Once the key has a status of ready you can use it for creating new instances by 
 				"key_id":         keyId,
 			}
 
-			if tenantId == "" {
-				body["tenant_id"] = cfg.Aura.DefaultTenant()
+			if projectId == "" {
+				body["tenant_id"] = cfg.Aura.DefaultProject()
 			} else {
-				body["tenant_id"] = tenantId
+				body["tenant_id"] = projectId
 			}
 
 			cmd.SilenceUsage = true
@@ -109,7 +109,7 @@ Once the key has a status of ready you can use it for creating new instances by 
 	cmd.Flags().StringVar(&instanceType, instanceTypeFlag, "", "The type of the instance.")
 	cmd.MarkFlagRequired(instanceTypeFlag)
 
-	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
+	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "")
 
 	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)

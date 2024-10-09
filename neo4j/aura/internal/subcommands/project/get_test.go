@@ -1,4 +1,4 @@
-package tenant_test
+package project_test
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
 )
 
-func TestGetTenantWithoutIntegrationEndpoint(t *testing.T) {
+func TestGetProjectWithoutIntegrationEndpoint(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	tenantId := "6981ace7-efe8-4f5c-b7c5-267b5162ce91"
+	projectId := "6981ace7-efe8-4f5c-b7c5-267b5162ce91"
 
-	getMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s", tenantId), http.StatusOK, `{
+	getMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s", projectId), http.StatusOK, `{
 			"data": {
 				"id": "6981ace7-efe8-4f5c-b7c5-267b5162ce91",
 				"name": "Production",
@@ -22,16 +22,16 @@ func TestGetTenantWithoutIntegrationEndpoint(t *testing.T) {
 			}
 		}`)
 
-	metricsIntegrationMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s/metrics-integration", tenantId), http.StatusBadRequest, `{
+	metricsIntegrationMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s/metrics-integration", projectId), http.StatusBadRequest, `{
 			"errors": [
 				{
-					"message": "This tenant has no instances eligible for metrics integration",
+					"message": "This project has no instances eligible for metrics integration",
 					"reason": "tenant-incapable-of-action"
 				}
 			]
 		}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("tenant get %s", tenantId))
+	helper.ExecuteCommand(fmt.Sprintf("project get %s", projectId))
 
 	getMockHandler.AssertCalledTimes(1)
 	getMockHandler.AssertCalledWithMethod(http.MethodGet)
@@ -47,13 +47,13 @@ func TestGetTenantWithoutIntegrationEndpoint(t *testing.T) {
 	}
 	`)
 }
-func TestGetTenantWithMetricsIntegrationEndpoint(t *testing.T) {
+func TestGetProjectWithMetricsIntegrationEndpoint(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	tenantId := "6981ace7-efe8-4f5c-b7c5-267b5162ce91"
+	projectId := "6981ace7-efe8-4f5c-b7c5-267b5162ce91"
 
-	getMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s", tenantId), http.StatusOK, `{
+	getMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s", projectId), http.StatusOK, `{
 			"data": {
 				"id": "6981ace7-efe8-4f5c-b7c5-267b5162ce91",
 				"name": "Production",
@@ -61,13 +61,13 @@ func TestGetTenantWithMetricsIntegrationEndpoint(t *testing.T) {
 			}
 		}`)
 
-	metricsIntegrationMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s/metrics-integration", tenantId), http.StatusOK, `{
+	metricsIntegrationMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s/metrics-integration", projectId), http.StatusOK, `{
 			"data": {
 				"endpoint": "https://customer-metrics-api-devnommrr.neo4j-dev.io/api/v1/ca7bc96c-204c-546e-9736-f4a578d53f64/metrics"
 			}
 		}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("tenant get %s", tenantId))
+	helper.ExecuteCommand(fmt.Sprintf("project get %s", projectId))
 
 	getMockHandler.AssertCalledTimes(1)
 	getMockHandler.AssertCalledWithMethod(http.MethodGet)
@@ -85,13 +85,13 @@ func TestGetTenantWithMetricsIntegrationEndpoint(t *testing.T) {
 	`)
 }
 
-func TestGetTenantNotFoundError(t *testing.T) {
+func TestGetProjectNotFoundError(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	tenantId := "6981ace7-efe8-4f5c-b7c5-267b5162ce91"
+	projectId := "6981ace7-efe8-4f5c-b7c5-267b5162ce91"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s", tenantId), http.StatusNotFound, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s", projectId), http.StatusNotFound, `{
 		"errors": [
 			{
 			"message": "The tenant you specified could not be found",
@@ -100,7 +100,7 @@ func TestGetTenantNotFoundError(t *testing.T) {
 		]
 		}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("tenant get %s", tenantId))
+	helper.ExecuteCommand(fmt.Sprintf("project get %s", projectId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)

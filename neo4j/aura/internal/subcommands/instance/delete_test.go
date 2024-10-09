@@ -20,7 +20,7 @@ func TestDeleteInstance(t *testing.T) {
 		  "name": "Production",
 		  "status": "deleting",
 		  "connection_url": "YOUR_CONNECTION_URL",
-		  "tenant_id": "YOUR_TENANT_ID",
+		  "tenant_id": "YOUR_PROJECT_ID",
 		  "cloud_provider": "gcp",
 		  "memory": "8GB",
 		  "region": "europe-west1",
@@ -42,7 +42,7 @@ func TestDeleteInstance(t *testing.T) {
 		"name": "Production",
 		"region": "europe-west1",
 		"status": "deleting",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	  }
 	}`)

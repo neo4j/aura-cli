@@ -24,7 +24,7 @@ func TestGetCustomerManagedKey(t *testing.T) {
 					"key_id": "arn:aws:kms:us-east-1:123456789:key/11111-a222-1212-x789-1212f1212f",
 					"region": "us-east-1",
 					"type": "enterprise-db",
-					"tenant_id": "YOUR_TENANT_ID",
+					"tenant_id": "YOUR_PROJECT_ID",
 					"status": "ready"
 				}
 			}`)
@@ -43,7 +43,7 @@ func TestGetCustomerManagedKey(t *testing.T) {
 			"name": "Instance01",
 			"region": "us-east-1",
 			"status": "ready",
-			"tenant_id": "YOUR_TENANT_ID",
+			"tenant_id": "YOUR_PROJECT_ID",
 			"type": "enterprise-db"
 		  }
 		}`)

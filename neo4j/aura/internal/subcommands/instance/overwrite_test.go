@@ -21,7 +21,7 @@ func TestOverwriteFromInstance(t *testing.T) {
 		  "name": "Production",
 		  "status": "overwriting",
 		  "connection_url": "YOUR_CONNECTION_URL",
-		  "tenant_id": "YOUR_TENANT_ID",
+		  "tenant_id": "YOUR_PROJECT_ID",
 		  "cloud_provider": "gcp",
 		  "memory": "8GB",
 		  "region": "europe-west1",
@@ -44,7 +44,7 @@ func TestOverwriteFromInstance(t *testing.T) {
 		"name": "Production",
 		"region": "europe-west1",
 		"status": "overwriting",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	  }
 	}`)
@@ -64,7 +64,7 @@ func TestOverwriteFromSnapshot(t *testing.T) {
 		  "name": "Production",
 		  "status": "overwriting",
 		  "connection_url": "YOUR_CONNECTION_URL",
-		  "tenant_id": "YOUR_TENANT_ID",
+		  "tenant_id": "YOUR_PROJECT_ID",
 		  "cloud_provider": "gcp",
 		  "memory": "8GB",
 		  "region": "europe-west1",
@@ -88,7 +88,7 @@ func TestOverwriteFromSnapshot(t *testing.T) {
 		"name": "Production",
 		"region": "europe-west1",
 		"status": "overwriting",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	  }
 	}`)
@@ -107,7 +107,7 @@ func TestOverwriteWithAwait(t *testing.T) {
 		  "name": "Production",
 		  "status": "overwriting",
 		  "connection_url": "YOUR_CONNECTION_URL",
-		  "tenant_id": "YOUR_TENANT_ID",
+		  "tenant_id": "YOUR_PROJECT_ID",
 		  "cloud_provider": "gcp",
 		  "memory": "8GB",
 		  "region": "europe-west1",
@@ -147,7 +147,7 @@ func TestOverwriteWithAwait(t *testing.T) {
 		"name": "Production",
 		"region": "europe-west1",
 		"status": "overwriting",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	}
 }

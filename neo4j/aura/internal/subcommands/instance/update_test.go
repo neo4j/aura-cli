@@ -20,7 +20,7 @@ func TestUpdateMemory(t *testing.T) {
 			"name": "Production",
 			"status": "updating",
 			"connection_url": "YOUR_CONNECTION_URL",
-			"tenant_id": "YOUR_TENANT_ID",
+			"tenant_id": "YOUR_PROJECT_ID",
 			"cloud_provider": "gcp",
 			"memory": "8GB",
 			"region": "europe-west1",
@@ -43,7 +43,7 @@ func TestUpdateMemory(t *testing.T) {
 		"name": "Production",
 		"region": "europe-west1",
 		"status": "updating",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	  }
 	}`)
@@ -61,7 +61,7 @@ func TestUpdateName(t *testing.T) {
 			"name": "New Name",
 			"status": "updating",
 			"connection_url": "YOUR_CONNECTION_URL",
-			"tenant_id": "YOUR_TENANT_ID",
+			"tenant_id": "YOUR_PROJECT_ID",
 			"cloud_provider": "gcp",
 			"memory": "4GB",
 			"region": "europe-west1",
@@ -84,7 +84,7 @@ func TestUpdateName(t *testing.T) {
 		"name": "New Name",
 		"region": "europe-west1",
 		"status": "updating",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	  }
 	}`)
@@ -102,7 +102,7 @@ func TestUpdateMemoryAndName(t *testing.T) {
 			"name": "New Name",
 			"status": "updating",
 			"connection_url": "YOUR_CONNECTION_URL",
-			"tenant_id": "YOUR_TENANT_ID",
+			"tenant_id": "YOUR_PROJECT_ID",
 			"cloud_provider": "gcp",
 			"memory": "8GB",
 			"region": "europe-west1",
@@ -125,7 +125,7 @@ func TestUpdateMemoryAndName(t *testing.T) {
 		"name": "New Name",
 		"region": "europe-west1",
 		"status": "updating",
-		"tenant_id": "YOUR_TENANT_ID",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"type": "enterprise-db"
 	  }
 	}`)
