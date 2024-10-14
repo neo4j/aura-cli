@@ -12,13 +12,8 @@ import (
 	"github.com/neo4j/cli/common/clicfg"
 )
 
-func getToken(cfg *clicfg.Config) (string, error) {
-	credential, err := cfg.Aura.DefaultCredential()
-	if err != nil {
-		return "", err
-	}
-
-	if credential.IsAccessTokenValid() {
+func getToken(credential *clicfg.AuraCredential, cfg *clicfg.Config) (string, error) {
+	if credential.HasValidAccessToken() {
 		return credential.AccessToken, nil
 	}
 

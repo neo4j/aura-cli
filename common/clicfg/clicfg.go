@@ -253,7 +253,7 @@ func (config *AuraConfig) RemoveCredential(name string) error {
 	return config.viper.WriteConfig()
 }
 
-func (credential *AuraCredential) IsAccessTokenValid() bool {
+func (credential *AuraCredential) HasValidAccessToken() bool {
 	now := time.Now().UnixMilli()
 
 	if credential.AccessToken == "" {
@@ -282,6 +282,23 @@ func (credential *AuraCredential) UpdateAccessToken(accessToken string, expiresI
 		if c.Name == credential.Name {
 			auraConfig.Credentials[i].AccessToken = accessToken
 			auraConfig.Credentials[i].TokenExpiry = expiresInSeconds
+			break
+		}
+	}
+
+	credential.viper.Set("aura.credentials", auraConfig.Credentials)
+
+	return credential.viper.WriteConfig()
+}
+
+func (credential *AuraCredential) ClearAccessToken() error {
+	auraConfig := auraConfig{}
+	credential.viper.Sub("aura").Unmarshal(&auraConfig)
+
+	for i, c := range auraConfig.Credentials {
+		if c.Name == credential.Name {
+			auraConfig.Credentials[i].AccessToken = ""
+			auraConfig.Credentials[i].TokenExpiry = 0
 			break
 		}
 	}
