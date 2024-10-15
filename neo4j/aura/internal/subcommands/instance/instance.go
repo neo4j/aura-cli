@@ -3,7 +3,6 @@ package instance
 import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/instance/snapshot"
-	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/instance/dataapi"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +34,6 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(NewUpdateCmd(cfg))
 	cmd.AddCommand(NewOverwriteCmd(cfg))
 	cmd.AddCommand(snapshot.NewCmd(cfg))
-	cmd.AddCommand(dataapi.NewCmd(cfg))
 
 	cmd.PersistentFlags().String("auth-url", "", "")
 	cmd.PersistentFlags().String("base-url", "", "")

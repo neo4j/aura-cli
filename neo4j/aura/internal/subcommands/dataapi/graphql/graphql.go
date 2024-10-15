@@ -1,17 +1,14 @@
-package dataapi
+package graphql
 
 import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/spf13/cobra"
-
-	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/instance/dataapi/graphql"
-
 )
 
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "data-api",
-		Short: "Allows you to programmatically provision and manage your Data APIs connected to an instance",
+		Use:   "graphql",
+		Short: "Allows you to programmatically provision and manage your GraphQL Data APIs",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
 			if err := cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url")); err != nil {
@@ -28,7 +25,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(graphql.NewCmd(cfg))
+	cmd.AddCommand(NewListCmd(cfg))
 
 	cmd.PersistentFlags().String("auth-url", "", "")
 	cmd.PersistentFlags().String("base-url", "", "")
