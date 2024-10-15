@@ -18,6 +18,8 @@ var ConfigPrefix string
 const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
 const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
 
+var ValidOutputValues = [3]string{"default", "json", "table"}
+
 func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
 
@@ -60,7 +62,7 @@ func bindEnvironmentVariables(Viper *viper.Viper) {
 func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
-	Viper.SetDefault("aura.output", "json")
+	Viper.SetDefault("aura.output", "default")
 	Viper.SetDefault("aura.credentials", []AuraCredential{})
 }
 
@@ -81,6 +83,16 @@ type AuraConfig struct {
 }
 
 func (config *AuraConfig) IsValidConfigKey(key string) bool {
+	for _, k := range config.ValidConfigKeys {
+		if k == key {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (config *AuraConfig) IsValidConfigEntry(key string, value interface{}) bool {
 	for _, k := range config.ValidConfigKeys {
 		if k == key {
 			return true

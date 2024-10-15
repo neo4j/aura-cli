@@ -27,3 +27,14 @@ func TestSetConfigWithInvalidConfigKey(t *testing.T) {
 
 	helper.AssertErr("Error: invalid config key specified: invalid")
 }
+
+func TestSetConfigWithInvalidOutputValue(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.OverwriteConfig("{}")
+
+	helper.ExecuteCommand("config set output invalid")
+
+	helper.AssertErr("Error: invalid output value specified: invalid")
+}
