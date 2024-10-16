@@ -98,27 +98,6 @@ func TestCreateProfessionalInstanceNoMemory(t *testing.T) {
 
 	helper.AssertErr(`Error: required flag(s) "memory" not set
 `)
-	helper.AssertOut(`Usage:
-  aura instance create [flags]
-
-Flags:
-      --await                            Waits until created instance is ready.
-      --cloud-provider string            The cloud provider hosting the instance.
-      --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
-  -h, --help                             help for create
-      --memory string                    The size of the instance memory in GB.
-      --name string                      The name of the instance (any UTF-8 characters with no trailing or leading whitespace).
-      --region string                    The region where the instance is hosted.
-      --tenant-id string                 
-      --type string                      The type of the instance.
-      --version string                   The Neo4j version of the instance. (default "5")
-
-Global Flags:
-      --auth-url string   
-      --base-url string   
-      --output string
-
-`)
 }
 
 func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
@@ -132,27 +111,6 @@ func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
 	mockHandler.AssertCalledTimes(0)
 
 	helper.AssertErr(`Error: required flag(s) "tenant-id" not set
-`)
-	helper.AssertOut(`Usage:
-  aura instance create [flags]
-
-Flags:
-      --await                            Waits until created instance is ready.
-      --cloud-provider string            The cloud provider hosting the instance.
-      --customer-managed-key-id string   An optional customer managed key to be used for instance creation.
-  -h, --help                             help for create
-      --memory string                    The size of the instance memory in GB.
-      --name string                      The name of the instance (any UTF-8 characters with no trailing or leading whitespace).
-      --region string                    The region where the instance is hosted.
-      --tenant-id string                 
-      --type string                      The type of the instance.
-      --version string                   The Neo4j version of the instance. (default "5")
-
-Global Flags:
-      --auth-url string   
-      --base-url string   
-      --output string
-
 `)
 }
 

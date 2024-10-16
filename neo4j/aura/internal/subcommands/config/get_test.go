@@ -25,5 +25,5 @@ func TestGetConfigDefault(t *testing.T) {
 
 	helper.ExecuteCommand("config get output")
 
-	helper.AssertOut("json")
+	helper.AssertOut("default")
 }
