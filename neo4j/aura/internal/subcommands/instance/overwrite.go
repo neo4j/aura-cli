@@ -29,7 +29,7 @@ func NewOverwriteCmd(cfg *clicfg.Config) *cobra.Command {
 
 The overwrite process mimics the 'Clone to existing' functionality of the Aura Console.
 
-If only --source-instance-id is provided, a new snapshot of that instance is created and used for overwriting. Alternatively, you can specify an additional --source-snapshot-id to use a specific snapshot for overwriting, from --source-instance-id provided, otherwise as a snapshot of the instance being overwritten.
+If only --source-instance-id is provided, a new snapshot of that instance is created and used for overwriting. Alternatively, you can specify an additional --source-snapshot-id to use a specific snapshot for overwriting, from --source-instance-id provided, otherwise as a snapshot of the instance being overwritten. The snapshot specified must be exportable.
 		`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -78,7 +78,7 @@ If only --source-instance-id is provided, a new snapshot of that instance is cre
 	}
 
 	cmd.Flags().StringVar(&sourceInstanceId, sourceInstanceIdFlag, "", "The ID of the instance to overwrite with, from the source snapshot ID if provided, otherwise takes a new snapshot and overwrites")
-	cmd.Flags().StringVar(&sourceSnapshotId, sourceSnapshotIdFlag, "", "The ID of the snapshot to overwrite with, from the source instance ID if provided, otherwise the argument provided instance")
+	cmd.Flags().StringVar(&sourceSnapshotId, sourceSnapshotIdFlag, "", "The ID of the snapshot to overwrite with, which must be exportable, from the source instance ID if provided, otherwise the argument provided instance")
 
 	cmd.MarkFlagsOneRequired(sourceInstanceIdFlag, sourceSnapshotIdFlag)
 
