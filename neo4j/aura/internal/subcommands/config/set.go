@@ -16,11 +16,24 @@ func NewSetCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			if cfg.Aura.IsValidConfigKey(args[0]) {
-				return nil
+			if !cfg.Aura.IsValidConfigKey(args[0]) {
+				return fmt.Errorf("invalid config key specified: %s", args[0])
 			}
 
-			return fmt.Errorf("invalid config key specified: %s", args[0])
+			if args[0] == "output" {
+				validOutputValue := false
+				for _, v := range clicfg.ValidOutputValues {
+					if v == args[1] {
+						validOutputValue = true
+						break
+					}
+				}
+				if !validOutputValue {
+					return fmt.Errorf("invalid output value specified: %s", args[1])
+				}
+			}
+
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.Aura.Set(args[0], args[1])

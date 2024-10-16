@@ -94,3 +94,14 @@ func TestListCustomerManagedKeysWithTenantId(t *testing.T) {
 		`)
 	}
 }
+
+func TestListCustomerManagedKeysWithInvalidOutput(t *testing.T) {
+	for _, command := range []string{"customer-managed-key", "cmk"} {
+		helper := testutils.NewAuraTestHelper(t)
+		defer helper.Close()
+
+		helper.ExecuteCommand(fmt.Sprintf("%s list --output invalid", command))
+
+		helper.AssertErr("Error: invalid output value specified: invalid")
+	}
+}

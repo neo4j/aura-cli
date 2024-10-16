@@ -143,3 +143,12 @@ func TestListInstancesWithTenantId(t *testing.T) {
 	  ]
 	}`)
 }
+
+func TestListCustomerManagedKeysWithInvalidOutput(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.ExecuteCommand("instance list --output invalid")
+
+	helper.AssertErr("Error: invalid output value specified: invalid")
+}
