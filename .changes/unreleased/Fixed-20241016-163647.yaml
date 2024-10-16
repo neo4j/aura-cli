@@ -1,0 +1,3 @@
+kind: Fixed
+body: Add warning message when getting tenant details with table output that more details are available with other output settings
+time: 2024-10-16T16:36:47.494052+01:00

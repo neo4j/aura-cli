@@ -47,6 +47,7 @@ func TestGetTenantWithoutIntegrationEndpoint(t *testing.T) {
 	}
 	`)
 }
+
 func TestGetTenantWithMetricsIntegrationEndpoint(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
@@ -106,4 +107,44 @@ func TestGetTenantNotFoundError(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
 	helper.AssertErr("Error: [The tenant you specified could not be found]")
+}
+
+func TestGetTenantWithTableOutput(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	tenantId := "6981ace7-efe8-4f5c-b7c5-267b5162ce91"
+
+	getMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s", tenantId), http.StatusOK, `{
+			"data": {
+				"id": "6981ace7-efe8-4f5c-b7c5-267b5162ce91",
+				"name": "Production",
+				"instance_configurations": []
+			}
+		}`)
+
+	metricsIntegrationMockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/tenants/%s/metrics-integration", tenantId), http.StatusBadRequest, `{
+			"errors": [
+				{
+					"message": "This tenant has no instances eligible for metrics integration",
+					"reason": "tenant-incapable-of-action"
+				}
+			]
+		}`)
+
+	helper.ExecuteCommand(fmt.Sprintf("tenant get %s --output table", tenantId))
+
+	getMockHandler.AssertCalledTimes(1)
+	getMockHandler.AssertCalledWithMethod(http.MethodGet)
+	metricsIntegrationMockHandler.AssertCalledTimes(1)
+	metricsIntegrationMockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertOut(`
+┌──────────────────────────────────────┬────────────┐
+│ ID                                   │ NAME       │
+├──────────────────────────────────────┼────────────┤
+│ 6981ace7-efe8-4f5c-b7c5-267b5162ce91 │ Production │
+└──────────────────────────────────────┴────────────┘
+instance configurations are not visible with table output - please use a different output setting using --output if you would like to view these
+`)
 }
