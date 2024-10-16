@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/spf13/afero"
@@ -83,23 +84,7 @@ type AuraConfig struct {
 }
 
 func (config *AuraConfig) IsValidConfigKey(key string) bool {
-	for _, k := range config.ValidConfigKeys {
-		if k == key {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (config *AuraConfig) IsValidConfigEntry(key string, value interface{}) bool {
-	for _, k := range config.ValidConfigKeys {
-		if k == key {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(config.ValidConfigKeys, key)
 }
 
 func (config *AuraConfig) Get(key string) interface{} {
