@@ -1,3 +1,0 @@
-kind: Added
-body: Clear access token in the instance of an unauthorized request, and prompt user to retry
-time: 2024-10-07T16:51:03.523543+01:00
