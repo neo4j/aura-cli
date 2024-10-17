@@ -48,7 +48,11 @@ func handleResponseError(res *http.Response, credential *clicfg.AuraCredential) 
 
 		messages := []string{}
 		for _, e := range errorResponse.Errors {
-			messages = append(messages, e.Message)
+			message := e.Message
+			if e.Field != "" {
+				message = fmt.Sprintf("%s: %s", e.Field, e.Message)
+			}
+			messages = append(messages, message)
 		}
 
 		return fmt.Errorf("%s", messages)
