@@ -1,4 +1,4 @@
-package data_api
+package dataapi
 
 import (
 	"github.com/neo4j/cli/common/clicfg"
