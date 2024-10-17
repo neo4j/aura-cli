@@ -10,7 +10,6 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "graphql",
 		Short: "Allows you to programmatically provision and manage your GraphQL Data APIs",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-
 			if err := cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url")); err != nil {
 				return err
 			}
