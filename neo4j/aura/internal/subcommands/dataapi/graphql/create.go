@@ -53,7 +53,7 @@ Creating a GraphQL Data API is an asynchronous operation. You can poll the curre
 
 This endpoint returns your GraphQL Data API ID, API key, and connection URL in the response body for you to use once the GraphQL Data API is running. It is important to store the API key as it is not currently possible to get this or update it.
 
-If you lose your API key, you will need create a new Authentication provider.. This will not result in any loss of data.`,
+If you lose your API key, you will need to create a new Authentication provider.. This will not result in any loss of data.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			typeValue, _ := cmd.Flags().GetString(authProviderTypeFlag)
 			if typeValue == AuthProviderTypeJwks {
@@ -80,6 +80,8 @@ If you lose your API key, you will need create a new Authentication provider.. T
 				return errors.New(msg)
 			}
 
+			// TODO: make it possible to add multiple auth providers
+
 			authProvider := map[string]any{
 				"name":    authProviderName,
 				"type":    authProviderType,
@@ -95,7 +97,7 @@ If you lose your API key, you will need create a new Authentication provider.. T
 				},
 			}
 
-			// TODO: read typeDefs from local file
+			// TODO: read typeDefs from local file, also update flag help message
 
 			if !IsBase64(typeDefs) {
 				return errors.New("Type definitions are not valid base64")
@@ -118,7 +120,7 @@ If you lose your API key, you will need create a new Authentication provider.. T
 					fmt.Println("###############################")
 					fmt.Println("# API key was created. It is important to _store_ the API key as it is not currently possible to get this or update it.")
 					fmt.Println("#")
-					fmt.Println("# If you lose your API key, you will need create a new Authentication provider.")
+					fmt.Println("# If you lose your API key, you will need to create a new Authentication provider.")
 					fmt.Println("# This will not result in any loss of data.")
 					fmt.Println("###############################")
 				}
