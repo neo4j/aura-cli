@@ -1,12 +1,50 @@
 package graphql_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/dataapi/graphql"
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestResolveTypeDefsFlagValue(t *testing.T) {
+	tests := map[string]struct {
+		flagValue     string
+		expectedValue string
+		expectedError error
+	}{"correct base64 string": {
+		flagValue:     "TXkgc3RyaW5n",
+		expectedValue: "TXkgc3RyaW5n",
+		expectedError: nil,
+	}, "correct path to file": {
+		flagValue:     "../../../test/testutils/typeDefs.graphql",
+		expectedValue: "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg==",
+		expectedError: nil,
+	}, "invalid base 64 string": {
+		flagValue:     "sdf",
+		expectedValue: "",
+		expectedError: errors.New("type definitions file 'sdf' does not exist"),
+	}, "invalid path": {
+		flagValue:     "../../test/testutils/typeDefs.graphql",
+		expectedValue: "",
+		expectedError: errors.New("type definitions file '../../test/testutils/typeDefs.graphql' does not exist"),
+	}}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			val, err := graphql.ResolveTypeDefsFlagValue(test.flagValue)
+			if test.expectedError != nil {
+				assert.EqualError(t, err, test.expectedError.Error())
+			} else {
+				assert.Equal(t, test.expectedValue, val)
+			}
+		})
+	}
+}
 
 func TestCreateGraphQLDataApisMissingFlags(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
@@ -140,6 +178,24 @@ func TestCreateGraphQLDataApisTypeDefsNotBase64(t *testing.T) {
 
 	helper.AssertErr("Error: provided type definitions are not valid base64")
 }
+
+// func TestCreateGraphQLDataApisTypeDefsAsFile(t *testing.T) {
+// 	helper := testutils.NewAuraTestHelper(t)
+// 	defer helper.Close()
+
+// 	helper.SetConfigValue("aura.beta-enabled", "true")
+
+// 	instanceId := "2f49c2b3"
+// 	instanceUsername := "neo4j"
+// 	instancePassword := "dlkshglsjsdfsd"
+// 	typeDefs := "../../../test/testutils/typeDefs.graphql"
+// 	name := "my-data-api-1"
+// 	secAuthProviderName := "provider-1"
+// 	secAuthProviderType := "api-key"
+// 	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
+
+// 	helper.AssertErr("Error: se64")
+// }
 
 func TestCreateGraphQLDataApisWrongAuthProviderType(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)

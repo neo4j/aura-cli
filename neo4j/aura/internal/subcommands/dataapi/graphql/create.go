@@ -1,10 +1,12 @@
 package graphql
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -70,11 +72,16 @@ If you lose your API key, you will need to create a new Authentication provider.
 					"username": instanceUsername,
 					"password": instancePassword,
 				},
-				"type_definitions": typeDefs,
 				"features": map[string]bool{
 					"subgraph": featureSubgraphEnabled,
 				},
 			}
+
+			base64EncodedTypeDefs, err := ResolveTypeDefsFlagValue(typeDefs)
+			if err != nil {
+				return err
+			}
+			body["type_definitions"] = base64EncodedTypeDefs
 
 			if securityAuthProviderType != SecurityAuthProviderTypeJwks && securityAuthProviderType != SecurityAuthProviderTypeApiKey {
 				msg := strings.ToLower(fmt.Sprintf("invalid security auth provider type, got '%s', expect '%s' or '%s'", securityAuthProviderType, SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks))
@@ -96,12 +103,6 @@ If you lose your API key, you will need to create a new Authentication provider.
 				"authentication_providers": []map[string]any{
 					authProvider,
 				},
-			}
-
-			// TODO: read typeDefs from local file, also update flag help message
-
-			if !IsBase64(typeDefs) {
-				return errors.New("provided type definitions are not valid base64")
 			}
 
 			cmd.SilenceUsage = true
@@ -162,7 +163,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&instancePassword, instancePasswordFlag, "", "The password of the instance this GraphQL Data API will be connected to")
 	cmd.MarkFlagRequired(instancePasswordFlag)
 
-	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
+	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded or local .graphql file (path/to/typeDefs.graphql)")
 	cmd.MarkFlagRequired(typeDefsFlag)
 
 	featureSubgraphHelpMsg := fmt.Sprintf("Wether or not GraphQL subgraph is enabled, default is %t", featureSubgraphEnabledDefault)
@@ -183,4 +184,26 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 
 	return cmd
+}
+
+func ResolveTypeDefsFlagValue(typeDefsFlagValue string) (string, error) {
+	_, err := base64.StdEncoding.DecodeString(typeDefsFlagValue)
+	if err == nil {
+		// typeDefsFlagValue is a valid base64 encoded string
+		return typeDefsFlagValue, nil
+	} else {
+		// typeDefsFlagValue is assessed as a local file
+		if _, err := os.Stat(typeDefsFlagValue); os.IsNotExist(err) {
+			return "", fmt.Errorf("type definitions file '%s' does not exist", typeDefsFlagValue)
+		}
+
+		fileData, err := os.ReadFile(typeDefsFlagValue)
+		if err != nil {
+			return "", fmt.Errorf("reading type definitions file failed with error: %s", err)
+		}
+		base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(fileData))
+		fmt.Println(base64EncodedTypeDefs)
+
+		return base64EncodedTypeDefs, nil
+	}
 }
