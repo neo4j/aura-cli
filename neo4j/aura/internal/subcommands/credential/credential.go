@@ -14,6 +14,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(NewAddCmd(cfg))
 	cmd.AddCommand(NewRemoveCmd(cfg))
 	cmd.AddCommand(NewUseCmd(cfg))
+	cmd.AddCommand(NewListCmd(cfg))
 
 	return cmd
 }
