@@ -234,7 +234,8 @@ func (d ListResponseData) AsArray() []map[string]any {
 }
 
 type SingleValueResponseData struct {
-	Data map[string]any `json:"data"`
+	Data   map[string]any   `json:"data"`
+	Errors []map[string]any `json:"errors,omitempty"`
 }
 
 func (d SingleValueResponseData) GetSingleOrError() (map[string]any, error) {
@@ -259,7 +260,6 @@ func NewResponseData(data []map[string]any) ResponseData {
 
 func ParseBody(body []byte) (ResponseData, error) {
 	var listResponseData ListResponseData
-
 	err := json.Unmarshal(body, &listResponseData)
 
 	// Try unmarshalling array first, if not it creates an array from the single item
