@@ -14,7 +14,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if cfg.Aura.AuraBetaEnabled() != "true" {
 				cmd.SilenceUsage = true
-				return errors.New("The command 'data-api' is beta functionality. Turn it on by setting the Aura config key 'beta-enabled' to 'true'.")
+				return errors.New("the command 'data-api' is beta functionality. turn it on by setting the aura config key 'beta-enabled' to 'true'")
 			}
 
 			if err := cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url")); err != nil {
