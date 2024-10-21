@@ -15,8 +15,12 @@ import (
 
 var ConfigPrefix string
 
-const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
-const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
+const (
+	DefaultAuraBaseUrl     = "https://api.neo4j.io/v1"
+	DefaultAuraBetaBaseUrl = "https://api.neo4j.io/v1beta5"
+	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
+	DefaultAuraBetaEnabled = "false"
+)
 
 func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
@@ -49,7 +53,7 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	return &Config{Version: version, Aura: AuraConfig{viper: Viper, pollingOverride: PollingConfig{
 		MaxRetries: 60,
 		Interval:   20,
-	}, ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output"}}}, nil
+	}, ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled"}}}, nil
 }
 
 func bindEnvironmentVariables(Viper *viper.Viper) {
@@ -62,6 +66,7 @@ func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
 	Viper.SetDefault("aura.output", "json")
 	Viper.SetDefault("aura.credentials", []AuraCredential{})
+	Viper.SetDefault("aura.beta-enabled", DefaultAuraBetaEnabled)
 }
 
 type Config struct {
@@ -96,6 +101,7 @@ func (config *AuraConfig) Get(key string) interface{} {
 
 func (config *AuraConfig) Set(key string, value string) error {
 	config.viper.Set(fmt.Sprintf("aura.%s", key), value)
+	config.handleAuraBetaEnabledConfig(key, value)
 	return config.viper.WriteConfig()
 }
 
@@ -134,6 +140,10 @@ func (config *AuraConfig) BindOutput(flag *pflag.Flag) error {
 	return config.viper.BindPFlag("aura.output", flag)
 }
 
+func (config *AuraConfig) AuraBetaEnabled() string {
+	return config.viper.GetString("aura.beta-enabled")
+}
+
 func (config *AuraConfig) DefaultTenant() string {
 	return config.viper.GetString("aura.default-tenant")
 }
@@ -160,6 +170,16 @@ func (config *AuraConfig) DefaultCredential() (*AuraCredential, error) {
 	}
 
 	return nil, fmt.Errorf("could not find credential with name %s", defaultCredential)
+}
+
+func (config *AuraConfig) handleAuraBetaEnabledConfig(key string, value string) {
+	if key == "beta-enabled" {
+		nextBaseUrl := DefaultAuraBaseUrl
+		if value == "true" {
+			nextBaseUrl = DefaultAuraBetaBaseUrl
+		}
+		config.viper.Set("aura.base-url", nextBaseUrl)
+	}
 }
 
 func (config *AuraConfig) PollingConfig() PollingConfig {
