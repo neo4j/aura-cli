@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
@@ -14,34 +15,34 @@ import (
 
 func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	const (
-		instanceIdFlag             = "instance-id"
-		nameFlag                   = "name"
-		instanceUsernameFlag       = "instance-username"
-		instancePasswordFlag       = "instance-password"
-		typeDefsFlag               = "type-definitions"
-		featureSubgraphEnabledFlag = "feature-subgraph-enabled"
-		authProviderNameFlag       = "auth-provider-name"
-		authProviderTypeFlag       = "auth-provider-type"
-		authProviderEnabledFlag    = "auth-provider-enabled"
-		authProviderUrlFlag        = "auth-provider-url"
-		awaitFlag                  = "await"
+		instanceIdFlag                  = "instance-id"
+		nameFlag                        = "name"
+		instanceUsernameFlag            = "instance-username"
+		instancePasswordFlag            = "instance-password"
+		typeDefsFlag                    = "type-definitions"
+		featureSubgraphEnabledFlag      = "feature-subgraph-enabled"
+		securityAuthProviderNameFlag    = "security-auth-provider-name"
+		securityAuthProviderTypeFlag    = "security-auth-provider-type"
+		securityAuthProviderEnabledFlag = "security-auth-provider-enabled"
+		securityAuthProviderUrlFlag     = "security-auth-provider-url"
+		awaitFlag                       = "await"
 
-		featureSubgraphEnabledDefault = false
-		authProviderEnabledDefault    = true
+		featureSubgraphEnabledDefault      = false
+		securityAuthProviderEnabledDefault = true
 	)
 
 	var (
-		instanceId             string
-		name                   string
-		instanceUsername       string
-		instancePassword       string
-		typeDefs               string
-		featureSubgraphEnabled bool
-		authProviderName       string
-		authProviderType       string
-		authProviderEnabled    bool
-		authProviderUrl        string
-		await                  bool
+		instanceId                  string
+		name                        string
+		instanceUsername            string
+		instancePassword            string
+		typeDefs                    string
+		featureSubgraphEnabled      bool
+		securityAuthProviderName    string
+		securityAuthProviderType    string
+		securityAuthProviderEnabled bool
+		securityAuthProviderUrl     string
+		await                       bool
 	)
 
 	cmd := &cobra.Command{
@@ -55,9 +56,9 @@ This endpoint returns your GraphQL Data API ID, API key, and connection URL in t
 
 If you lose your API key, you will need to create a new Authentication provider.. This will not result in any loss of data.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			typeValue, _ := cmd.Flags().GetString(authProviderTypeFlag)
-			if typeValue == AuthProviderTypeJwks {
-				cmd.MarkFlagRequired(authProviderUrlFlag)
+			typeValue, _ := cmd.Flags().GetString(securityAuthProviderTypeFlag)
+			if typeValue == SecurityAuthProviderTypeJwks {
+				cmd.MarkFlagRequired(securityAuthProviderUrlFlag)
 			}
 
 			return nil
@@ -75,20 +76,20 @@ If you lose your API key, you will need to create a new Authentication provider.
 				},
 			}
 
-			if authProviderType != AuthProviderTypeJwks && authProviderType != AuthProviderTypeApiKey {
-				msg := fmt.Sprintf("Invalid Auth provider type, got '%s', expect '%s' or '%s'", authProviderType, AuthProviderTypeApiKey, AuthProviderTypeJwks)
+			if securityAuthProviderType != SecurityAuthProviderTypeJwks && securityAuthProviderType != SecurityAuthProviderTypeApiKey {
+				msg := strings.ToLower(fmt.Sprintf("invalid security auth provider type, got '%s', expect '%s' or '%s'", securityAuthProviderType, SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks))
 				return errors.New(msg)
 			}
 
 			// TODO: make it possible to add multiple auth providers
 
 			authProvider := map[string]any{
-				"name":    authProviderName,
-				"type":    authProviderType,
-				"enabled": authProviderEnabled,
+				"name":    securityAuthProviderName,
+				"type":    securityAuthProviderType,
+				"enabled": securityAuthProviderEnabled,
 			}
-			if authProviderType == AuthProviderTypeJwks {
-				authProvider["url"] = authProviderUrl
+			if securityAuthProviderType == SecurityAuthProviderTypeJwks {
+				authProvider["url"] = securityAuthProviderUrl
 			}
 
 			body["security"] = map[string]any{
@@ -100,7 +101,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 			// TODO: read typeDefs from local file, also update flag help message
 
 			if !IsBase64(typeDefs) {
-				return errors.New("Type definitions are not valid base64")
+				return errors.New("provided type definitions are not valid base64")
 			}
 
 			cmd.SilenceUsage = true
@@ -116,9 +117,9 @@ If you lose your API key, you will need to create a new Authentication provider.
 			// NOTE: GraphQL Data API create should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
 
-				if authProviderType == AuthProviderTypeApiKey {
+				if securityAuthProviderType == SecurityAuthProviderTypeApiKey {
 					fmt.Println("###############################")
-					fmt.Println("# API key was created. It is important to _store_ the API key as it is not currently possible to get this or update it.")
+					fmt.Println("# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.")
 					fmt.Println("#")
 					fmt.Println("# If you lose your API key, you will need to create a new Authentication provider.")
 					fmt.Println("# This will not result in any loss of data.")
@@ -167,17 +168,17 @@ If you lose your API key, you will need to create a new Authentication provider.
 	featureSubgraphHelpMsg := fmt.Sprintf("Wether or not GraphQL subgraph is enabled, default is %t", featureSubgraphEnabledDefault)
 	cmd.Flags().BoolVar(&featureSubgraphEnabled, featureSubgraphEnabledFlag, featureSubgraphEnabledDefault, featureSubgraphHelpMsg)
 
-	cmd.Flags().StringVar(&authProviderName, authProviderNameFlag, "", "The name of the GraphQL Data API auth provider")
-	cmd.MarkFlagRequired(authProviderNameFlag)
+	cmd.Flags().StringVar(&securityAuthProviderName, securityAuthProviderNameFlag, "", "The name of the GraphQL Data API security auth provider")
+	cmd.MarkFlagRequired(securityAuthProviderNameFlag)
 
-	authProviderTypeHelpMsg := fmt.Sprintf("The type of the GraphQL Data API auth provider, can be either '%s' or '%s'", AuthProviderTypeApiKey, AuthProviderTypeJwks)
-	cmd.Flags().StringVar(&authProviderType, authProviderTypeFlag, "", authProviderTypeHelpMsg)
-	cmd.MarkFlagRequired(authProviderTypeFlag)
+	authProviderTypeHelpMsg := fmt.Sprintf("The type of the GraphQL Data API security auth provider, can be either '%s' or '%s'", SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks)
+	cmd.Flags().StringVar(&securityAuthProviderType, securityAuthProviderTypeFlag, "", authProviderTypeHelpMsg)
+	cmd.MarkFlagRequired(securityAuthProviderTypeFlag)
 
-	authProviderEnabledHelpMsg := fmt.Sprintf("Wether or not the GraphQL Data API auth provider is enabled, default is %t", authProviderEnabledDefault)
-	cmd.Flags().BoolVar(&authProviderEnabled, authProviderEnabledFlag, authProviderEnabledDefault, authProviderEnabledHelpMsg)
+	authProviderEnabledHelpMsg := fmt.Sprintf("Wether or not the GraphQL Data API security auth provider is enabled, default is %t", securityAuthProviderEnabledDefault)
+	cmd.Flags().BoolVar(&securityAuthProviderEnabled, securityAuthProviderEnabledFlag, securityAuthProviderEnabledDefault, authProviderEnabledHelpMsg)
 
-	cmd.Flags().StringVar(&authProviderUrl, authProviderUrlFlag, "", "The JWKS url for the GraphQL Data API auth provider")
+	cmd.Flags().StringVar(&securityAuthProviderUrl, securityAuthProviderUrlFlag, "", "The JWKS url for the GraphQL Data API security auth provider")
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 

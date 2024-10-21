@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	AuthProviderTypeApiKey = "api-key"
-	AuthProviderTypeJwks   = "jwks"
+	SecurityAuthProviderTypeApiKey = "api-key"
+	SecurityAuthProviderTypeJwks   = "jwks"
 )
 
 func IsBase64(s string) bool {
