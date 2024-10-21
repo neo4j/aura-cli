@@ -75,7 +75,6 @@ func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
 	Viper.SetDefault("aura.output", "default")
-	// Viper.SetDefault("aura.credentials", []AuraCredential{})
 }
 
 type Config struct {

@@ -10,11 +10,11 @@ func TestUseCredential(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	helper.SetConfigValue("aura.credentials", []map[string]string{{"name": "test", "client-id": "testclientid", "client-secret": "testclientsecret"}})
+	helper.SetCredentialsValue("aura.credentials", []map[string]string{{"name": "test", "client-id": "testclientid", "client-secret": "testclientsecret"}})
 
 	helper.ExecuteCommand("credential use test")
 
-	helper.AssertConfigValue("aura.default-credential", "test")
+	helper.AssertCredentialsValue("aura.default-credential", "test")
 }
 
 func TestUseCredentialIfDoesNotExist(t *testing.T) {

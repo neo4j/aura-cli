@@ -6,12 +6,12 @@ import (
 )
 
 type AuraCredentials struct {
-	DefaultCredential string           `json:"default-credential"`
-	Credentials       []AuraCredential `json:"credentials"`
+	DefaultCredential string            `json:"default-credential"`
+	Credentials       []*AuraCredential `json:"credentials"`
 	onSave            func() error
 }
 
-func (c *AuraCredentials) List() []AuraCredential {
+func (c *AuraCredentials) List() []*AuraCredential {
 	return c.Credentials
 }
 
@@ -23,7 +23,7 @@ func (c *AuraCredentials) Add(name string, clientId string, clientSecret string)
 		}
 	}
 
-	c.Credentials = append(c.Credentials, AuraCredential{Name: name, ClientId: clientId, ClientSecret: clientSecret})
+	c.Credentials = append(c.Credentials, &AuraCredential{Name: name, ClientId: clientId, ClientSecret: clientSecret})
 	if len(c.Credentials) == 1 {
 		c.SetDefault(name)
 	}
@@ -72,14 +72,14 @@ func (c *AuraCredentials) GetDefault() (*AuraCredential, error) {
 func (c *AuraCredentials) Get(name string) (*AuraCredential, error) {
 	for _, credential := range c.Credentials {
 		if credential.Name == name {
-			return &credential, nil
+			return credential, nil
 		}
 	}
 	return nil, fmt.Errorf("could not find credential with name %s", name)
 }
 
-func (c *AuraCredentials) UpdateAccessToken(credential *AuraCredential, accessToken string, expiresInSeconds int64) (*AuraCredential, error) {
-	credential, err := c.Get(credential.Name)
+func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken string, expiresInSeconds int64) (*AuraCredential, error) {
+	credential, err := c.Get(cred.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +93,8 @@ func (c *AuraCredentials) UpdateAccessToken(credential *AuraCredential, accessTo
 	return credential, nil
 }
 
-func (c *AuraCredentials) ClearAccessToken(credential *AuraCredential) (*AuraCredential, error) {
-	credential, err := c.Get(credential.Name)
+func (c *AuraCredentials) ClearAccessToken(cred *AuraCredential) (*AuraCredential, error) {
+	credential, err := c.Get(cred.Name)
 	if err != nil {
 		return nil, err
 	}

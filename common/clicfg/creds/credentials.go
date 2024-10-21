@@ -9,7 +9,7 @@ import (
 )
 
 type CredentialsFile struct {
-	Aura AuraCredentials `json:"aura"`
+	Aura *AuraCredentials `json:"aura"`
 }
 
 type Credentials struct {
@@ -25,8 +25,8 @@ func NewCredentials(fs afero.Fs, configPrefix string) (*Credentials, error) {
 		fs:       fs,
 		filePath: configPath,
 	}
-	c.load()
-	return &c, nil
+	err := c.load()
+	return &c, err
 }
 
 func (c *Credentials) load() error {
@@ -37,8 +37,8 @@ func (c *Credentials) load() error {
 	}
 
 	var credentials CredentialsFile = CredentialsFile{
-		Aura: AuraCredentials{
-			Credentials: []AuraCredential{},
+		Aura: &AuraCredentials{
+			Credentials: []*AuraCredential{},
 			onSave:      c.save,
 		},
 	}
@@ -48,7 +48,7 @@ func (c *Credentials) load() error {
 		}
 	}
 
-	c.Aura = &credentials.Aura
+	c.Aura = credentials.Aura
 
 	if !fileHasData {
 		return c.save()
@@ -59,7 +59,7 @@ func (c *Credentials) load() error {
 
 func (c *Credentials) save() error {
 	data, err := json.Marshal(CredentialsFile{
-		Aura: *c.Aura,
+		Aura: c.Aura,
 	})
 	if err != nil {
 		return err

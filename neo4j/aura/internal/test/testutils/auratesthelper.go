@@ -21,13 +21,14 @@ import (
 )
 
 type AuraTestHelper struct {
-	mux    *http.ServeMux
-	Server *httptest.Server
-	out    *bytes.Buffer
-	err    *bytes.Buffer
-	cfg    string
-	fs     afero.Fs
-	t      *testing.T
+	mux         *http.ServeMux
+	Server      *httptest.Server
+	out         *bytes.Buffer
+	err         *bytes.Buffer
+	cfg         string
+	credentials string
+	fs          afero.Fs
+	t           *testing.T
 }
 
 func (helper *AuraTestHelper) Close() {
@@ -38,7 +39,7 @@ func (helper *AuraTestHelper) ExecuteCommand(command string) {
 	args, err := shlex.Split(command)
 	assert.Nil(helper.t, err)
 
-	fs, err := testfs.GetTestFs(helper.cfg)
+	fs, err := testfs.GetTestFs(helper.cfg, helper.credentials)
 	assert.Nil(helper.t, err)
 
 	helper.fs = fs
@@ -70,6 +71,12 @@ func (helper *AuraTestHelper) SetConfigValue(key string, value interface{}) {
 	cfg, err := sjson.Set(helper.cfg, key, value)
 	assert.Nil(helper.t, err)
 	helper.cfg = cfg
+}
+
+func (helper *AuraTestHelper) SetCredentialsValue(key string, value interface{}) {
+	credentials, err := sjson.Set(helper.credentials, key, value)
+	assert.Nil(helper.t, err)
+	helper.credentials = credentials
 }
 
 // Assets no errors were returned
@@ -155,6 +162,29 @@ func (helper *AuraTestHelper) AssertConfigValue(key string, expected string) {
 	assert.Equal(helper.t, formattedExpected, formattedActual)
 }
 
+func (helper *AuraTestHelper) AssertCredentialsValue(key string, expected string) { // TODO: merge with assertConfig
+	file, err := helper.fs.Open(filepath.Join(clicfg.ConfigPrefix, "neo4j", "cli", "credentials.json"))
+	assert.Nil(helper.t, err)
+	defer file.Close()
+
+	out, err := io.ReadAll(file)
+	assert.Nil(helper.t, err)
+
+	actual := gjson.Get(string(out), key)
+
+	formattedExpected, err := FormatJson(expected, "\t")
+	if err != nil {
+		formattedExpected = expected
+	}
+
+	formattedActual, err := FormatJson(actual.String(), "\t")
+	if err != nil {
+		formattedActual = actual.String()
+	}
+
+	assert.Equal(helper.t, formattedExpected, formattedActual)
+}
+
 func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, body string) *requestHandlerMock {
 	mock := requestHandlerMock{Calls: []call{}, t: helper.t, Responses: []response{
 		{status: status, body: body},
@@ -206,15 +236,19 @@ func NewAuraTestHelper(t *testing.T) AuraTestHelper {
 				"aura": {
 					"auth-url": "%s/oauth/token",
 					"base-url": "%s/v1",
+					"output": "json"
+					}
+				}`, server.URL, server.URL)
+	helper.credentials = `{
+				"aura": {
 					"credentials": [{
 						"name": "test-cred",
 						"access-token": "dsa",
 						"token-expiry": 123
 					}],
-					"default-credential": "test-cred",
-					"output": "json"
+					"default-credential": "test-cred"
 					}
-				}`, server.URL, server.URL)
+				}`
 
 	helper.Server = server
 

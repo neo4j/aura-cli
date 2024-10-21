@@ -198,7 +198,7 @@ func TestUnauthorizedAccessTokenRefresh(t *testing.T) {
 			mockHandler.AssertCalledTimes(1)
 			mockHandler.AssertCalledWithMethod(http.MethodGet)
 
-			helper.AssertConfigValue("aura.credentials", `[
+			helper.AssertCredentialsValue("aura.credentials", `[
 	{
 		"name": "test-cred",
 		"client-id": "",
