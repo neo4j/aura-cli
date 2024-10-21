@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/spf13/afero"
@@ -21,6 +22,8 @@ const (
 	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
 	DefaultAuraBetaEnabled = "false"
 )
+
+var ValidOutputValues = [3]string{"default", "json", "table"}
 
 func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
@@ -64,7 +67,7 @@ func bindEnvironmentVariables(Viper *viper.Viper) {
 func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
-	Viper.SetDefault("aura.output", "json")
+	Viper.SetDefault("aura.output", "default")
 	Viper.SetDefault("aura.credentials", []AuraCredential{})
 	Viper.SetDefault("aura.beta-enabled", DefaultAuraBetaEnabled)
 }
@@ -86,13 +89,7 @@ type AuraConfig struct {
 }
 
 func (config *AuraConfig) IsValidConfigKey(key string) bool {
-	for _, k := range config.ValidConfigKeys {
-		if k == key {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(config.ValidConfigKeys, key)
 }
 
 func (config *AuraConfig) Get(key string) interface{} {

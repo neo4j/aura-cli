@@ -25,7 +25,6 @@ func PrintBodyMap(cmd *cobra.Command, cfg *clicfg.Config, values api.ResponseDat
 		if err != nil {
 			return err
 		}
-
 	default:
 		// This is in case the value is unknown
 		cmd.Println(values)
