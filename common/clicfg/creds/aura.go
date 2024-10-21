@@ -1,7 +1,9 @@
 package creds
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -13,6 +15,17 @@ type AuraCredentials struct {
 
 func (c *AuraCredentials) List() []*AuraCredential {
 	return c.Credentials
+}
+
+func (config *AuraCredentials) Print(writer io.Writer) error {
+	encoder := json.NewEncoder(writer)
+	encoder.SetIndent("", "\t")
+
+	if err := encoder.Encode(config.Credentials); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *AuraCredentials) Add(name string, clientId string, clientSecret string) error {
