@@ -126,7 +126,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 					fmt.Println("###############################")
 				}
 
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "type_definitions", "auth_provider"})
+				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "authentication_providers"})
 				if err != nil {
 					return err
 				}

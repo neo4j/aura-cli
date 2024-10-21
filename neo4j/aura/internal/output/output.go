@@ -2,6 +2,9 @@ package output
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"reflect"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
@@ -62,6 +65,15 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 		row := table.Row{}
 		for _, f := range fields {
 			formattedValue := v[f]
+
+			if reflect.TypeOf(formattedValue).Kind() == reflect.Slice {
+				marshaledSlice, err := json.MarshalIndent(formattedValue, "", "  ")
+				if err != nil {
+					msg := fmt.Sprintf("print table, marshaling value %s caused error: %s", formattedValue, err)
+					return errors.New(msg)
+				}
+				formattedValue = string(marshaledSlice)
+			}
 
 			if v[f] == nil {
 				formattedValue = ""

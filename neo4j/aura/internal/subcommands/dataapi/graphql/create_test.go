@@ -208,7 +208,7 @@ func TestCreateGraphQLDataApisOneAuthProviderWithApiKey(t *testing.T) {
 		}
 	}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
@@ -230,6 +230,59 @@ func TestCreateGraphQLDataApisOneAuthProviderWithApiKey(t *testing.T) {
 			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
 		}
 	}`)
+}
+
+func TestCreateGraphQLDataApisOneAuthProviderWithApiKeyOutputAsTable(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.SetConfigValue("aura.beta-enabled", "true")
+
+	instanceId := "2f49c2b3"
+	instanceUsername := "neo4j"
+	instancePassword := "lxbckvpsdbfgsbsdfgbsdf"
+	name := "my-data-api-1"
+	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
+	secAuthProviderName := "provider-1"
+	secAuthProviderType := "api-key"
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, `{
+		"data": {
+			"id": "2f49c2b3",
+			"name": "my-data-api-1",
+			"status": "creating",
+			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql",
+			"authentication_providers": [
+				{
+					"id": "1ad1b794-e40e-41f7-8e8c-5638130317ed",
+					"name": "provider-1",
+					"type": "api-key",
+					"enabled": true,
+					"key": "ublHwKxm2ylsc1HlkuL8NAcMfZnEVP1g"
+				}
+			]
+		}
+	}`)
+
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+
+	helper.AssertOut(`
+┌──────────┬───────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────┐
+│ ID       │ NAME          │ STATUS   │ URL                                                                            │ AUTHENTICATION_PROVIDERS                          │
+├──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────┤
+│ 2f49c2b3 │ my-data-api-1 │ creating │ https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql │ [                                                 │
+│          │               │          │                                                                                │   {                                               │
+│          │               │          │                                                                                │     "enabled": true,                              │
+│          │               │          │                                                                                │     "id": "1ad1b794-e40e-41f7-8e8c-5638130317ed", │
+│          │               │          │                                                                                │     "key": "ublHwKxm2ylsc1HlkuL8NAcMfZnEVP1g",    │
+│          │               │          │                                                                                │     "name": "provider-1",                         │
+│          │               │          │                                                                                │     "type": "api-key"                             │
+│          │               │          │                                                                                │   }                                               │
+│          │               │          │                                                                                │ ]                                                 │
+└──────────┴───────────────┴──────────┴────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────┘
+	`)
 }
 
 func TestCreateGraphQLDataApisOneAuthProviderWithJwks(t *testing.T) {
@@ -264,7 +317,7 @@ func TestCreateGraphQLDataApisOneAuthProviderWithJwks(t *testing.T) {
 		}
 	}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType, secAuthProviderUrl))
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType, secAuthProviderUrl))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
