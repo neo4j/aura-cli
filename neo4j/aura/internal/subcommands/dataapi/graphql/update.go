@@ -1,8 +1,11 @@
 package graphql
 
 import (
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
@@ -54,6 +57,9 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 				body["name"] = name
 			}
 			if typeDefs != "" {
+				if !isBase64(typeDefs) {
+					return errors.New("provided type definitions are not valid base64")
+				}
 				body["type_definitions"] = typeDefs
 			}
 			if typeDefsFile != "" {
@@ -75,8 +81,12 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 				body["aura_instance"] = auraInstance
 			}
 			if featureSubgraphEnabled != "" {
-				body["features"] = map[string]string{
-					"subgraph": featureSubgraphEnabled,
+				value, err := strconv.ParseBool(featureSubgraphEnabled)
+				if err != nil {
+					return err
+				}
+				body["features"] = map[string]bool{
+					"subgraph": value,
 				}
 			}
 
@@ -129,4 +139,9 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 
 	return cmd
+}
+
+func isBase64(s string) bool {
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
 }
