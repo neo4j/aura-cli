@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/dataapi/graphql"
@@ -11,34 +12,46 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestResolveTypeDefsFlagValue(t *testing.T) {
+func TestResolveTypeDefsFileFlagValue(t *testing.T) {
+	// Create a temporary file
+	tmpFile, err := os.CreateTemp("", "invalid-file")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name()) // clean up the file
+
+	// Change permissions to make the file unreadable
+	if err := os.Chmod(tmpFile.Name(), 0200); err != nil {
+		t.Fatalf("failed to chmod file: %v", err)
+	}
+
 	tests := map[string]struct {
 		flagValue     string
 		expectedValue string
 		expectedError error
-	}{"correct base64 string": {
-		flagValue:     "TXkgc3RyaW5n",
-		expectedValue: "TXkgc3RyaW5n",
-		expectedError: nil,
-	}, "correct path to file": {
-		flagValue:     "../../../test/testutils/typeDefs.graphql",
+	}{"correct path to file": {
+		flagValue:     "../../../test/assets/typeDefs.graphql",
 		expectedValue: "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg==",
 		expectedError: nil,
-	}, "invalid base 64 string": {
-		flagValue:     "sdf",
-		expectedValue: "",
-		expectedError: errors.New("type definitions file 'sdf' does not exist"),
 	}, "invalid path": {
-		flagValue:     "../../test/testutils/typeDefs.graphql",
+		flagValue:     "../../test/assets/typeDefs.graphql",
 		expectedValue: "",
-		expectedError: errors.New("type definitions file '../../test/testutils/typeDefs.graphql' does not exist"),
+		expectedError: errors.New("type definitions file '../../test/assets/typeDefs.graphql' does not exist"),
+	}, "empty file": {
+		flagValue:     "../../../test/assets/empty.graphql",
+		expectedValue: "",
+		expectedError: errors.New("read type definitions file is empty"),
+	}, "unreadable file": {
+		flagValue:     tmpFile.Name(),
+		expectedValue: "",
+		expectedError: errors.New("reading type definitions file failed with error"),
 	}}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			val, err := graphql.ResolveTypeDefsFlagValue(test.flagValue)
+			val, err := graphql.ResolveTypeDefsFileFlagValue(test.flagValue)
 			if test.expectedError != nil {
-				assert.EqualError(t, err, test.expectedError.Error())
+				assert.ErrorContains(t, err, test.expectedError.Error())
 			} else {
 				assert.Equal(t, test.expectedValue, val)
 			}
@@ -46,20 +59,7 @@ func TestResolveTypeDefsFlagValue(t *testing.T) {
 	}
 }
 
-func TestCreateGraphQLDataApisMissingFlags(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s", instanceId))
-
-	helper.AssertErr("Error: required flag(s) \"instance-password\", \"instance-username\", \"name\", \"security-auth-provider-name\", \"security-auth-provider-type\", \"type-definitions\" not set")
-}
-
-func TestCreateGraphQLDataApisMissingFlagInstancePassword(t *testing.T) {
+func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -67,186 +67,97 @@ func TestCreateGraphQLDataApisMissingFlagInstancePassword(t *testing.T) {
 
 	instanceId := "2f49c2b3"
 	instanceUsername := "neo4j"
+	instancePassword := "dfjglhssdopfrow"
 	name := "my-data-api-1"
 	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
+	invalidTypeDefs := "df"
+	typeDefsFile := "../../../test/assets/typeDefs.graphql"
+	invalidTypeDefsFile := "../invalid/typeDefs.graphql"
 	secAuthProviderName := "provider-1"
-	secAuthProviderType := "api-key"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, name, typeDefs, secAuthProviderName, secAuthProviderType))
+	secAuthProviderTypeApiKey := "api-key"
+	secAuthProviderTypeJwks := "jwks"
+	invalidSecAuthProviderType := "non-existing-type"
 
-	helper.AssertErr("Error: required flag(s) \"instance-password\" not set")
+	tests := map[string]struct {
+		executedCommand string
+		expectedError   string
+	}{"no type defs flag provided": {
+		executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s", instanceId),
+		expectedError:   "Error: either '--type-definitions' or '--type-definitions-file' flag needs to be provided",
+	},
+		"only one type defs flag can be provided": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --type-definitions %s --type-definitions-file %s", instanceId, typeDefs, typeDefsFile),
+			expectedError:   "Error: only one of '--type-definitions' or '--type-definitions-file' flag can be provided",
+		},
+		"missing almost all flags": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --type-definitions %s", instanceId, typeDefs),
+			expectedError:   "Error: required flag(s) \"instance-password\", \"instance-username\", \"name\", \"security-auth-provider-name\", \"security-auth-provider-type\" not set",
+		},
+		"missing instance password flag": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+			expectedError:   "Error: required flag(s) \"instance-password\" not set",
+		},
+		"missing instance username flag": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+			expectedError:   "Error: required flag(s) \"instance-username\" not set",
+		},
+		"missing name flag": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+			expectedError:   "Error: required flag(s) \"name\" not set",
+		},
+		"missing auth provider name flag": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderTypeApiKey),
+			expectedError:   "Error: required flag(s) \"security-auth-provider-name\" not set",
+		},
+		"missing auth provider type flag": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName),
+			expectedError:   "Error: required flag(s) \"security-auth-provider-type\" not set",
+		},
+		"invalid type defs": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+			expectedError:   "Error: provided type definitions are not valid base64",
+		},
+		"invalid type defs file": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsFile, secAuthProviderName, secAuthProviderTypeApiKey),
+			expectedError:   "Error: type definitions file '../invalid/typeDefs.graphql' does not exist",
+		},
+		"invalid auth provider type": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, invalidSecAuthProviderType),
+			expectedError:   "Error: invalid security auth provider type, got 'non-existing-type', expect 'api-key' or 'jwks'",
+		},
+		"auth provider jwks missing url": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeJwks),
+			expectedError:   "Error: required flag(s) \"security-auth-provider-url\" not set",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			helper.ExecuteCommand(tt.executedCommand)
+			helper.AssertErr(tt.expectedError)
+		})
+	}
 }
 
-func TestCreateGraphQLDataApisMissingFlagInstanceUsername(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
+func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 	instanceId := "2f49c2b3"
-	instancePassword := "dlkshglsjsdfsd"
+	instanceUsername := "neo4j"
+	instancePassword := "dfjglhssdopfrow"
 	name := "my-data-api-1"
 	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
+	typeDefsFile := "../../../test/assets/typeDefs.graphql"
 	secAuthProviderName := "provider-1"
-	secAuthProviderType := "api-key"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
+	secAuthProviderTypeApiKey := "api-key"
+	secAuthProviderTypeJwks := "jwks"
+	secAuthProviderUrl := "https://test.com/.well-known/jwks.json"
 
-	helper.AssertErr("Error: required flag(s) \"instance-username\" not set")
-}
-
-func TestCreateGraphQLDataApisMissingFlagName(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "dlkshglsjsdfsd"
-	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "api-key"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, typeDefs, secAuthProviderName, secAuthProviderType))
-
-	helper.AssertErr("Error: required flag(s) \"name\" not set")
-}
-
-func TestCreateGraphQLDataApisMissingFlagTypeDefs(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "dlkshglsjsdfsd"
-	name := "my-data-api-1"
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "api-key"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, secAuthProviderName, secAuthProviderType))
-
-	helper.AssertErr("Error: required flag(s) \"type-definitions\" not set")
-}
-
-func TestCreateGraphQLDataApisMissingFlagAuthProviderName(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "dlkshglsjsdfsd"
-	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
-	name := "my-data-api-1"
-	secAuthProviderType := "api-key"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderType))
-
-	helper.AssertErr("Error: required flag(s) \"security-auth-provider-name\" not set")
-}
-
-func TestCreateGraphQLDataApisMissingFlagAuthProviderType(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "dlkshglsjsdfsd"
-	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
-	name := "my-data-api-1"
-	secAuthProviderName := "provider-1"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName))
-
-	helper.AssertErr("Error: required flag(s) \"security-auth-provider-type\" not set")
-}
-
-func TestCreateGraphQLDataApisTypeDefsNotBase64(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "dlkshglsjsdfsd"
-	typeDefs := "blabla"
-	name := "my-data-api-1"
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "api-key"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
-
-	helper.AssertErr("Error: provided type definitions are not valid base64")
-}
-
-// func TestCreateGraphQLDataApisTypeDefsAsFile(t *testing.T) {
-// 	helper := testutils.NewAuraTestHelper(t)
-// 	defer helper.Close()
-
-// 	helper.SetConfigValue("aura.beta-enabled", "true")
-
-// 	instanceId := "2f49c2b3"
-// 	instanceUsername := "neo4j"
-// 	instancePassword := "dlkshglsjsdfsd"
-// 	typeDefs := "../../../test/testutils/typeDefs.graphql"
-// 	name := "my-data-api-1"
-// 	secAuthProviderName := "provider-1"
-// 	secAuthProviderType := "api-key"
-// 	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
-
-// 	helper.AssertErr("Error: se64")
-// }
-
-func TestCreateGraphQLDataApisWrongAuthProviderType(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "dlkshglsjsdfsd"
-	typeDefs := "blabla"
-	name := "my-data-api-1"
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "non-existing-type"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
-
-	helper.AssertErr("Error: invalid security auth provider type, got 'non-existing-type', expect 'api-key' or 'jwks'")
-}
-
-func TestCreateGraphQLDataApisJWKSAuthProviderMissingUrl(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "dlkshglsjsdfsd"
-	typeDefs := "blabla"
-	name := "my-data-api-1"
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "jwks"
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
-
-	helper.AssertErr("Error: required flag(s) \"security-auth-provider-url\" not set")
-}
-
-func TestCreateGraphQLDataApisOneAuthProviderWithApiKey(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "lxbckvpsdbfgsbsdfgbsdf"
-	name := "my-data-api-1"
-	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "api-key"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, `{
+	tests := map[string]struct {
+		mockResponse     string
+		executeCommand   string
+		expectedResponse string
+		isJsonResponse   bool
+	}{"one auth provider - api-key": {
+		mockResponse: `{
 		"data": {
 			"id": "2f49c2b3",
 			"name": "my-data-api-1",
@@ -262,14 +173,9 @@ func TestCreateGraphQLDataApisOneAuthProviderWithApiKey(t *testing.T) {
 				}
 			]
 		}
-	}`)
-
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
-
-	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodPost)
-
-	helper.AssertOutJson(`{
+	}`,
+		executeCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		expectedResponse: `{
 		"data": {
 			"authentication_providers": [
 				{
@@ -285,23 +191,10 @@ func TestCreateGraphQLDataApisOneAuthProviderWithApiKey(t *testing.T) {
 			"status": "creating",
 			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
 		}
-	}`)
-}
-
-func TestCreateGraphQLDataApisOneAuthProviderWithApiKeyOutputAsTable(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "lxbckvpsdbfgsbsdfgbsdf"
-	name := "my-data-api-1"
-	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "api-key"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, `{
+	}`,
+		isJsonResponse: true,
+	}, "one auth provider - api-key - output as table": {
+		mockResponse: `{
 		"data": {
 			"id": "2f49c2b3",
 			"name": "my-data-api-1",
@@ -317,14 +210,9 @@ func TestCreateGraphQLDataApisOneAuthProviderWithApiKeyOutputAsTable(t *testing.
 				}
 			]
 		}
-	}`)
-
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType))
-
-	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodPost)
-
-	helper.AssertOut(`
+	}`,
+		executeCommand: fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		expectedResponse: `
 ┌──────────┬───────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────┐
 │ ID       │ NAME          │ STATUS   │ URL                                                                            │ AUTHENTICATION_PROVIDERS                          │
 ├──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────┤
@@ -338,24 +226,11 @@ func TestCreateGraphQLDataApisOneAuthProviderWithApiKeyOutputAsTable(t *testing.
 │          │               │          │                                                                                │   }                                               │
 │          │               │          │                                                                                │ ]                                                 │
 └──────────┴───────────────┴──────────┴────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────┘
-	`)
-}
-
-func TestCreateGraphQLDataApisOneAuthProviderWithJwks(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	helper.SetConfigValue("aura.beta-enabled", "true")
-
-	instanceId := "2f49c2b3"
-	instanceUsername := "neo4j"
-	instancePassword := "lxbckvpsdbfgsbsdfgbsdf"
-	name := "my-data-api-1"
-	typeDefs := "dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="
-	secAuthProviderName := "provider-1"
-	secAuthProviderType := "jwks"
-	secAuthProviderUrl := "https://test.com/.well-known/jwks.json"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, `{
+	`,
+		isJsonResponse: false,
+	},
+		"one auth provider - jwks": {
+			mockResponse: `{
 		"data": {
 			"id": "2f49c2b3",
 			"name": "my-data-api-1",
@@ -371,14 +246,9 @@ func TestCreateGraphQLDataApisOneAuthProviderWithJwks(t *testing.T) {
 				}
 			]
 		}
-	}`)
-
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderType, secAuthProviderUrl))
-
-	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodPost)
-
-	helper.AssertOutJson(`{
+	}`,
+			executeCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
+			expectedResponse: `{
 		"data": {
 			"authentication_providers": [
 				{
@@ -394,5 +264,72 @@ func TestCreateGraphQLDataApisOneAuthProviderWithJwks(t *testing.T) {
 			"status": "creating",
 			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
 		}
-	}`)
+	}`,
+			isJsonResponse: true,
+		},
+		"providing type defs as file": {
+			mockResponse: `{
+		"data": {
+			"id": "2f49c2b3",
+			"name": "my-data-api-1",
+			"status": "creating",
+			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql",
+			"authentication_providers": [
+				{
+					"id": "5170b65b-1ea6-4d59-8df6-7fd02b77fc75",
+					"name": "provider-1",
+					"type": "jwks",
+					"enabled": true,
+					"url": "https://test.com/.well-known/jwks.json"
+				}
+			]
+		}
+	}`,
+			executeCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefsFile, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
+			expectedResponse: `{
+		"data": {
+			"authentication_providers": [
+				{
+					"enabled": true,
+					"id": "5170b65b-1ea6-4d59-8df6-7fd02b77fc75",
+					"name": "provider-1",
+					"type": "jwks",
+					"url": "https://test.com/.well-known/jwks.json"
+				}
+			],
+			"id": "2f49c2b3",
+			"name": "my-data-api-1",
+			"status": "creating",
+			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
+		}
+	}`,
+			isJsonResponse: true,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			if name != "providing type defs as file" {
+				return
+			}
+
+			helper := testutils.NewAuraTestHelper(t)
+			defer helper.Close()
+
+			helper.SetConfigValue("aura.beta-enabled", "true")
+
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, tt.mockResponse)
+
+			helper.ExecuteCommand(tt.executeCommand)
+
+			mockHandler.AssertCalledTimes(1)
+			mockHandler.AssertCalledWithMethod(http.MethodPost)
+
+			if tt.isJsonResponse {
+				helper.AssertOutJson(tt.expectedResponse)
+			} else {
+				helper.AssertOut(tt.expectedResponse)
+			}
+		})
+	}
 }

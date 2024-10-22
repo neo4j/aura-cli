@@ -22,6 +22,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		instanceUsernameFlag            = "instance-username"
 		instancePasswordFlag            = "instance-password"
 		typeDefsFlag                    = "type-definitions"
+		typeDefsFileFlag                = "type-definitions-file"
 		featureSubgraphEnabledFlag      = "feature-subgraph-enabled"
 		securityAuthProviderNameFlag    = "security-auth-provider-name"
 		securityAuthProviderTypeFlag    = "security-auth-provider-type"
@@ -39,6 +40,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		instanceUsername            string
 		instancePassword            string
 		typeDefs                    string
+		typeDefsFile                string
 		featureSubgraphEnabled      bool
 		securityAuthProviderName    string
 		securityAuthProviderType    string
@@ -63,6 +65,14 @@ If you lose your API key, you will need to create a new Authentication provider.
 				cmd.MarkFlagRequired(securityAuthProviderUrlFlag)
 			}
 
+			typeDefs, _ := cmd.Flags().GetString(typeDefsFlag)
+			typeDefsFile, _ := cmd.Flags().GetString(typeDefsFileFlag)
+			if typeDefs == "" && typeDefsFile == "" {
+				return fmt.Errorf("either '--%s' or '--%s' flag needs to be provided", typeDefsFlag, typeDefsFileFlag)
+			} else if typeDefs != "" && typeDefsFile != "" {
+				return fmt.Errorf("only one of '--%s' or '--%s' flag can be provided", typeDefsFlag, typeDefsFileFlag)
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -77,11 +87,23 @@ If you lose your API key, you will need to create a new Authentication provider.
 				},
 			}
 
-			base64EncodedTypeDefs, err := ResolveTypeDefsFlagValue(typeDefs)
-			if err != nil {
-				return err
+			typeDefsForBody := ""
+			if typeDefs != "" {
+				if !isBase64(typeDefs) {
+					return errors.New("provided type definitions are not valid base64")
+				}
+				typeDefsForBody = typeDefs
+			} else if typeDefsFile != "" {
+				base64EncodedTypeDefs, err := ResolveTypeDefsFileFlagValue(typeDefsFile)
+				if err != nil {
+					return err
+				}
+
+				typeDefsForBody = base64EncodedTypeDefs
+			} else {
+				return fmt.Errorf("neither '--%s' nor '--%s' flag value is provided", typeDefsFlag, typeDefsFileFlag)
 			}
-			body["type_definitions"] = base64EncodedTypeDefs
+			body["type_definitions"] = typeDefsForBody
 
 			if securityAuthProviderType != SecurityAuthProviderTypeJwks && securityAuthProviderType != SecurityAuthProviderTypeApiKey {
 				msg := strings.ToLower(fmt.Sprintf("invalid security auth provider type, got '%s', expect '%s' or '%s'", securityAuthProviderType, SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks))
@@ -163,8 +185,9 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&instancePassword, instancePasswordFlag, "", "The password of the instance this GraphQL Data API will be connected to")
 	cmd.MarkFlagRequired(instancePasswordFlag)
 
-	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded or local .graphql file (path/to/typeDefs.graphql)")
-	cmd.MarkFlagRequired(typeDefsFlag)
+	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
+
+	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to the local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
 
 	featureSubgraphHelpMsg := fmt.Sprintf("Wether or not GraphQL subgraph is enabled, default is %t", featureSubgraphEnabledDefault)
 	cmd.Flags().BoolVar(&featureSubgraphEnabled, featureSubgraphEnabledFlag, featureSubgraphEnabledDefault, featureSubgraphHelpMsg)
@@ -186,24 +209,26 @@ If you lose your API key, you will need to create a new Authentication provider.
 	return cmd
 }
 
-func ResolveTypeDefsFlagValue(typeDefsFlagValue string) (string, error) {
-	_, err := base64.StdEncoding.DecodeString(typeDefsFlagValue)
-	if err == nil {
-		// typeDefsFlagValue is a valid base64 encoded string
-		return typeDefsFlagValue, nil
-	} else {
-		// typeDefsFlagValue is assessed as a local file
-		if _, err := os.Stat(typeDefsFlagValue); os.IsNotExist(err) {
-			return "", fmt.Errorf("type definitions file '%s' does not exist", typeDefsFlagValue)
-		}
+func isBase64(s string) bool {
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
+}
 
-		fileData, err := os.ReadFile(typeDefsFlagValue)
-		if err != nil {
-			return "", fmt.Errorf("reading type definitions file failed with error: %s", err)
-		}
-		base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(fileData))
-		fmt.Println(base64EncodedTypeDefs)
-
-		return base64EncodedTypeDefs, nil
+func ResolveTypeDefsFileFlagValue(typeDefsFileFlagValue string) (string, error) {
+	// typeDefsFileFlagValue is assessed as a local file
+	if _, err := os.Stat(typeDefsFileFlagValue); os.IsNotExist(err) {
+		return "", fmt.Errorf("type definitions file '%s' does not exist", typeDefsFileFlagValue)
 	}
+
+	fileData, err := os.ReadFile(typeDefsFileFlagValue)
+	if err != nil {
+		return "", fmt.Errorf("reading type definitions file failed with error: %s", err)
+	}
+
+	base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(fileData))
+	if base64EncodedTypeDefs == "" {
+		return "", errors.New("read type definitions file is empty")
+	}
+
+	return base64EncodedTypeDefs, nil
 }
