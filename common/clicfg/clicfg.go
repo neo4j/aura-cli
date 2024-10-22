@@ -108,7 +108,6 @@ func (config *AuraConfig) Get(key string) interface{} {
 
 func (config *AuraConfig) Set(key string, value string) error {
 	filename := config.viper.ConfigFileUsed()
-	println(filename)
 	data, err := fileutils.ReadFileSafe(config.fs, filename)
 	if err != nil {
 		return err

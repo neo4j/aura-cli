@@ -70,7 +70,6 @@ func getToken(credential *creds.AuraCredential, cfg *clicfg.Config) (string, err
 		return "", err
 	}
 
-	cfg.Credentials.Aura.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)
-
-	return grant.AccessToken, nil
+	_, err = cfg.Credentials.Aura.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)
+	return grant.AccessToken, err
 }
