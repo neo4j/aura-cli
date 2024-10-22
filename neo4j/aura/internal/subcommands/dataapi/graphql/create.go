@@ -131,12 +131,12 @@ If you lose your API key, you will need to create a new Authentication provider.
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
 
 				if securityAuthProviderType == SecurityAuthProviderTypeApiKey {
-					fmt.Println("###############################")
-					fmt.Println("# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.")
-					fmt.Println("#")
-					fmt.Println("# If you lose your API key, you will need to create a new Authentication provider.")
-					fmt.Println("# This will not result in any loss of data.")
-					fmt.Println("###############################")
+					cmd.Println("###############################")
+					cmd.Println("# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.")
+					cmd.Println("#")
+					cmd.Println("# If you lose your API key, you will need to create a new Authentication provider.")
+					cmd.Println("# This will not result in any loss of data.")
+					cmd.Println("###############################")
 				}
 
 				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "authentication_providers"})
@@ -151,7 +151,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 						return err
 					}
 
-					pollResponse, err := api.PollGraphQLDataApi(cfg, instanceId, response.Data.Id)
+					pollResponse, err := api.PollGraphQLDataApi(cfg, instanceId, response.Data.Id, api.GraphQLDataApiStatusCreating)
 					if err != nil {
 						return err
 					}

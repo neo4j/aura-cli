@@ -37,10 +37,10 @@ func PollCMK(cfg *clicfg.Config, cmkId string) (*PollResponse, error) {
 	})
 }
 
-func PollGraphQLDataApi(cfg *clicfg.Config, instanceId string, graphQLDataApiId string) (*PollResponse, error) {
+func PollGraphQLDataApi(cfg *clicfg.Config, instanceId string, graphQLDataApiId string, waitingStatus string) (*PollResponse, error) {
 	path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s", instanceId, graphQLDataApiId)
 	return Poll(cfg, path, func(status string) bool {
-		return status != GraphQLDataApiStatusCreating
+		return status != waitingStatus
 	})
 }
 
