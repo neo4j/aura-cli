@@ -84,7 +84,8 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s", instanceId, args[0])
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method: http.MethodPatch,
+				Method:   http.MethodPatch,
+				PostBody: body,
 			})
 			if err != nil {
 				return err
