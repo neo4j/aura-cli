@@ -76,6 +76,11 @@ If you lose your API key, you will need to create a new Authentication provider.
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if securityAuthProviderType != SecurityAuthProviderTypeJwks && securityAuthProviderType != SecurityAuthProviderTypeApiKey {
+				msg := strings.ToLower(fmt.Sprintf("invalid security auth provider type, got '%s', expect '%s' or '%s'", securityAuthProviderType, SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks))
+				return errors.New(msg)
+			}
+
 			body := map[string]any{
 				"name": name,
 				"aura_instance": map[string]string{
@@ -87,30 +92,15 @@ If you lose your API key, you will need to create a new Authentication provider.
 				},
 			}
 
-			typeDefsForBody := ""
-			if typeDefs != "" {
-				if !isBase64(typeDefs) {
-					return errors.New("provided type definitions are not valid base64")
-				}
-				typeDefsForBody = typeDefs
-			} else if typeDefsFile != "" {
-				base64EncodedTypeDefs, err := ResolveTypeDefsFileFlagValue(typeDefsFile)
-				if err != nil {
-					return err
-				}
-
-				typeDefsForBody = base64EncodedTypeDefs
-			} else {
-				return fmt.Errorf("neither '--%s' nor '--%s' flag value is provided", typeDefsFlag, typeDefsFileFlag)
+			typeDefsForBody, err := getTypeDefsFromFlag(typeDefs, typeDefsFile, typeDefsFlag, typeDefsFileFlag)
+			if err != nil {
+				return err
 			}
 			body["type_definitions"] = typeDefsForBody
 
-			if securityAuthProviderType != SecurityAuthProviderTypeJwks && securityAuthProviderType != SecurityAuthProviderTypeApiKey {
-				msg := strings.ToLower(fmt.Sprintf("invalid security auth provider type, got '%s', expect '%s' or '%s'", securityAuthProviderType, SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks))
-				return errors.New(msg)
-			}
-
+			//
 			// TODO: make it possible to add multiple auth providers
+			//
 
 			authProvider := map[string]any{
 				"name":    securityAuthProviderName,
@@ -212,6 +202,26 @@ If you lose your API key, you will need to create a new Authentication provider.
 func isBase64(s string) bool {
 	_, err := base64.StdEncoding.DecodeString(s)
 	return err == nil
+}
+
+func getTypeDefsFromFlag(typeDefs string, typeDefsFile string, typeDefsFlag string, typeDefsFileFlag string) (string, error) {
+	typeDefsForBody := ""
+	if typeDefs != "" {
+		if !isBase64(typeDefs) {
+			return "", errors.New("provided type definitions are not valid base64")
+		}
+		typeDefsForBody = typeDefs
+	} else if typeDefsFile != "" {
+		base64EncodedTypeDefs, err := ResolveTypeDefsFileFlagValue(typeDefsFile)
+		if err != nil {
+			return "", err
+		}
+
+		typeDefsForBody = base64EncodedTypeDefs
+	} else {
+		return "", fmt.Errorf("neither '--%s' nor '--%s' flag value is provided", typeDefsFlag, typeDefsFileFlag)
+	}
+	return typeDefsForBody, nil
 }
 
 func ResolveTypeDefsFileFlagValue(typeDefsFileFlagValue string) (string, error) {
