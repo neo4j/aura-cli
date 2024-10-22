@@ -164,7 +164,6 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 		executeCommand      string
 		expectedRequestBody string
 		expectedResponse    string
-		isJsonResponse      bool
 	}{"one auth provider - api-key": {
 		mockResponse: `{
 		"data": {
@@ -183,26 +182,31 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			]
 		}
 	}`,
-		executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
-		expectedRequestBody: "{}",
-		expectedResponse: `{
-		"data": {
-			"authentication_providers": [
-				{
-					"enabled": true,
-					"id": "1ad1b794-e40e-41f7-8e8c-5638130317ed",
-					"key": "ublHwKxm2ylsc1HlkuL8NAcMfZnEVP1g",
-					"name": "provider-1",
-					"type": "api-key"
-				}
-			],
-			"id": "2f49c2b3",
-			"name": "my-data-api-1",
-			"status": "creating",
-			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
-		}
-	}`,
-		isJsonResponse: true,
+		executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-enabled false --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"features":{"subgraph":true},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":false,"name":"provider-1","type":"api-key"}]},"type_definitions":"dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="}`,
+		expectedResponse: `###############################
+# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.
+#
+# If you lose your API key, you will need to create a new Authentication provider.
+# This will not result in any loss of data.
+###############################
+{
+	"data": {
+		"authentication_providers": [
+			{
+				"enabled": true,
+				"id": "1ad1b794-e40e-41f7-8e8c-5638130317ed",
+				"key": "ublHwKxm2ylsc1HlkuL8NAcMfZnEVP1g",
+				"name": "provider-1",
+				"type": "api-key"
+			}
+		],
+		"id": "2f49c2b3",
+		"name": "my-data-api-1",
+		"status": "creating",
+		"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
+	}
+}`,
 	}, "one auth provider - api-key - output as table": {
 		mockResponse: `{
 		"data": {
@@ -221,9 +225,14 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			]
 		}
 	}`,
-		executeCommand:      fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
-		expectedRequestBody: "{}",
-		expectedResponse: `
+		executeCommand:      fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"features":{"subgraph":false},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"provider-1","type":"api-key"}]},"type_definitions":"dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="}`,
+		expectedResponse: `###############################
+# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.
+#
+# If you lose your API key, you will need to create a new Authentication provider.
+# This will not result in any loss of data.
+###############################
 ┌──────────┬───────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────┐
 │ ID       │ NAME          │ STATUS   │ URL                                                                            │ AUTHENTICATION_PROVIDERS                          │
 ├──────────┼───────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────┤
@@ -238,7 +247,6 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 │          │               │          │                                                                                │ ]                                                 │
 └──────────┴───────────────┴──────────┴────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────┘
 	`,
-		isJsonResponse: false,
 	},
 		"one auth provider - jwks": {
 			mockResponse: `{
@@ -259,25 +267,24 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 		}
 	}`,
 			executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
-			expectedRequestBody: "{}",
+			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"features":{"subgraph":false},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"provider-1","type":"jwks","url":"https://test.com/.well-known/jwks.json"}]},"type_definitions":"dHlwZSBBY3RvciB7CiAgbmFtZTogU3RyaW5nCiAgbW92aWVzOiBbTW92aWUhXSEgQHJlbGF0aW9uc2hpcCh0eXBlOiAiQUNURURfSU4iLCBkaXJlY3Rpb246IE9VVCkKfQoKdHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwogIGFjdG9yczogW0FjdG9yIV0hIEByZWxhdGlvbnNoaXAodHlwZTogIkFDVEVEX0lOIiwgZGlyZWN0aW9uOiBJTikKfQ=="}`,
 			expectedResponse: `{
-		"data": {
-			"authentication_providers": [
-				{
-					"enabled": true,
-					"id": "5170b65b-1ea6-4d59-8df6-7fd02b77fc75",
-					"name": "provider-1",
-					"type": "jwks",
-					"url": "https://test.com/.well-known/jwks.json"
-				}
-			],
-			"id": "2f49c2b3",
-			"name": "my-data-api-1",
-			"status": "creating",
-			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
-		}
-	}`,
-			isJsonResponse: true,
+	"data": {
+		"authentication_providers": [
+			{
+				"enabled": true,
+				"id": "5170b65b-1ea6-4d59-8df6-7fd02b77fc75",
+				"name": "provider-1",
+				"type": "jwks",
+				"url": "https://test.com/.well-known/jwks.json"
+			}
+		],
+		"id": "2f49c2b3",
+		"name": "my-data-api-1",
+		"status": "creating",
+		"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
+	}
+}`,
 		},
 		"providing type defs as file": {
 			mockResponse: `{
@@ -300,32 +307,27 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefsFile, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
 			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"features":{"subgraph":false},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"provider-1","type":"jwks","url":"https://test.com/.well-known/jwks.json"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg=="}`,
 			expectedResponse: `{
-		"data": {
-			"authentication_providers": [
-				{
-					"enabled": true,
-					"id": "5170b65b-1ea6-4d59-8df6-7fd02b77fc75",
-					"name": "provider-1",
-					"type": "jwks",
-					"url": "https://test.com/.well-known/jwks.json"
-				}
-			],
-			"id": "2f49c2b3",
-			"name": "my-data-api-1",
-			"status": "creating",
-			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
-		}
-	}`,
-			isJsonResponse: true,
+	"data": {
+		"authentication_providers": [
+			{
+				"enabled": true,
+				"id": "5170b65b-1ea6-4d59-8df6-7fd02b77fc75",
+				"name": "provider-1",
+				"type": "jwks",
+				"url": "https://test.com/.well-known/jwks.json"
+			}
+		],
+		"id": "2f49c2b3",
+		"name": "my-data-api-1",
+		"status": "creating",
+		"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
+	}
+}`,
 		},
 	}
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			if name != "providing type defs as file" {
-				return
-			}
-
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
@@ -339,11 +341,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			mockHandler.AssertCalledWithMethod(http.MethodPost)
 			mockHandler.AssertCalledWithBody(tt.expectedRequestBody)
 
-			if tt.isJsonResponse {
-				helper.AssertOutJson(tt.expectedResponse)
-			} else {
-				helper.AssertOut(tt.expectedResponse)
-			}
+			helper.AssertOut(tt.expectedResponse)
 		})
 	}
 }
