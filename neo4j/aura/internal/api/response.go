@@ -214,6 +214,17 @@ type CreateSnapshotResponse struct {
 	}
 }
 
+const (
+	GraphQLDataApiStatusReady    = "ready"
+	GraphQLDataApiStatusCreating = "creating"
+	GraphQLDataApiStatusUpdating = "updating"
+	GraphQLDataApiStatusDeleting = "deleting"
+	GraphQLDataApiStatusPausing  = "pausing"
+	GraphQLDataApiStatusResuming = "resuming"
+	GraphQLDataApiStatusPaused   = "paused"
+	GraphQLDataApiStatusError    = "error"
+)
+
 type ResponseData interface {
 	AsArray() []map[string]any
 	GetSingleOrError() (map[string]any, error)

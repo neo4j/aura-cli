@@ -37,6 +37,13 @@ func PollCMK(cfg *clicfg.Config, cmkId string) (*PollResponse, error) {
 	})
 }
 
+func PollGraphQLDataApi(cfg *clicfg.Config, instanceId string, graphQLDataApiId string, waitingStatus string) (*PollResponse, error) {
+	path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s", instanceId, graphQLDataApiId)
+	return Poll(cfg, path, func(status string) bool {
+		return status != waitingStatus
+	})
+}
+
 func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollResponse, error) {
 	pollingConfig := cfg.Aura.PollingConfig()
 	for i := 0; i < pollingConfig.MaxRetries; i++ {
