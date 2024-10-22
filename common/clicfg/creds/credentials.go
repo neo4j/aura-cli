@@ -13,8 +13,7 @@ type CredentialsFile struct {
 }
 
 type Credentials struct {
-	fs afero.Fs
-
+	fs       afero.Fs
 	Aura     *AuraCredentials
 	filePath string
 }
@@ -39,7 +38,7 @@ func (c *Credentials) load() error {
 	var credentials CredentialsFile = CredentialsFile{
 		Aura: &AuraCredentials{
 			Credentials: []*AuraCredential{},
-			onSave:      c.save,
+			onUpdate:    c.save,
 		},
 	}
 	if fileHasData {

@@ -10,7 +10,7 @@ import (
 type AuraCredentials struct {
 	DefaultCredential string            `json:"default-credential"`
 	Credentials       []*AuraCredential `json:"credentials"`
-	onSave            func() error
+	onUpdate          func() error
 }
 
 func (c *AuraCredentials) List() []*AuraCredential {
@@ -40,7 +40,7 @@ func (c *AuraCredentials) Add(name string, clientId string, clientSecret string)
 	if len(c.Credentials) == 1 {
 		c.SetDefault(name)
 	}
-	return c.onSave()
+	return c.onUpdate()
 }
 
 func (c *AuraCredentials) Remove(name string) error {
@@ -62,7 +62,7 @@ func (c *AuraCredentials) Remove(name string) error {
 	}
 
 	c.Credentials = append(c.Credentials[:indexToRemove], c.Credentials[indexToRemove+1:]...)
-	return c.onSave()
+	return c.onUpdate()
 }
 
 func (c *AuraCredentials) SetDefault(name string) error {
@@ -71,7 +71,7 @@ func (c *AuraCredentials) SetDefault(name string) error {
 	}
 
 	c.DefaultCredential = name
-	c.onSave()
+	c.onUpdate()
 	return nil
 }
 
@@ -102,7 +102,7 @@ func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken st
 
 	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
 	credential.AccessToken = accessToken
-	c.onSave()
+	c.onUpdate()
 	return credential, nil
 }
 
@@ -114,7 +114,7 @@ func (c *AuraCredentials) ClearAccessToken(cred *AuraCredential) (*AuraCredentia
 
 	credential.TokenExpiry = 0
 	credential.AccessToken = ""
-	c.onSave()
+	c.onUpdate()
 	return credential, nil
 }
 

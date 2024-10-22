@@ -7,10 +7,12 @@ import (
 	"slices"
 
 	"github.com/neo4j/cli/common/clicfg/creds"
+	"github.com/neo4j/cli/common/clicfg/fileutils"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"github.com/tidwall/sjson"
 )
 
 var ConfigPrefix string
@@ -19,6 +21,12 @@ const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
 const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
 
 var ValidOutputValues = [3]string{"default", "json", "table"}
+
+type Config struct {
+	Version     string
+	Aura        *AuraConfig
+	Credentials *creds.Credentials
+}
 
 func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
@@ -55,7 +63,8 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 
 	return &Config{
 		Version: version,
-		Aura: AuraConfig{
+		Aura: &AuraConfig{
+			fs:    fs,
 			viper: Viper, pollingOverride: PollingConfig{
 				MaxRetries: 60,
 				Interval:   20,
@@ -77,21 +86,16 @@ func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.output", "default")
 }
 
-type Config struct {
-	Version     string
-	Aura        AuraConfig
-	Credentials *creds.Credentials
+type AuraConfig struct {
+	viper           *viper.Viper
+	fs              afero.Fs
+	pollingOverride PollingConfig
+	ValidConfigKeys []string
 }
 
 type PollingConfig struct {
 	Interval   int
 	MaxRetries int
-}
-
-type AuraConfig struct {
-	viper           *viper.Viper
-	pollingOverride PollingConfig
-	ValidConfigKeys []string
 }
 
 func (config *AuraConfig) IsValidConfigKey(key string) bool {
@@ -103,8 +107,19 @@ func (config *AuraConfig) Get(key string) interface{} {
 }
 
 func (config *AuraConfig) Set(key string, value string) error {
-	config.viper.Set(fmt.Sprintf("aura.%s", key), value)
-	return config.viper.WriteConfig()
+	filename := config.viper.ConfigFileUsed()
+	println(filename)
+	data, err := fileutils.ReadFileSafe(config.fs, filename)
+	if err != nil {
+		return err
+	}
+
+	updateConfig, err := sjson.Set(string(data), fmt.Sprintf("aura.%s", key), value)
+	if err != nil {
+		return err
+	}
+
+	return fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
 }
 
 func (config *AuraConfig) Print(cmd *cobra.Command) error {
