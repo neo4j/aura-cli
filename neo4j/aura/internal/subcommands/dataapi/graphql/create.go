@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -41,10 +42,10 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		instancePassword            string
 		typeDefs                    string
 		typeDefsFile                string
-		featureSubgraphEnabled      bool
+		featureSubgraphEnabled      string
 		securityAuthProviderName    string
 		securityAuthProviderType    string
-		securityAuthProviderEnabled bool
+		securityAuthProviderEnabled string
 		securityAuthProviderUrl     string
 		await                       bool
 	)
@@ -87,9 +88,20 @@ If you lose your API key, you will need to create a new Authentication provider.
 					"username": instanceUsername,
 					"password": instancePassword,
 				},
-				"features": map[string]bool{
-					"subgraph": featureSubgraphEnabled,
-				},
+			}
+
+			if featureSubgraphEnabled != "" {
+				value, err := strconv.ParseBool(featureSubgraphEnabled)
+				if err != nil {
+					return err
+				}
+				body["features"] = map[string]bool{
+					"subgraph": value,
+				}
+			} else {
+				body["features"] = map[string]bool{
+					"subgraph": featureSubgraphEnabledDefault,
+				}
 			}
 
 			typeDefsForBody, err := getTypeDefsFromFlag(typeDefs, typeDefsFile, typeDefsFlag, typeDefsFileFlag)
@@ -103,9 +115,17 @@ If you lose your API key, you will need to create a new Authentication provider.
 			//
 
 			authProvider := map[string]any{
-				"name":    securityAuthProviderName,
-				"type":    securityAuthProviderType,
-				"enabled": securityAuthProviderEnabled,
+				"name": securityAuthProviderName,
+				"type": securityAuthProviderType,
+			}
+			if securityAuthProviderEnabled != "" {
+				value, err := strconv.ParseBool(securityAuthProviderEnabled)
+				if err != nil {
+					return err
+				}
+				authProvider["enabled"] = value
+			} else {
+				authProvider["enabled"] = securityAuthProviderEnabledDefault
 			}
 			if securityAuthProviderType == SecurityAuthProviderTypeJwks {
 				authProvider["url"] = securityAuthProviderUrl
@@ -180,7 +200,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to the local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
 
 	featureSubgraphHelpMsg := fmt.Sprintf("Wether or not GraphQL subgraph is enabled, default is %t", featureSubgraphEnabledDefault)
-	cmd.Flags().BoolVar(&featureSubgraphEnabled, featureSubgraphEnabledFlag, featureSubgraphEnabledDefault, featureSubgraphHelpMsg)
+	cmd.Flags().StringVar(&featureSubgraphEnabled, featureSubgraphEnabledFlag, "", featureSubgraphHelpMsg)
 
 	cmd.Flags().StringVar(&securityAuthProviderName, securityAuthProviderNameFlag, "", "The name of the GraphQL Data API security auth provider")
 	cmd.MarkFlagRequired(securityAuthProviderNameFlag)
@@ -190,7 +210,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.MarkFlagRequired(securityAuthProviderTypeFlag)
 
 	authProviderEnabledHelpMsg := fmt.Sprintf("Wether or not the GraphQL Data API security auth provider is enabled, default is %t", securityAuthProviderEnabledDefault)
-	cmd.Flags().BoolVar(&securityAuthProviderEnabled, securityAuthProviderEnabledFlag, securityAuthProviderEnabledDefault, authProviderEnabledHelpMsg)
+	cmd.Flags().StringVar(&securityAuthProviderEnabled, securityAuthProviderEnabledFlag, "", authProviderEnabledHelpMsg)
 
 	cmd.Flags().StringVar(&securityAuthProviderUrl, securityAuthProviderUrlFlag, "", "The JWKS url for the GraphQL Data API security auth provider")
 

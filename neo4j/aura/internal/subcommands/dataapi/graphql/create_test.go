@@ -129,6 +129,14 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeJwks),
 			expectedError:   "Error: required flag(s) \"security-auth-provider-url\" not set",
 		},
+		"invalid bool value for feature subgraph enabled": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled yaya", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+			expectedError:   "Error: strconv.ParseBool: parsing \"yaya\": invalid syntax",
+		},
+		"invalid bool value for auth provider enabled": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-enabled yeye", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+			expectedError:   "Error: strconv.ParseBool: parsing \"yeye\": invalid syntax",
+		},
 	}
 
 	for name, tt := range tests {
@@ -152,10 +160,11 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 	secAuthProviderUrl := "https://test.com/.well-known/jwks.json"
 
 	tests := map[string]struct {
-		mockResponse     string
-		executeCommand   string
-		expectedResponse string
-		isJsonResponse   bool
+		mockResponse        string
+		executeCommand      string
+		expectedRequestBody string
+		expectedResponse    string
+		isJsonResponse      bool
 	}{"one auth provider - api-key": {
 		mockResponse: `{
 		"data": {
@@ -174,7 +183,8 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			]
 		}
 	}`,
-		executeCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		expectedRequestBody: "{}",
 		expectedResponse: `{
 		"data": {
 			"authentication_providers": [
@@ -211,7 +221,8 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			]
 		}
 	}`,
-		executeCommand: fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		executeCommand:      fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --feature-subgraph-enabled true", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeApiKey),
+		expectedRequestBody: "{}",
 		expectedResponse: `
 ┌──────────┬───────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────┐
 │ ID       │ NAME          │ STATUS   │ URL                                                                            │ AUTHENTICATION_PROVIDERS                          │
@@ -247,7 +258,8 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			]
 		}
 	}`,
-			executeCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
+			executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefs, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
+			expectedRequestBody: "{}",
 			expectedResponse: `{
 		"data": {
 			"authentication_providers": [
@@ -285,7 +297,8 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			]
 		}
 	}`,
-			executeCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefsFile, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
+			executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s --security-auth-provider-name %s --security-auth-provider-type %s --security-auth-provider-url %s --feature-subgraph-enabled false", instanceId, instanceUsername, instancePassword, name, typeDefsFile, secAuthProviderName, secAuthProviderTypeJwks, secAuthProviderUrl),
+			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"features":{"subgraph":false},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"provider-1","type":"jwks","url":"https://test.com/.well-known/jwks.json"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg=="}`,
 			expectedResponse: `{
 		"data": {
 			"authentication_providers": [
@@ -324,6 +337,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 
 			mockHandler.AssertCalledTimes(1)
 			mockHandler.AssertCalledWithMethod(http.MethodPost)
+			mockHandler.AssertCalledWithBody(tt.expectedRequestBody)
 
 			if tt.isJsonResponse {
 				helper.AssertOutJson(tt.expectedResponse)
