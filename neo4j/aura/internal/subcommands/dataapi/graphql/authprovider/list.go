@@ -18,7 +18,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "Returns a list of auth providers of a GraphQL Data API",
+		Short: "Returns a list of authentication providers of a GraphQL Data API",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-provider", instanceId, dataApiId)
@@ -37,10 +37,10 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance the Data API is connected to")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance the GraphQL Data API is connected to")
 	cmd.MarkFlagRequired("instance-id")
 
-	cmd.Flags().StringVar(&dataApiId, "data-api-id", "", "The ID of the Data API to list the auth providers of")
+	cmd.Flags().StringVar(&dataApiId, "data-api-id", "", "The ID of the GraphQL Data API to list the authentication providers of")
 	cmd.MarkFlagRequired("instance-id")
 
 	return cmd
