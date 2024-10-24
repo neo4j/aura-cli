@@ -50,7 +50,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 		return responseBody, 0, err
 	}
 
-	credential, err := cfg.Aura.DefaultCredential()
+	credential, err := cfg.Credentials.Aura.GetDefault()
 	if err != nil {
 		return responseBody, 0, err
 	}
@@ -77,7 +77,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 		return responseBody, res.StatusCode, nil
 	}
 
-	return responseBody, res.StatusCode, handleResponseError(res, credential)
+	return responseBody, res.StatusCode, handleResponseError(res, credential, cfg)
 }
 
 func createBody(data map[string]any) (io.Reader, error) {

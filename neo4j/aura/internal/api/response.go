@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clicfg/credentials"
 )
 
 type ErrorResponse struct {
@@ -25,7 +26,7 @@ type ServerError struct {
 	Error string `json:"error"`
 }
 
-func handleResponseError(res *http.Response, credential *clicfg.AuraCredential) error {
+func handleResponseError(res *http.Response, credential *credentials.AuraCredential, cfg *clicfg.Config) error {
 	var err error
 	resBody, err := io.ReadAll(res.Body)
 
@@ -53,7 +54,7 @@ func handleResponseError(res *http.Response, credential *clicfg.AuraCredential) 
 
 		return fmt.Errorf("%s", messages)
 	case http.StatusUnauthorized:
-		return formatAuthorizationError(resBody, statusCode, credential)
+		return formatAuthorizationError(resBody, statusCode, credential, cfg)
 	case http.StatusForbidden:
 		// Requested endpoint is forbidden
 		var serverError ServerError
@@ -65,7 +66,7 @@ func handleResponseError(res *http.Response, credential *clicfg.AuraCredential) 
 			return fmt.Errorf(serverError.Error)
 		}
 
-		return formatAuthorizationError(resBody, statusCode, credential)
+		return formatAuthorizationError(resBody, statusCode, credential, cfg)
 	case http.StatusNotFound:
 		var errorResponse ErrorResponse
 
@@ -133,7 +134,7 @@ func handleResponseError(res *http.Response, credential *clicfg.AuraCredential) 
 	}
 }
 
-func getHeaders(credential *clicfg.AuraCredential, cfg *clicfg.Config) (http.Header, error) {
+func getHeaders(credential *credentials.AuraCredential, cfg *clicfg.Config) (http.Header, error) {
 	token, err := getToken(credential, cfg)
 
 	if err != nil {
@@ -271,7 +272,7 @@ func ParseBody(body []byte) (ResponseData, error) {
 	}
 }
 
-func formatAuthorizationError(resBody []byte, statusCode int, credential *clicfg.AuraCredential) error {
+func formatAuthorizationError(resBody []byte, statusCode int, credential *credentials.AuraCredential, cfg *clicfg.Config) error {
 	var errorResponse ErrorResponse
 
 	err := json.Unmarshal(resBody, &errorResponse)
@@ -284,7 +285,7 @@ func formatAuthorizationError(resBody []byte, statusCode int, credential *clicfg
 		messages = append(messages, e.Message)
 	}
 
-	err = credential.ClearAccessToken()
+	_, err = cfg.Credentials.Aura.ClearAccessToken(credential)
 	if err != nil {
 		messages = append(messages, "Request failed authorization - attempted to clear the access token but encountered an error, please report an issue in https://github.com/neo4j/cli")
 	} else {

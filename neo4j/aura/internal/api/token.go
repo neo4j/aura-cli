@@ -10,9 +10,10 @@ import (
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clicfg/credentials"
 )
 
-func getToken(credential *clicfg.AuraCredential, cfg *clicfg.Config) (string, error) {
+func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (string, error) {
 	if credential.HasValidAccessToken() {
 		return credential.AccessToken, nil
 	}
@@ -69,7 +70,6 @@ func getToken(credential *clicfg.AuraCredential, cfg *clicfg.Config) (string, er
 		return "", err
 	}
 
-	credential.UpdateAccessToken(grant.AccessToken, grant.ExpiresIn)
-
-	return grant.AccessToken, nil
+	_, err = cfg.Credentials.Aura.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)
+	return grant.AccessToken, err
 }

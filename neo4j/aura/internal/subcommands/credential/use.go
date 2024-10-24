@@ -11,7 +11,7 @@ func NewUseCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Sets the default credential to be used",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.Aura.SetDefaultCredential(args[0])
+			return cfg.Credentials.Aura.SetDefault(args[0])
 		},
 	}
 }
