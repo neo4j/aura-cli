@@ -79,11 +79,8 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 	instancePassword := "dfjglhssdopfrow"
 	name := "my-data-api-1"
 	typeDefs := "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"
-	invalidTypeDefsExample1 := "dHlwIE1vdmllIHsKICB0aXRsZTogc3RyaW5nCn0="
-	invalidTypeDefsExample2 := "dHlwZSBNb3ZpZSB7CiAgdGl0bGUgc3RyaW5nCn0="
 	invalidBase64TypeDefs := "df"
 	typeDefsFile := "../../../test/assets/typeDefs.graphql"
-	typeDefsFileWithInvalidTypeDefs := "../../../test/assets/invalid.graphql"
 	invalidTypeDefsFile := "../invalid/typeDefs.graphql"
 
 	tests := map[string]struct {
@@ -117,21 +114,9 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, invalidBase64TypeDefs),
 			expectedError:   "Error: provided type definitions are not valid base64",
 		},
-		"invalid type defs example 1": {
-			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsExample1),
-			expectedError:   "Error: provided type definitions are invalid, error(s): input:1: Unexpected Name \"typ\"",
-		},
-		"invalid type defs example 2": {
-			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsExample2),
-			expectedError:   "Error: provided type definitions are invalid, error(s): input:2: Expected :, found Name",
-		},
 		"invalid type defs file": {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsFile),
 			expectedError:   "Error: type definitions file '../invalid/typeDefs.graphql' does not exist",
-		},
-		"invalid type defs in a type defs file": {
-			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s", instanceId, instanceUsername, instancePassword, name, typeDefsFileWithInvalidTypeDefs),
-			expectedError:   "Error: provided type definitions are invalid, error(s): input:1: Unexpected Name \"typ\"",
 		},
 	}
 

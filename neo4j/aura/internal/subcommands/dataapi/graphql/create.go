@@ -13,8 +13,6 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
-	"github.com/vektah/gqlparser/v2"
-	"github.com/vektah/gqlparser/v2/ast"
 )
 
 func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
@@ -41,13 +39,13 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Creates a new GraphQL Data API",
-		Long: `This endpoint starts the creation process of an Aura GraphQL Data API.
+		Long: `This command starts the creation process of a GraphQL Data API.
 
-Creating a GraphQL Data API is an asynchronous operation. Use --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "creating" to "ready" you may begin to use your GraphQL Data API.
+Creating a GraphQL Data API is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "creating" to "ready" you may begin to use your GraphQL Data API.
 
-This endpoint returns your GraphQL Data API ID, API key, and connection URL for you to use once the GraphQL Data API is running. It is important to store the API key as it is not currently possible to get this or update it.
+This command returns your GraphQL Data API ID, API key, and connection URL for you to use once the GraphQL Data API is running. It is important to store the API key as it is not currently possible to get this or update it.
 
-If you lose your API key, you will need to create a new Authentication provider.. This will not result in any loss of data.`,
+If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			typeDefs, _ := cmd.Flags().GetString(typeDefsFlag)
 			typeDefsFile, _ := cmd.Flags().GetString(typeDefsFileFlag)
@@ -130,7 +128,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to create the GraphQL Data APIs for")
 	cmd.MarkFlagRequired(instanceIdFlag)
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Data API")
+	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the GraphQL Data API")
 	cmd.MarkFlagRequired(nameFlag)
 
 	cmd.Flags().StringVar(&instanceUsername, instanceUsernameFlag, "", "The username of the instance this GraphQL Data API will be connected to")
@@ -148,29 +146,13 @@ If you lose your API key, you will need to create a new Authentication provider.
 	return cmd
 }
 
-func isValidTypeDefs(typDefs string) error {
-	_, err := gqlparser.LoadSchema(&ast.Source{
-		Input: typDefs,
-	})
-	if err != nil {
-		return fmt.Errorf("provided type definitions are invalid, error(s): %s", err.Error())
-	}
-	return nil
-}
-
 func getTypeDefsFromFlag(typeDefs string, typeDefsFile string, typeDefsFlag string, typeDefsFileFlag string) (string, error) {
 	typeDefsForBody := ""
 	if typeDefs != "" {
-		decodedTypeDefs, err := base64.StdEncoding.DecodeString(typeDefs)
+		_, err := base64.StdEncoding.DecodeString(typeDefs)
 		if err != nil {
 			return "", errors.New("provided type definitions are not valid base64")
 		}
-
-		err = isValidTypeDefs(string(decodedTypeDefs))
-		if err != nil {
-			return "", err
-		}
-
 		// type defs in request body need to be base 64 encoded
 		typeDefsForBody = typeDefs
 	} else if typeDefsFile != "" {
@@ -200,11 +182,6 @@ func ResolveTypeDefsFileFlagValue(typeDefsFileFlagValue string) (string, error) 
 	fileData, err := os.ReadFile(typeDefsFileFlagValue)
 	if err != nil {
 		return "", fmt.Errorf("reading type definitions file failed with error: %s", err)
-	}
-
-	err = isValidTypeDefs(string(fileData))
-	if err != nil {
-		return "", err
 	}
 
 	base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(fileData))

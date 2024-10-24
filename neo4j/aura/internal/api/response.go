@@ -214,7 +214,7 @@ type CreateSnapshotResponse struct {
 	}
 }
 
-// Response Body of Create and Get GraphQL Data API for successful requests
+// Response Body of Create GraphQL Data API for successful requests
 type CreateGraphQLDataApiResponse struct {
 	Data struct {
 		Id                      string
