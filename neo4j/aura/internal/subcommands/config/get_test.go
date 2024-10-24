@@ -27,3 +27,14 @@ func TestGetConfigDefault(t *testing.T) {
 
 	helper.AssertOut("default")
 }
+
+func TestGetConfigBetaEnabled(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+
+	helper.ExecuteCommand("config get beta-enabled")
+
+	helper.AssertOut("true")
+}

@@ -21,7 +21,7 @@ const (
 	DefaultAuraBaseUrl     = "https://api.neo4j.io/v1"
 	DefaultAuraBetaBaseUrl = "https://api.neo4j.io/v1beta5"
 	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
-	DefaultAuraBetaEnabled = "false"
+	DefaultAuraBetaEnabled = false
 )
 
 var ValidOutputValues = [3]string{"default", "json", "table"}
@@ -170,8 +170,8 @@ func (config *AuraConfig) BindOutput(flag *pflag.Flag) error {
 	return config.viper.BindPFlag("aura.output", flag)
 }
 
-func (config *AuraConfig) AuraBetaEnabled() string {
-	return config.viper.GetString("aura.beta-enabled")
+func (config *AuraConfig) AuraBetaEnabled() bool {
+	return config.viper.GetBool("aura.beta-enabled")
 }
 
 func (config *AuraConfig) DefaultTenant() string {
