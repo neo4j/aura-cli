@@ -43,9 +43,9 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Creates a new GraphQL Data API",
 		Long: `This endpoint starts the creation process of an Aura GraphQL Data API.
 
-Creating a GraphQL Data API is an asynchronous operation. You can poll the current status of this operation by periodically getting the GraphQL Data API details for the GraphQL Data API ID using the GET /data-apis/graphql/{data-apiId} endpoint. Once the status transitions from "creating" to "ready" you may begin to use your GraphQL Data API.
+Creating a GraphQL Data API is an asynchronous operation. Use --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "creating" to "ready" you may begin to use your GraphQL Data API.
 
-This endpoint returns your GraphQL Data API ID, API key, and connection URL in the response body for you to use once the GraphQL Data API is running. It is important to store the API key as it is not currently possible to get this or update it.
+This endpoint returns your GraphQL Data API ID, API key, and connection URL for you to use once the GraphQL Data API is running. It is important to store the API key as it is not currently possible to get this or update it.
 
 If you lose your API key, you will need to create a new Authentication provider.. This will not result in any loss of data.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -127,7 +127,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to list the GraphQL Data APIs of")
+	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to create the GraphQL Data APIs for")
 	cmd.MarkFlagRequired(instanceIdFlag)
 
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Data API")
@@ -141,7 +141,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 
 	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
 
-	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
+	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.x. path/to/typeDefs.graphql. Must be of file type .graphql")
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 

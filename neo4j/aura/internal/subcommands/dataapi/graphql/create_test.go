@@ -72,7 +72,7 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	helper.SetConfigValue("aura.beta-enabled", "true")
+	helper.SetConfigValue("aura.beta-enabled", true)
 
 	instanceId := "2f49c2b3"
 	instanceUsername := "neo4j"
@@ -83,6 +83,7 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 	invalidTypeDefsExample2 := "dHlwZSBNb3ZpZSB7CiAgdGl0bGUgc3RyaW5nCn0="
 	invalidBase64TypeDefs := "df"
 	typeDefsFile := "../../../test/assets/typeDefs.graphql"
+	typeDefsFileWithInvalidTypeDefs := "../../../test/assets/invalid.graphql"
 	invalidTypeDefsFile := "../invalid/typeDefs.graphql"
 
 	tests := map[string]struct {
@@ -127,6 +128,10 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 		"invalid type defs file": {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsFile),
 			expectedError:   "Error: type definitions file '../invalid/typeDefs.graphql' does not exist",
+		},
+		"invalid type defs in a type defs file": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s", instanceId, instanceUsername, instancePassword, name, typeDefsFileWithInvalidTypeDefs),
+			expectedError:   "Error: provided type definitions are invalid, error(s): input:1: Unexpected Name \"typ\"",
 		},
 	}
 
@@ -237,7 +242,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
-			helper.SetConfigValue("aura.beta-enabled", "true")
+			helper.SetConfigValue("aura.beta-enabled", true)
 
 			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, tt.mockResponse)
 

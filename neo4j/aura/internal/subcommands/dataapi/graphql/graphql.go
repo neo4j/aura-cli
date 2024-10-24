@@ -5,11 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	SecurityAuthProviderTypeApiKey = "api-key"
-	SecurityAuthProviderTypeJwks   = "jwks"
-)
-
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "graphql",
