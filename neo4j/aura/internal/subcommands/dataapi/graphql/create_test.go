@@ -1,7 +1,6 @@
 package graphql_test
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,44 +13,54 @@ import (
 
 func TestResolveTypeDefsFileFlagValue(t *testing.T) {
 	// Create a temporary file
-	tmpFile, err := os.CreateTemp("", "invalid-file")
+	tmpGraphQLFile, err := os.CreateTemp("", "testTypeDefs.*.graphql")
 	if err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf("failed to create temp graphql file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name()) // clean up the file
+	tmpTextFile, err := os.CreateTemp("", "test.*.txt")
+	if err != nil {
+		t.Fatalf("failed to create temp text file: %v", err)
+	}
+	defer os.Remove(tmpGraphQLFile.Name()) // clean up the file
+	defer os.Remove(tmpTextFile.Name())
 
 	// Change permissions to make the file unreadable
-	if err := os.Chmod(tmpFile.Name(), 0200); err != nil {
+	if err := os.Chmod(tmpGraphQLFile.Name(), 0200); err != nil {
 		t.Fatalf("failed to chmod file: %v", err)
 	}
 
 	tests := map[string]struct {
-		flagValue     string
-		expectedValue string
-		expectedError error
+		flagValue        string
+		expectedValue    string
+		expectedErrorMsg string
 	}{"correct path to file": {
-		flagValue:     "../../../test/assets/typeDefs.graphql",
-		expectedValue: "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg==",
-		expectedError: nil,
-	}, "invalid path": {
-		flagValue:     "../../test/assets/typeDefs.graphql",
-		expectedValue: "",
-		expectedError: errors.New("type definitions file '../../test/assets/typeDefs.graphql' does not exist"),
-	}, "empty file": {
-		flagValue:     "../../../test/assets/empty.graphql",
-		expectedValue: "",
-		expectedError: errors.New("read type definitions file is empty"),
-	}, "unreadable file": {
-		flagValue:     tmpFile.Name(),
-		expectedValue: "",
-		expectedError: errors.New("reading type definitions file failed with error"),
-	}}
+		flagValue:        "../../../test/assets/typeDefs.graphql",
+		expectedValue:    "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg==",
+		expectedErrorMsg: "",
+	}, "invalid file type": {
+		flagValue:        tmpTextFile.Name(),
+		expectedValue:    "",
+		expectedErrorMsg: "must have file type '.graphql'",
+	},
+		"invalid path": {
+			flagValue:        "../../test/assets/typeDefs.graphql",
+			expectedValue:    "",
+			expectedErrorMsg: "type definitions file '../../test/assets/typeDefs.graphql' does not exist",
+		}, "empty file": {
+			flagValue:        "../../../test/assets/empty.graphql",
+			expectedValue:    "",
+			expectedErrorMsg: "read type definitions file is empty",
+		}, "unreadable file": {
+			flagValue:        tmpGraphQLFile.Name(),
+			expectedValue:    "",
+			expectedErrorMsg: "reading type definitions file failed with error",
+		}}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			val, err := graphql.ResolveTypeDefsFileFlagValue(test.flagValue)
-			if test.expectedError != nil {
-				assert.ErrorContains(t, err, test.expectedError.Error())
+			if test.expectedErrorMsg != "" {
+				assert.Contains(t, err.Error(), test.expectedErrorMsg)
 			} else {
 				assert.Equal(t, test.expectedValue, val)
 			}

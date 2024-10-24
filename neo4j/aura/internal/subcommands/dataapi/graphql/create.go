@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -18,36 +17,23 @@ import (
 
 func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	const (
-		instanceIdFlag                  = "instance-id"
-		nameFlag                        = "name"
-		instanceUsernameFlag            = "instance-username"
-		instancePasswordFlag            = "instance-password"
-		typeDefsFlag                    = "type-definitions"
-		typeDefsFileFlag                = "type-definitions-file"
-		featureSubgraphEnabledFlag      = "feature-subgraph-enabled"
-		securityAuthProviderNameFlag    = "security-auth-provider-name"
-		securityAuthProviderTypeFlag    = "security-auth-provider-type"
-		securityAuthProviderEnabledFlag = "security-auth-provider-enabled"
-		securityAuthProviderUrlFlag     = "security-auth-provider-url"
-		awaitFlag                       = "await"
-
-		featureSubgraphEnabledDefault      = false
-		securityAuthProviderEnabledDefault = true
+		instanceIdFlag       = "instance-id"
+		nameFlag             = "name"
+		instanceUsernameFlag = "instance-username"
+		instancePasswordFlag = "instance-password"
+		typeDefsFlag         = "type-definitions"
+		typeDefsFileFlag     = "type-definitions-file"
+		awaitFlag            = "await"
 	)
 
 	var (
-		instanceId                  string
-		name                        string
-		instanceUsername            string
-		instancePassword            string
-		typeDefs                    string
-		typeDefsFile                string
-		featureSubgraphEnabled      string
-		securityAuthProviderName    string
-		securityAuthProviderType    string
-		securityAuthProviderEnabled string
-		securityAuthProviderUrl     string
-		await                       bool
+		instanceId       string
+		name             string
+		instanceUsername string
+		instancePassword string
+		typeDefs         string
+		typeDefsFile     string
+		await            bool
 	)
 
 	cmd := &cobra.Command{
@@ -61,11 +47,6 @@ This endpoint returns your GraphQL Data API ID, API key, and connection URL in t
 
 If you lose your API key, you will need to create a new Authentication provider.. This will not result in any loss of data.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			typeValue, _ := cmd.Flags().GetString(securityAuthProviderTypeFlag)
-			if typeValue == SecurityAuthProviderTypeJwks {
-				cmd.MarkFlagRequired(securityAuthProviderUrlFlag)
-			}
-
 			typeDefs, _ := cmd.Flags().GetString(typeDefsFlag)
 			typeDefsFile, _ := cmd.Flags().GetString(typeDefsFileFlag)
 			if typeDefs == "" && typeDefsFile == "" {
@@ -77,31 +58,19 @@ If you lose your API key, you will need to create a new Authentication provider.
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if securityAuthProviderType != SecurityAuthProviderTypeJwks && securityAuthProviderType != SecurityAuthProviderTypeApiKey {
-				msg := strings.ToLower(fmt.Sprintf("invalid security auth provider type, got '%s', expect '%s' or '%s'", securityAuthProviderType, SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks))
-				return errors.New(msg)
-			}
-
 			body := map[string]any{
 				"name": name,
 				"aura_instance": map[string]string{
 					"username": instanceUsername,
 					"password": instancePassword,
 				},
-			}
-
-			if featureSubgraphEnabled != "" {
-				value, err := strconv.ParseBool(featureSubgraphEnabled)
-				if err != nil {
-					return err
-				}
-				body["features"] = map[string]bool{
-					"subgraph": value,
-				}
-			} else {
-				body["features"] = map[string]bool{
-					"subgraph": featureSubgraphEnabledDefault,
-				}
+				"security": map[string]any{
+					"authentication_providers": map[string]string{
+						"type":    "api-key",
+						"name":    "default",
+						"enabled": "true",
+					},
+				},
 			}
 
 			typeDefsForBody, err := getTypeDefsFromFlag(typeDefs, typeDefsFile, typeDefsFlag, typeDefsFileFlag)
@@ -109,33 +78,6 @@ If you lose your API key, you will need to create a new Authentication provider.
 				return err
 			}
 			body["type_definitions"] = typeDefsForBody
-
-			//
-			// TODO: make it possible to add multiple auth providers
-			//
-
-			authProvider := map[string]any{
-				"name": securityAuthProviderName,
-				"type": securityAuthProviderType,
-			}
-			if securityAuthProviderEnabled != "" {
-				value, err := strconv.ParseBool(securityAuthProviderEnabled)
-				if err != nil {
-					return err
-				}
-				authProvider["enabled"] = value
-			} else {
-				authProvider["enabled"] = securityAuthProviderEnabledDefault
-			}
-			if securityAuthProviderType == SecurityAuthProviderTypeJwks {
-				authProvider["url"] = securityAuthProviderUrl
-			}
-
-			body["security"] = map[string]any{
-				"authentication_providers": []map[string]any{
-					authProvider,
-				},
-			}
 
 			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/data-apis/graphql", instanceId)
@@ -150,14 +92,12 @@ If you lose your API key, you will need to create a new Authentication provider.
 			// NOTE: GraphQL Data API create should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
 
-				if securityAuthProviderType == SecurityAuthProviderTypeApiKey {
-					cmd.Println("###############################")
-					cmd.Println("# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.")
-					cmd.Println("#")
-					cmd.Println("# If you lose your API key, you will need to create a new Authentication provider.")
-					cmd.Println("# This will not result in any loss of data.")
-					cmd.Println("###############################")
-				}
+				cmd.Println("###############################")
+				cmd.Println("# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.")
+				cmd.Println("#")
+				cmd.Println("# If you lose your API key, you will need to create a new Authentication provider.")
+				cmd.Println("# This will not result in any loss of data.")
+				cmd.Println("###############################")
 
 				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "authentication_providers"})
 				if err != nil {
@@ -199,21 +139,6 @@ If you lose your API key, you will need to create a new Authentication provider.
 
 	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to the local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
 
-	featureSubgraphHelpMsg := fmt.Sprintf("Wether or not GraphQL subgraph is enabled, default is %t", featureSubgraphEnabledDefault)
-	cmd.Flags().StringVar(&featureSubgraphEnabled, featureSubgraphEnabledFlag, "", featureSubgraphHelpMsg)
-
-	cmd.Flags().StringVar(&securityAuthProviderName, securityAuthProviderNameFlag, "", "The name of the GraphQL Data API security auth provider")
-	cmd.MarkFlagRequired(securityAuthProviderNameFlag)
-
-	authProviderTypeHelpMsg := fmt.Sprintf("The type of the GraphQL Data API security auth provider, can be either '%s' or '%s'", SecurityAuthProviderTypeApiKey, SecurityAuthProviderTypeJwks)
-	cmd.Flags().StringVar(&securityAuthProviderType, securityAuthProviderTypeFlag, "", authProviderTypeHelpMsg)
-	cmd.MarkFlagRequired(securityAuthProviderTypeFlag)
-
-	authProviderEnabledHelpMsg := fmt.Sprintf("Wether or not the GraphQL Data API security auth provider is enabled, default is %t", securityAuthProviderEnabledDefault)
-	cmd.Flags().StringVar(&securityAuthProviderEnabled, securityAuthProviderEnabledFlag, "", authProviderEnabledHelpMsg)
-
-	cmd.Flags().StringVar(&securityAuthProviderUrl, securityAuthProviderUrlFlag, "", "The JWKS url for the GraphQL Data API security auth provider")
-
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 
 	return cmd
@@ -246,8 +171,12 @@ func getTypeDefsFromFlag(typeDefs string, typeDefsFile string, typeDefsFlag stri
 
 func ResolveTypeDefsFileFlagValue(typeDefsFileFlagValue string) (string, error) {
 	// typeDefsFileFlagValue is assessed as a local file
-	if _, err := os.Stat(typeDefsFileFlagValue); os.IsNotExist(err) {
+	fileInfo, err := os.Stat(typeDefsFileFlagValue)
+	if os.IsNotExist(err) {
 		return "", fmt.Errorf("type definitions file '%s' does not exist", typeDefsFileFlagValue)
+	}
+	if !strings.HasSuffix(fileInfo.Name(), ".graphql") {
+		return "", fmt.Errorf("type definitions file '%s' must have file type '.graphql'", typeDefsFileFlagValue)
 	}
 
 	fileData, err := os.ReadFile(typeDefsFileFlagValue)
