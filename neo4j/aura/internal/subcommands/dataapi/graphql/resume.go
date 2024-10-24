@@ -19,9 +19,9 @@ func NewResumeCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resume <id>",
 		Short: "Resume a GraphQL Data API",
-		Long: `This endpoint starts the resuming process of an existing Aura GraphQL Data API.
+		Long: `This command starts the resuming process of an existing GraphQL Data API.
 
-Resuming a GraphQL Data API is an asynchronous operation. You can poll the current status of this operation by periodically getting the GraphQL Data API details for the GraphQL Data API ID using the GET /data-apis/graphql/{data-apiId} endpoint. Once the status transitions from "resuming" to "ready" you may begin to use your GraphQL Data API.	`,
+Resuming a GraphQL Data API is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "resuming" to "ready" you may begin to use your GraphQL Data API.	`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
@@ -57,7 +57,7 @@ Resuming a GraphQL Data API is an asynchronous operation. You can poll the curre
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to resume the Data API for")
 	cmd.MarkFlagRequired("instance-id")
 
-	cmd.Flags().BoolVar(&await, "await", false, "Waits until GraphQL Data API is deleted.")
+	cmd.Flags().BoolVar(&await, "await", false, "Waits until GraphQL Data API is resumed.")
 
 	return cmd
 }

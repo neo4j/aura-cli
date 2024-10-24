@@ -19,9 +19,9 @@ func NewPauseCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pause <id>",
 		Short: "Pause a GraphQL Data API",
-		Long: `This endpoint starts the pausing process of an existing Aura GraphQL Data API.
+		Long: `This command starts the pausing process of an existing GraphQL Data API.
 
-Pausing a GraphQL Data API is an asynchronous operation. You can poll the current status of this operation by periodically getting the GraphQL Data API details for the GraphQL Data API ID using the GET /data-apis/graphql/{data-apiId} endpoint. The GraphQL Data API will only be paused once the status transitions from "pausing" to "paused".`,
+Pausing a GraphQL Data API is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be paused. The GraphQL Data API will only be paused once the status transitions from "pausing" to "paused".`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
@@ -57,7 +57,7 @@ Pausing a GraphQL Data API is an asynchronous operation. You can poll the curren
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to pause the Data API for")
 	cmd.MarkFlagRequired("instance-id")
 
-	cmd.Flags().BoolVar(&await, "await", false, "Waits until GraphQL Data API is deleted.")
+	cmd.Flags().BoolVar(&await, "await", false, "Waits until GraphQL Data API is paused.")
 
 	return cmd
 }
