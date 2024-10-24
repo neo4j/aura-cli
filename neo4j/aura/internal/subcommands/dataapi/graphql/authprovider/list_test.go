@@ -12,7 +12,7 @@ func TestListAuthProviders(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	helper.SetConfigValue("aura.beta-enabled", "true")
+	helper.SetConfigValue("aura.beta-enabled", true)
 
 	instanceId := "2f49c2b3"
 	dataApiId := "a342b824"
@@ -21,7 +21,7 @@ func TestListAuthProviders(t *testing.T) {
 			{
 				"id": "87d46b4b-3bfb-4ad2-8dac-0e95cf72d39f",
 				"name": "test-key",
-				"type": "api-key",
+				"type": "jwks",
 				"enabled": true,
 				"url": "https://test.com/.well-known/jwks.json"
 			}
@@ -39,7 +39,7 @@ func TestListAuthProviders(t *testing.T) {
 				"enabled": true,
 				"id": "87d46b4b-3bfb-4ad2-8dac-0e95cf72d39f",
 				"name": "test-key",
-				"type": "api-key",
+				"type": "jwks",
 				"url": "https://test.com/.well-known/jwks.json"
 			}
 		]
