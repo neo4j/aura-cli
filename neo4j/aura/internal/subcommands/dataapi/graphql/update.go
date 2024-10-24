@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
@@ -15,25 +14,23 @@ import (
 
 func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	const (
-		instanceIdFlag             = "instance-id"
-		nameFlag                   = "name"
-		instanceUsernameFlag       = "instance-username"
-		instancePasswordFlag       = "instance-password"
-		typeDefsFlag               = "type-definitions"
-		typeDefsFileFlag           = "type-definitions-file"
-		featureSubgraphEnabledFlag = "feature-subgraph-enabled"
-		awaitFlag                  = "await"
+		instanceIdFlag       = "instance-id"
+		nameFlag             = "name"
+		instanceUsernameFlag = "instance-username"
+		instancePasswordFlag = "instance-password"
+		typeDefsFlag         = "type-definitions"
+		typeDefsFileFlag     = "type-definitions-file"
+		awaitFlag            = "await"
 	)
 
 	var (
-		instanceId             string
-		name                   string
-		instanceUsername       string
-		instancePassword       string
-		typeDefs               string
-		typeDefsFile           string
-		featureSubgraphEnabled string
-		await                  bool
+		instanceId       string
+		name             string
+		instanceUsername string
+		instancePassword string
+		typeDefs         string
+		typeDefsFile     string
+		await            bool
 	)
 
 	cmd := &cobra.Command{
@@ -64,7 +61,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 			if typeDefsFile != "" {
 				//
-				// TODO: get type defs from file! and encode base64.
+				// TODO: get type defs from file! and encode base64. Move helper funcs to shared location
 				//
 				body["type_definitions"] = typeDefsFile
 			}
@@ -79,15 +76,6 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 				}
 
 				body["aura_instance"] = auraInstance
-			}
-			if featureSubgraphEnabled != "" {
-				value, err := strconv.ParseBool(featureSubgraphEnabled)
-				if err != nil {
-					return err
-				}
-				body["features"] = map[string]bool{
-					"subgraph": value,
-				}
 			}
 
 			cmd.SilenceUsage = true
@@ -132,9 +120,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
 
-	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to the local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
-
-	cmd.Flags().StringVar(&featureSubgraphEnabled, featureSubgraphEnabledFlag, "", "Wether or not GraphQL subgraph is enabled, use 'true' or 'false'")
+	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 

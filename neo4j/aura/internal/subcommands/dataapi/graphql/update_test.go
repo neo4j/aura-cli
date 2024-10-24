@@ -28,10 +28,6 @@ func TestUpdateGraphQLDataApiFlagsValidation(t *testing.T) {
 			executedCommand: fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions bla %s", instanceId, dataApiId),
 			expectedError:   "Error: provided type definitions are not valid base64",
 		},
-		"invalid feature subgraph enabled value": {
-			executedCommand: fmt.Sprintf("data-api graphql update --output json --instance-id %s --feature-subgraph-enabled fd %s", instanceId, dataApiId),
-			expectedError:   "Error: strconv.ParseBool: parsing \"fd\": invalid syntax",
-		},
 	}
 
 	for name, tt := range tests {
@@ -97,20 +93,10 @@ func TestUpdateGraphQLDataApiWithResponse(t *testing.T) {
 		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions %s %s", instanceId, typeDefs, dataApiId),
 		expectedRequestBody: `{"type_definitions":"dHlwZS=="}`,
 		expectedResponse:    expectedResponse,
-	}, "update the feature subgraph enabled bool to false": {
+	}, "update all possible values in one request": {
 		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --feature-subgraph-enabled false %s", instanceId, dataApiId),
-		expectedRequestBody: `{"features":{"subgraph":false}}`,
-		expectedResponse:    expectedResponse,
-	}, "update the feature subgraph enabled bool to true": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --feature-subgraph-enabled true %s", instanceId, dataApiId),
-		expectedRequestBody: `{"features":{"subgraph":true}}`,
-		expectedResponse:    expectedResponse,
-	}, "all in one request": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s --instance-username %s --type-definitions %s --name %s --feature-subgraph-enabled true %s", instanceId, instancePassword, instanceUsername, typeDefs, name, dataApiId),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"features":{"subgraph":true},"name":"my-data-api-2","type_definitions":"dHlwZS=="}`,
+		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s --instance-username %s --type-definitions %s --name %s %s", instanceId, instancePassword, instanceUsername, typeDefs, name, dataApiId),
+		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-2","type_definitions":"dHlwZS=="}`,
 		expectedResponse:    expectedResponse,
 	},
 	}
