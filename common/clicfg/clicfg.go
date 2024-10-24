@@ -17,8 +17,12 @@ import (
 
 var ConfigPrefix string
 
-const DefaultAuraBaseUrl = "https://api.neo4j.io/v1"
-const DefaultAuraAuthUrl = "https://api.neo4j.io/oauth/token"
+const (
+	DefaultAuraBaseUrl     = "https://api.neo4j.io/v1"
+	DefaultAuraBetaBaseUrl = "https://api.neo4j.io/v1beta5"
+	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
+	DefaultAuraBetaEnabled = false
+)
 
 var ValidOutputValues = [3]string{"default", "json", "table"}
 
@@ -69,7 +73,7 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 				MaxRetries: 60,
 				Interval:   20,
 			},
-			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output"},
+			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled"},
 		},
 		Credentials: credentials,
 	}, nil
@@ -84,6 +88,7 @@ func setDefaultValues(Viper *viper.Viper) {
 	Viper.SetDefault("aura.base-url", DefaultAuraBaseUrl)
 	Viper.SetDefault("aura.auth-url", DefaultAuraAuthUrl)
 	Viper.SetDefault("aura.output", "default")
+	Viper.SetDefault("aura.beta-enabled", DefaultAuraBetaEnabled)
 }
 
 type AuraConfig struct {
@@ -116,6 +121,15 @@ func (config *AuraConfig) Set(key string, value string) error {
 	updateConfig, err := sjson.Set(string(data), fmt.Sprintf("aura.%s", key), value)
 	if err != nil {
 		return err
+	}
+
+	updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange(key, value)
+	if updatedAuraBaseUrl != "" {
+		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
+		if err != nil {
+			return err
+		}
+		updateConfig = intermediateUpdateConfig
 	}
 
 	return fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
@@ -156,6 +170,10 @@ func (config *AuraConfig) BindOutput(flag *pflag.Flag) error {
 	return config.viper.BindPFlag("aura.output", flag)
 }
 
+func (config *AuraConfig) AuraBetaEnabled() bool {
+	return config.viper.GetBool("aura.beta-enabled")
+}
+
 func (config *AuraConfig) DefaultTenant() string {
 	return config.viper.GetString("aura.default-tenant")
 }
@@ -169,4 +187,15 @@ func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
 		MaxRetries: maxRetries,
 		Interval:   interval,
 	}
+}
+
+func (config *AuraConfig) auraBaseUrlOnBetaEnabledChange(key string, value string) string {
+	if key == "beta-enabled" {
+		nextBaseUrl := DefaultAuraBaseUrl
+		if value == "true" {
+			nextBaseUrl = DefaultAuraBetaBaseUrl
+		}
+		return nextBaseUrl
+	}
+	return ""
 }
