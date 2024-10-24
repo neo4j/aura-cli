@@ -65,10 +65,12 @@ If you lose your API key, you will need to create a new Authentication provider.
 					"password": instancePassword,
 				},
 				"security": map[string]any{
-					"authentication_providers": map[string]string{
-						"type":    "api-key",
-						"name":    "default",
-						"enabled": "true",
+					"authentication_providers": []map[string]any{
+						{
+							"type":    "api-key",
+							"name":    "default",
+							"enabled": true,
+						},
 					},
 				},
 			}
@@ -137,7 +139,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 
 	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
 
-	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to the local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
+	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 
