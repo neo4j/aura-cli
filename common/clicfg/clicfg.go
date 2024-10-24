@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/neo4j/cli/common/clicfg/creds"
+	"github.com/neo4j/cli/common/clicfg/credentials"
 	"github.com/neo4j/cli/common/clicfg/fileutils"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -25,7 +25,7 @@ var ValidOutputValues = [3]string{"default", "json", "table"}
 type Config struct {
 	Version     string
 	Aura        *AuraConfig
-	Credentials *creds.Credentials
+	Credentials *credentials.Credentials
 }
 
 func NewConfig(fs afero.Fs, version string) (*Config, error) {
@@ -56,7 +56,7 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 		}
 	}
 
-	credentials, err := creds.NewCredentials(fs, ConfigPrefix)
+	credentials, err := credentials.NewCredentials(fs, ConfigPrefix)
 	if err != nil {
 		return nil, err
 	}

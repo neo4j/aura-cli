@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
-	"github.com/neo4j/cli/common/clicfg/creds"
+	"github.com/neo4j/cli/common/clicfg/credentials"
 )
 
 type ErrorResponse struct {
@@ -26,7 +26,7 @@ type ServerError struct {
 	Error string `json:"error"`
 }
 
-func handleResponseError(res *http.Response, credential *creds.AuraCredential, cfg *clicfg.Config) error {
+func handleResponseError(res *http.Response, credential *credentials.AuraCredential, cfg *clicfg.Config) error {
 	var err error
 	resBody, err := io.ReadAll(res.Body)
 
@@ -134,7 +134,7 @@ func handleResponseError(res *http.Response, credential *creds.AuraCredential, c
 	}
 }
 
-func getHeaders(credential *creds.AuraCredential, cfg *clicfg.Config) (http.Header, error) {
+func getHeaders(credential *credentials.AuraCredential, cfg *clicfg.Config) (http.Header, error) {
 	token, err := getToken(credential, cfg)
 
 	if err != nil {
@@ -272,7 +272,7 @@ func ParseBody(body []byte) (ResponseData, error) {
 	}
 }
 
-func formatAuthorizationError(resBody []byte, statusCode int, credential *creds.AuraCredential, cfg *clicfg.Config) error {
+func formatAuthorizationError(resBody []byte, statusCode int, credential *credentials.AuraCredential, cfg *clicfg.Config) error {
 	var errorResponse ErrorResponse
 
 	err := json.Unmarshal(resBody, &errorResponse)
