@@ -78,8 +78,10 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 	instanceUsername := "neo4j"
 	instancePassword := "dfjglhssdopfrow"
 	name := "my-data-api-1"
-	typeDefs := "dHlwZQ=="
-	invalidTypeDefs := "df"
+	typeDefs := "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"
+	invalidTypeDefsExample1 := "dHlwIE1vdmllIHsKICB0aXRsZTogc3RyaW5nCn0="
+	invalidTypeDefsExample2 := "dHlwZSBNb3ZpZSB7CiAgdGl0bGUgc3RyaW5nCn0="
+	invalidBase64TypeDefs := "df"
 	typeDefsFile := "../../../test/assets/typeDefs.graphql"
 	invalidTypeDefsFile := "../invalid/typeDefs.graphql"
 
@@ -110,9 +112,17 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --type-definitions %s", instanceId, instanceUsername, instancePassword, typeDefs),
 			expectedError:   "Error: required flag(s) \"name\" not set",
 		},
-		"invalid type defs": {
-			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefs),
+		"invalid base64 for type defs": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, invalidBase64TypeDefs),
 			expectedError:   "Error: provided type definitions are not valid base64",
+		},
+		"invalid type defs example 1": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsExample1),
+			expectedError:   "Error: provided type definitions are invalid, error(s): input:1: Unexpected Name \"typ\"",
+		},
+		"invalid type defs example 2": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsExample2),
+			expectedError:   "Error: provided type definitions are invalid, error(s): input:2: Expected :, found Name",
 		},
 		"invalid type defs file": {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s", instanceId, instanceUsername, instancePassword, name, invalidTypeDefsFile),
@@ -133,7 +143,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 	instanceUsername := "neo4j"
 	instancePassword := "dfjglhssdopfrow"
 	name := "my-data-api-1"
-	typeDefs := "dHlwZQ=="
+	typeDefs := "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"
 	typeDefsFile := "../../../test/assets/typeDefs.graphql"
 
 	mockResponse := `{
@@ -206,12 +216,12 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 	}{"create with default auth provider": {
 		mockResponse:        mockResponse,
 		executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, typeDefs),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZQ=="}`,
+		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"}`,
 		expectedResponse:    expectedResponseJson,
 	}, "create with default auth provider and output as table": {
 		mockResponse:        mockResponse,
 		executeCommand:      fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s ", instanceId, instanceUsername, instancePassword, name, typeDefs),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZQ=="}`,
+		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"}`,
 		expectedResponse:    expectedResponseTable,
 	},
 		"providing type defs as file": {

@@ -13,6 +13,8 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 	"github.com/spf13/cobra"
+	"github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
@@ -146,17 +148,30 @@ If you lose your API key, you will need to create a new Authentication provider.
 	return cmd
 }
 
-func isBase64(s string) bool {
-	_, err := base64.StdEncoding.DecodeString(s)
-	return err == nil
+func isValidTypeDefs(typDefs string) error {
+	_, err := gqlparser.LoadSchema(&ast.Source{
+		Input: typDefs,
+	})
+	if err != nil {
+		return fmt.Errorf("provided type definitions are invalid, error(s): %s", err.Error())
+	}
+	return nil
 }
 
 func getTypeDefsFromFlag(typeDefs string, typeDefsFile string, typeDefsFlag string, typeDefsFileFlag string) (string, error) {
 	typeDefsForBody := ""
 	if typeDefs != "" {
-		if !isBase64(typeDefs) {
+		decodedTypeDefs, err := base64.StdEncoding.DecodeString(typeDefs)
+		if err != nil {
 			return "", errors.New("provided type definitions are not valid base64")
 		}
+
+		err = isValidTypeDefs(string(decodedTypeDefs))
+		if err != nil {
+			return "", err
+		}
+
+		// type defs in request body need to be base 64 encoded
 		typeDefsForBody = typeDefs
 	} else if typeDefsFile != "" {
 		base64EncodedTypeDefs, err := ResolveTypeDefsFileFlagValue(typeDefsFile)
@@ -168,6 +183,7 @@ func getTypeDefsFromFlag(typeDefs string, typeDefsFile string, typeDefsFlag stri
 	} else {
 		return "", fmt.Errorf("neither '--%s' nor '--%s' flag value is provided", typeDefsFlag, typeDefsFileFlag)
 	}
+
 	return typeDefsForBody, nil
 }
 
@@ -184,6 +200,11 @@ func ResolveTypeDefsFileFlagValue(typeDefsFileFlagValue string) (string, error) 
 	fileData, err := os.ReadFile(typeDefsFileFlagValue)
 	if err != nil {
 		return "", fmt.Errorf("reading type definitions file failed with error: %s", err)
+	}
+
+	err = isValidTypeDefs(string(fileData))
+	if err != nil {
+		return "", err
 	}
 
 	base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(fileData))

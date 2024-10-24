@@ -11,10 +11,12 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/gjson v1.14.2
+	github.com/vektah/gqlparser/v2 v2.5.18
 	golang.org/x/sys v0.22.0
 )
 
 require (
+	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
