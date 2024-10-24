@@ -217,18 +217,18 @@ type CreateSnapshotResponse struct {
 // Response Body of Create and Get GraphQL Data API for successful requests
 type CreateGraphQLDataApiResponse struct {
 	Data struct {
-		Id           string
-		Name         string
-		Status       string
-		AuraInstance struct {
-			Id string
-		} `json:"aura_instance"`
-		Url             string
-		TypeDefinitions string `json:"type_definitions"`
-		features        struct {
-			SubGraph bool
-		}
-		// TODO auth provider
+		Id                      string
+		Name                    string
+		Status                  string
+		Url                     string
+		AuthenticationProviders []struct {
+			Id      string
+			Name    string
+			Type    string
+			Enabled bool
+			Key     string `json:"key,omitempty"`
+			Url     string `json:"url,omitempty"`
+		} `json:"authentication_providers"`
 	}
 }
 
