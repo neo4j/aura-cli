@@ -53,6 +53,9 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 			if name != "" {
 				body["name"] = name
 			}
+			//
+			// TODO: verify the type defs
+			//
 			if typeDefs != "" {
 				if !isBase64(typeDefs) {
 					return errors.New("provided type definitions are not valid base64")
