@@ -34,7 +34,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to list the Data APIs of")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to list the GraphQL Data APIs of")
 	cmd.MarkFlagRequired("instance-id")
 
 	return cmd

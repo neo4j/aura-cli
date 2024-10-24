@@ -16,7 +16,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <id>",
 		Short: "Get details of a GraphQL Data API",
-		Long:  "This endpoint returns details about a specific GraphQL Data API.",
+		Long:  "This endpoint returns details of a specific GraphQL Data API.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
@@ -39,7 +39,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to get the Data API for")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to get the GraphQL Data API details for")
 	cmd.MarkFlagRequired("instance-id")
 
 	return cmd
