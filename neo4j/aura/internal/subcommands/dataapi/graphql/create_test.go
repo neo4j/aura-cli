@@ -229,7 +229,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
-			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, tt.mockResponse)
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusAccepted, tt.mockResponse)
 
 			helper.ExecuteCommand(tt.executeCommand)
 
