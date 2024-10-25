@@ -57,10 +57,7 @@ If only --source-instance-id is provided, a new snapshot of that instance is cre
 			}
 
 			if statusCode == http.StatusAccepted {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"})
 			}
 
 			if await {

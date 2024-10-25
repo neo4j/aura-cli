@@ -31,10 +31,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 		panic(fmt.Sprintf("method not set in requests %s", path))
 	}
 
-	body, err := createBody(config.PostBody)
-	if err != nil {
-		return nil, 0, err
-	}
+	body := createBody(config.PostBody)
 
 	baseUrl := cfg.Aura.BaseUrl()
 
@@ -47,7 +44,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	req, err := http.NewRequest(method, urlString, body)
 
 	if err != nil {
-		return responseBody, 0, err
+		panic(err)
 	}
 
 	credential, err := cfg.Credentials.Aura.GetDefault()
@@ -62,7 +59,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 
 	res, err := client.Do(req)
 	if err != nil {
-		return responseBody, 0, err
+		panic(err)
 	}
 
 	defer res.Body.Close()
@@ -71,7 +68,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 		responseBody, err = io.ReadAll(res.Body)
 
 		if err != nil {
-			return responseBody, 0, err
+			panic(err)
 		}
 
 		return responseBody, res.StatusCode, nil
@@ -80,17 +77,17 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	return responseBody, res.StatusCode, handleResponseError(res, credential, cfg)
 }
 
-func createBody(data map[string]any) (io.Reader, error) {
+func createBody(data map[string]any) io.Reader {
 	if data == nil {
-		return nil, nil
+		return nil
 	} else {
 		jsonData, err := json.Marshal(data)
 
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 
-		return bytes.NewBuffer(jsonData), nil
+		return bytes.NewBuffer(jsonData)
 	}
 }
 

@@ -1,0 +1,3 @@
+kind: Fixed
+body: Panic on fatal errors as opposed to bubbling up errors
+time: 2024-10-25T11:38:45.4568+01:00

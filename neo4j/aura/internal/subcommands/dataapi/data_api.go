@@ -12,15 +12,9 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "data-api",
 		Short: "Allows you to programmatically provision and manage your Data APIs",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url")); err != nil {
-				return err
-			}
-			if err := cfg.Aura.BindAuthUrl(cmd.Flags().Lookup("auth-url")); err != nil {
-				return err
-			}
-			if err := cfg.Aura.BindOutput(cmd.Flags().Lookup("output")); err != nil {
-				return err
-			}
+			cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url"))
+			cfg.Aura.BindAuthUrl(cmd.Flags().Lookup("auth-url"))
+			cfg.Aura.BindOutput(cmd.Flags().Lookup("output"))
 
 			return nil
 		},

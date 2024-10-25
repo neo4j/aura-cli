@@ -32,7 +32,7 @@ type Config struct {
 	Credentials *credentials.Credentials
 }
 
-func NewConfig(fs afero.Fs, version string) (*Config, error) {
+func NewConfig(fs afero.Fs, version string) *Config {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
 
 	Viper := viper.New()
@@ -49,21 +49,18 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 	if err := Viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			if err := fs.MkdirAll(configPath, 0755); err != nil {
-				return nil, err
+				panic(err)
 			}
 			if err = Viper.SafeWriteConfig(); err != nil {
-				return nil, err
+				panic(err)
 			}
 		} else {
 			// Config file was found but another error was produced
-			return nil, err
+			panic(err)
 		}
 	}
 
-	credentials, err := credentials.NewCredentials(fs, ConfigPrefix)
-	if err != nil {
-		return nil, err
-	}
+	credentials := credentials.NewCredentials(fs, ConfigPrefix)
 
 	return &Config{
 		Version: version,
@@ -76,7 +73,7 @@ func NewConfig(fs afero.Fs, version string) (*Config, error) {
 			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled"},
 		},
 		Credentials: credentials,
-	}, nil
+	}
 }
 
 func bindEnvironmentVariables(Viper *viper.Viper) {
@@ -111,63 +108,64 @@ func (config *AuraConfig) Get(key string) interface{} {
 	return config.viper.Get(fmt.Sprintf("aura.%s", key))
 }
 
-func (config *AuraConfig) Set(key string, value string) error {
+func (config *AuraConfig) Set(key string, value string) {
 	filename := config.viper.ConfigFileUsed()
-	data, err := fileutils.ReadFileSafe(config.fs, filename)
-	if err != nil {
-		return err
-	}
+	data := fileutils.ReadFileSafe(config.fs, filename)
 
 	updateConfig, err := sjson.Set(string(data), fmt.Sprintf("aura.%s", key), value)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange(key, value)
 	if updatedAuraBaseUrl != "" {
 		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
 		if err != nil {
-			return err
+			panic(err)
 		}
 		updateConfig = intermediateUpdateConfig
 	}
 
-	return fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
+	fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
 }
 
-func (config *AuraConfig) Print(cmd *cobra.Command) error {
+func (config *AuraConfig) Print(cmd *cobra.Command) {
 	encoder := json.NewEncoder(cmd.OutOrStdout())
 	encoder.SetIndent("", "\t")
 
 	if err := encoder.Encode(config.viper.Get("aura")); err != nil {
-		return err
+		panic(err)
 	}
-
-	return nil
 }
 
 func (config *AuraConfig) BaseUrl() string {
 	return config.viper.GetString("aura.base-url")
 }
 
-func (config *AuraConfig) BindBaseUrl(flag *pflag.Flag) error {
-	return config.viper.BindPFlag("aura.base-url", flag)
+func (config *AuraConfig) BindBaseUrl(flag *pflag.Flag) {
+	if err := config.viper.BindPFlag("aura.base-url", flag); err != nil {
+		panic(err)
+	}
 }
 
 func (config *AuraConfig) AuthUrl() string {
 	return config.viper.GetString("aura.auth-url")
 }
 
-func (config *AuraConfig) BindAuthUrl(flag *pflag.Flag) error {
-	return config.viper.BindPFlag("aura.auth-url", flag)
+func (config *AuraConfig) BindAuthUrl(flag *pflag.Flag) {
+	if err := config.viper.BindPFlag("aura.auth-url", flag); err != nil {
+		panic(err)
+	}
 }
 
 func (config *AuraConfig) Output() string {
 	return config.viper.GetString("aura.output")
 }
 
-func (config *AuraConfig) BindOutput(flag *pflag.Flag) error {
-	return config.viper.BindPFlag("aura.output", flag)
+func (config *AuraConfig) BindOutput(flag *pflag.Flag) {
+	if err := config.viper.BindPFlag("aura.output", flag); err != nil {
+		panic(err)
+	}
 }
 
 func (config *AuraConfig) AuraBetaEnabled() bool {

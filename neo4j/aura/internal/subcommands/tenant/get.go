@@ -30,18 +30,12 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				responseData, err := api.ParseBody(resBody)
-				if err != nil {
-					return err
-				}
+				responseData := api.ParseBody(resBody)
 				fields, values, err := postProcessResponseValues(cfg, tenantId, responseData)
 				if err != nil {
 					return err
 				}
-				err = output.PrintBodyMap(cmd, cfg, values, fields)
-				if err != nil {
-					return err
-				}
+				output.PrintBodyMap(cmd, cfg, values, fields)
 				if cfg.Aura.Output() == "table" || cfg.Aura.Output() == "default" {
 					cmd.Println("instance configurations are not visible with table output - please use a different output setting using --output if you would like to view these")
 				}
@@ -80,10 +74,7 @@ func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (stri
 	}
 	switch {
 	case statusCode == http.StatusOK:
-		metricsIntegrationResponse, err := api.ParseBody(resBody)
-		if err != nil {
-			return "", err
-		}
+		metricsIntegrationResponse := api.ParseBody(resBody)
 		metricsIntegration, err := metricsIntegrationResponse.GetSingleOrError()
 		if err != nil {
 			return "", err
