@@ -205,10 +205,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 	}`
 
 	expectedResponseJson := `###############################
-# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.
-#
-# If you lose your API key, you will need to create a new Authentication provider.
-# This will not result in any loss of data.
+# It is important to store the created API key! If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.
 ###############################
 {
 	"data": {
@@ -228,10 +225,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 	}
 }`
 	expectedResponseTable := `###############################
-# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.
-#
-# If you lose your API key, you will need to create a new Authentication provider.
-# This will not result in any loss of data.
+# It is important to store the created API key! If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.
 ###############################
 ┌──────────┬───────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────┐
 │ ID       │ NAME          │ STATUS   │ URL                                                                            │ AUTHENTICATION_PROVIDERS                          │

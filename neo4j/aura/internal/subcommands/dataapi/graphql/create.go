@@ -84,10 +84,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
 
 				cmd.Println("###############################")
-				cmd.Println("# An API key was created. It is important to _store_ the API key as it is not currently possible to get it or update it.")
-				cmd.Println("#")
-				cmd.Println("# If you lose your API key, you will need to create a new Authentication provider.")
-				cmd.Println("# This will not result in any loss of data.")
+				cmd.Println("# It is important to store the created API key! If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.")
 				cmd.Println("###############################")
 
 				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "authentication_providers"})
