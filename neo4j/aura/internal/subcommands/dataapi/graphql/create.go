@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clicfg/fileutils"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -64,7 +64,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 				},
 			}
 
-			typeDefsForBody, err := getTypeDefsFromFlag(typeDefs, typeDefsFile)
+			typeDefsForBody, err := GetTypeDefsFromFlag(cfg, typeDefs, typeDefsFile)
 			if err != nil {
 				return err
 			}
@@ -137,7 +137,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	return cmd
 }
 
-func getTypeDefsFromFlag(typeDefs string, typeDefsFile string) (string, error) {
+func GetTypeDefsFromFlag(cfg *clicfg.Config, typeDefs string, typeDefsFile string) (string, error) {
 	typeDefsForBody := ""
 	if typeDefs != "" {
 		_, err := base64.StdEncoding.DecodeString(typeDefs)
@@ -147,7 +147,7 @@ func getTypeDefsFromFlag(typeDefs string, typeDefsFile string) (string, error) {
 		// type defs in request body need to be base 64 encoded
 		typeDefsForBody = typeDefs
 	} else {
-		base64EncodedTypeDefs, err := ResolveTypeDefsFileFlagValue(typeDefsFile)
+		base64EncodedTypeDefs, err := ResolveTypeDefsFileFlagValue(cfg.Aura.Fs(), typeDefsFile)
 		if err != nil {
 			return "", err
 		}
@@ -158,27 +158,16 @@ func getTypeDefsFromFlag(typeDefs string, typeDefsFile string) (string, error) {
 	return typeDefsForBody, nil
 }
 
-func ResolveTypeDefsFileFlagValue(typeDefsFileFlagValue string) (string, error) {
-	// typeDefsFileFlagValue is assessed as a local file
-	fileInfo, err := os.Stat(typeDefsFileFlagValue)
-	if os.IsNotExist(err) {
+func ResolveTypeDefsFileFlagValue(fs afero.Fs, typeDefsFileFlagValue string) (string, error) {
+	data, err := fileutils.ReadFileSafe(fs, typeDefsFileFlagValue)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
 		return "", fmt.Errorf("type definitions file '%s' does not exist", typeDefsFileFlagValue)
 	}
-	if !strings.HasSuffix(fileInfo.Name(), ".graphql") {
-		return "", fmt.Errorf("type definitions file '%s' must have file type '.graphql'", typeDefsFileFlagValue)
-	}
 
-	fileData, err := os.ReadFile(typeDefsFileFlagValue)
-	if err != nil {
-		return "", fmt.Errorf("reading type definitions file failed with error: %s", err)
-	}
-
-	// ensure same line ending conventions in UNIX (\n) and Windows (\r\n).
-	normalizedData := strings.ReplaceAll(string(fileData), "\r\n", "\n")
-	base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(normalizedData))
-	if base64EncodedTypeDefs == "" {
-		return "", errors.New("read type definitions file is empty")
-	}
+	base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(data))
 
 	return base64EncodedTypeDefs, nil
 }

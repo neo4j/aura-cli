@@ -3,48 +3,112 @@ package graphql_test
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"testing"
 
+	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clicfg/fileutils"
 	"github.com/neo4j/cli/neo4j/aura/internal/subcommands/dataapi/graphql"
 	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
+	"github.com/neo4j/cli/test/utils/testfs"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestResolveTypeDefsFileFlagValue(t *testing.T) {
-	// Create temporary file
-	tmpTextFile, err := os.CreateTemp("", "test.*.txt")
+	typDefs := `type Movie {
+  title: String
+}`
+	pathToTypeDefsFile := "typeDefs.graphql"
+	pathToEmptyFile := "empty.graphql"
+
+	fs, err := testfs.GetDefaultTestFs()
 	if err != nil {
-		t.Fatalf("failed to create temp text file: %v", err)
+		t.Fatal(err.Error())
 	}
-	defer os.Remove(tmpTextFile.Name()) // clean up the file
+
+	fileutils.WriteFile(fs, pathToTypeDefsFile, []byte(typDefs))
+	fileutils.WriteFile(fs, pathToEmptyFile, []byte(""))
 
 	tests := map[string]struct {
 		flagValue        string
 		expectedValue    string
 		expectedErrorMsg string
-	}{"correct path to file": {
-		flagValue:        "../../../test/assets/typeDefs.graphql",
-		expectedValue:    "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg==",
-		expectedErrorMsg: "",
-	}, "invalid file type": {
-		flagValue:        tmpTextFile.Name(),
-		expectedValue:    "",
-		expectedErrorMsg: "must have file type '.graphql'",
-	},
+	}{
+		"correct path to file": {
+			flagValue:        pathToTypeDefsFile,
+			expectedValue:    "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9",
+			expectedErrorMsg: "",
+		},
 		"invalid path": {
-			flagValue:        "../../test/assets/typeDefs.graphql",
+			flagValue:        "path/to/no-file.txt",
 			expectedValue:    "",
-			expectedErrorMsg: "type definitions file '../../test/assets/typeDefs.graphql' does not exist",
-		}, "empty file": {
-			flagValue:        "../../../test/assets/empty.graphql",
+			expectedErrorMsg: "type definitions file 'path/to/no-file.txt' does not exist",
+		},
+		"empty file": {
+			flagValue:        pathToEmptyFile,
 			expectedValue:    "",
-			expectedErrorMsg: "read type definitions file is empty",
-		}}
+			expectedErrorMsg: "type definitions file 'empty.graphql' does not exist",
+		},
+	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			val, err := graphql.ResolveTypeDefsFileFlagValue(test.flagValue)
+			val, err := graphql.ResolveTypeDefsFileFlagValue(fs, test.flagValue)
+			if test.expectedErrorMsg != "" {
+				assert.Contains(t, err.Error(), test.expectedErrorMsg)
+			} else {
+				assert.Equal(t, test.expectedValue, val)
+			}
+		})
+	}
+}
+
+func TestGetTypeDefsFromFlag(t *testing.T) {
+	validTypeDefs := "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwkKfQ=="
+	typDefs := `type Movie {
+  title: String
+}`
+	pathToTypeDefsFile := "typeDefs.graphql"
+
+	fs, err := testfs.GetDefaultTestFs()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	cfg, err := clicfg.NewConfig(fs, "test")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	fileutils.WriteFile(fs, pathToTypeDefsFile, []byte(typDefs))
+
+	tests := map[string]struct {
+		typeDefsValue     string
+		typeDefsFileValue string
+		expectedValue     string
+		expectedErrorMsg  string
+	}{
+		"valid type defs": {
+			typeDefsValue:     validTypeDefs,
+			typeDefsFileValue: "",
+			expectedValue:     "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwkKfQ==",
+			expectedErrorMsg:  "",
+		},
+		"invalid type defs": {
+			typeDefsValue:     "dd",
+			typeDefsFileValue: "",
+			expectedValue:     "",
+			expectedErrorMsg:  "provided type definitions are not valid base64",
+		},
+		"valid type defs path": {
+			typeDefsValue:     "",
+			typeDefsFileValue: pathToTypeDefsFile,
+			expectedValue:     "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9",
+			expectedErrorMsg:  "",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			val, err := graphql.GetTypeDefsFromFlag(cfg, test.typeDefsValue, test.typeDefsFileValue)
 			if test.expectedErrorMsg != "" {
 				assert.Contains(t, err.Error(), test.expectedErrorMsg)
 			} else {
@@ -120,8 +184,7 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 	instanceUsername := "neo4j"
 	instancePassword := "dfjglhssdopfrow"
 	name := "my-data-api-1"
-	typeDefs := "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"
-	typeDefsFile := "../../../test/assets/typeDefs.graphql"
+	typeDefsEncoded := "dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwkKfQ=="
 
 	mockResponse := `{
 		"data": {
@@ -190,22 +253,17 @@ func TestCreateGraphQLDataApiWithResponse(t *testing.T) {
 		executeCommand      string
 		expectedRequestBody string
 		expectedResponse    string
-	}{"create with default auth provider": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, typeDefs),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"}`,
-		expectedResponse:    expectedResponseJson,
-	}, "create with default auth provider and output as table": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s ", instanceId, instanceUsername, instancePassword, name, typeDefs),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9"}`,
-		expectedResponse:    expectedResponseTable,
-	},
-		"providing type defs as file": {
+	}{
+		"create with default auth provider": {
 			mockResponse:        mockResponse,
-			executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions-file %s", instanceId, instanceUsername, instancePassword, name, typeDefsFile),
-			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwp9Cg=="}`,
+			executeCommand:      fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s", instanceId, instanceUsername, instancePassword, name, typeDefsEncoded),
+			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwkKfQ=="}`,
 			expectedResponse:    expectedResponseJson,
+		}, "create with default auth provider and output as table": {
+			mockResponse:        mockResponse,
+			executeCommand:      fmt.Sprintf("data-api graphql create --output table --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s ", instanceId, instanceUsername, instancePassword, name, typeDefsEncoded),
+			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-1","security":{"authentication_providers":[{"enabled":true,"name":"default","type":"api-key"}]},"type_definitions":"dHlwZSBNb3ZpZSB7CiAgdGl0bGU6IFN0cmluZwkKfQ=="}`,
+			expectedResponse:    expectedResponseTable,
 		},
 	}
 
