@@ -184,7 +184,9 @@ func ResolveTypeDefsFileFlagValue(typeDefsFileFlagValue string) (string, error) 
 		return "", fmt.Errorf("reading type definitions file failed with error: %s", err)
 	}
 
-	base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(fileData))
+	// ensure same line ending conventions in UNIX (\n) and Windows (\r\n).
+	normalizedData := strings.ReplaceAll(string(fileData), "\r\n", "\n")
+	base64EncodedTypeDefs := base64.StdEncoding.EncodeToString([]byte(normalizedData))
 	if base64EncodedTypeDefs == "" {
 		return "", errors.New("read type definitions file is empty")
 	}

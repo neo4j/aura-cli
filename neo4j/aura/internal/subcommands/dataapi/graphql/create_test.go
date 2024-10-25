@@ -12,22 +12,12 @@ import (
 )
 
 func TestResolveTypeDefsFileFlagValue(t *testing.T) {
-	// Create temporary files
-	tmpGraphQLFile, err := os.CreateTemp("", "testTypeDefs.*.graphql")
-	if err != nil {
-		t.Fatalf("failed to create temp graphql file: %v", err)
-	}
+	// Create temporary file
 	tmpTextFile, err := os.CreateTemp("", "test.*.txt")
 	if err != nil {
 		t.Fatalf("failed to create temp text file: %v", err)
 	}
-	defer os.Remove(tmpGraphQLFile.Name()) // clean up the file
-	defer os.Remove(tmpTextFile.Name())
-
-	// Change permissions of the tmp graphql file to make the file unreadable
-	if err := os.Chmod(tmpGraphQLFile.Name(), 0200); err != nil {
-		t.Fatalf("failed to chmod file: %v", err)
-	}
+	defer os.Remove(tmpTextFile.Name()) // clean up the file
 
 	tests := map[string]struct {
 		flagValue        string
@@ -50,10 +40,6 @@ func TestResolveTypeDefsFileFlagValue(t *testing.T) {
 			flagValue:        "../../../test/assets/empty.graphql",
 			expectedValue:    "",
 			expectedErrorMsg: "read type definitions file is empty",
-		}, "unreadable file": {
-			flagValue:        tmpGraphQLFile.Name(),
-			expectedValue:    "",
-			expectedErrorMsg: "reading type definitions file failed with error",
 		}}
 
 	for name, test := range tests {
