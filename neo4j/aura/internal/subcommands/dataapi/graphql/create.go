@@ -46,17 +46,6 @@ Creating a GraphQL Data API is an asynchronous operation. Use the --await flag t
 This command returns your GraphQL Data API ID, API key, and connection URL for you to use once the GraphQL Data API is running. It is important to store the API key as it is not currently possible to get this or update it.
 
 If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.`,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			typeDefs, _ := cmd.Flags().GetString(typeDefsFlag)
-			typeDefsFile, _ := cmd.Flags().GetString(typeDefsFileFlag)
-			if typeDefs == "" && typeDefsFile == "" {
-				return fmt.Errorf("either '--%s' or '--%s' flag needs to be provided", typeDefsFlag, typeDefsFileFlag)
-			} else if typeDefs != "" && typeDefsFile != "" {
-				return fmt.Errorf("only one of '--%s' or '--%s' flag can be provided", typeDefsFlag, typeDefsFileFlag)
-			}
-
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{
 				"name": name,
@@ -75,7 +64,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 				},
 			}
 
-			typeDefsForBody, err := getTypeDefsFromFlag(typeDefs, typeDefsFile, typeDefsFlag, typeDefsFileFlag)
+			typeDefsForBody, err := getTypeDefsFromFlag(typeDefs, typeDefsFile)
 			if err != nil {
 				return err
 			}
@@ -140,13 +129,15 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
 
 	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.x. path/to/typeDefs.graphql. Must be of file type .graphql")
+	cmd.MarkFlagsMutuallyExclusive(typeDefsFlag, typeDefsFileFlag)
+	cmd.MarkFlagsOneRequired(typeDefsFlag, typeDefsFileFlag)
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 
 	return cmd
 }
 
-func getTypeDefsFromFlag(typeDefs string, typeDefsFile string, typeDefsFlag string, typeDefsFileFlag string) (string, error) {
+func getTypeDefsFromFlag(typeDefs string, typeDefsFile string) (string, error) {
 	typeDefsForBody := ""
 	if typeDefs != "" {
 		_, err := base64.StdEncoding.DecodeString(typeDefs)
@@ -155,15 +146,13 @@ func getTypeDefsFromFlag(typeDefs string, typeDefsFile string, typeDefsFlag stri
 		}
 		// type defs in request body need to be base 64 encoded
 		typeDefsForBody = typeDefs
-	} else if typeDefsFile != "" {
+	} else {
 		base64EncodedTypeDefs, err := ResolveTypeDefsFileFlagValue(typeDefsFile)
 		if err != nil {
 			return "", err
 		}
 
 		typeDefsForBody = base64EncodedTypeDefs
-	} else {
-		return "", fmt.Errorf("neither '--%s' nor '--%s' flag value is provided", typeDefsFlag, typeDefsFileFlag)
 	}
 
 	return typeDefsForBody, nil

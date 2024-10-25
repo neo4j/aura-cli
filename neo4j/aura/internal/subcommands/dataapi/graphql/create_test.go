@@ -72,17 +72,18 @@ func TestCreateGraphQLDataApiFlagsValidation(t *testing.T) {
 	tests := map[string]struct {
 		executedCommand string
 		expectedError   string
-	}{"no type defs flag provided": {
-		executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s", instanceId),
-		expectedError:   "Error: either '--type-definitions' or '--type-definitions-file' flag needs to be provided",
-	},
-		"only one type defs flag can be provided": {
-			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --type-definitions %s --type-definitions-file %s", instanceId, typeDefs, typeDefsFile),
-			expectedError:   "Error: only one of '--type-definitions' or '--type-definitions-file' flag can be provided",
-		},
+	}{
 		"missing almost all flags": {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --type-definitions %s", instanceId, typeDefs),
 			expectedError:   "Error: required flag(s) \"instance-password\", \"instance-username\", \"name\" not set",
+		},
+		"missing any type defs flag": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s ", instanceId, instanceUsername, instancePassword, name),
+			expectedError:   "Error: at least one of the flags in the group [type-definitions type-definitions-file] is required",
+		},
+		"only one type defs flag can be provided": {
+			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --instance-password %s --name %s --type-definitions %s --type-definitions-file %s", instanceId, instanceUsername, instancePassword, name, typeDefs, typeDefsFile),
+			expectedError:   "Error: if any flags in the group [type-definitions type-definitions-file] are set none of the others can be; [type-definitions type-definitions-file] were all set",
 		},
 		"missing instance password flag": {
 			executedCommand: fmt.Sprintf("data-api graphql create --instance-id %s --instance-username %s --name %s --type-definitions %s", instanceId, instanceUsername, name, typeDefs),
