@@ -214,6 +214,35 @@ type CreateSnapshotResponse struct {
 	}
 }
 
+// Response Body of Create GraphQL Data API for successful requests
+type CreateGraphQLDataApiResponse struct {
+	Data struct {
+		Id                      string
+		Name                    string
+		Status                  string
+		Url                     string
+		AuthenticationProviders []struct {
+			Id      string
+			Name    string
+			Type    string
+			Enabled bool
+			Key     string `json:"key,omitempty"`
+			Url     string `json:"url,omitempty"`
+		} `json:"authentication_providers"`
+	}
+}
+
+const (
+	GraphQLDataApiStatusReady    = "ready"
+	GraphQLDataApiStatusCreating = "creating"
+	GraphQLDataApiStatusUpdating = "updating"
+	GraphQLDataApiStatusDeleting = "deleting"
+	GraphQLDataApiStatusPausing  = "pausing"
+	GraphQLDataApiStatusResuming = "resuming"
+	GraphQLDataApiStatusPaused   = "paused"
+	GraphQLDataApiStatusError    = "error"
+)
+
 type ResponseData interface {
 	AsArray() []map[string]any
 	GetSingleOrError() (map[string]any, error)

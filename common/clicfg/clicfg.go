@@ -176,6 +176,10 @@ func (config *AuraConfig) DefaultTenant() string {
 	return config.viper.GetString("aura.default-tenant")
 }
 
+func (config *AuraConfig) Fs() afero.Fs {
+	return config.fs
+}
+
 func (config *AuraConfig) PollingConfig() PollingConfig {
 	return config.pollingOverride
 }
