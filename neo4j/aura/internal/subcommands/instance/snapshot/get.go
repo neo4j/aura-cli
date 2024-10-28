@@ -30,10 +30,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"snapshot_id", "instance_id", "profile", "status", "timestamp", "exportable"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"snapshot_id", "instance_id", "profile", "status", "timestamp", "exportable"})
 			}
 			return nil
 		},

@@ -9,60 +9,63 @@ import (
 )
 
 /* Reads a file, if it doesn't exist returns empty []byte */
-func ReadFileSafe(fs afero.Fs, path string) ([]byte, error) {
-	exists, err := FileExists(fs, path)
+func ReadFileSafe(fs afero.Fs, path string) []byte {
+	exists := FileExists(fs, path)
 
-	if err != nil {
-		return nil, err
-	}
 	if exists {
-		return afero.ReadFile(fs, path)
+		data, err := afero.ReadFile(fs, path)
+		if err != nil {
+			panic(err)
+		}
+		return data
 	} else {
-		return []byte{}, nil
+		return []byte{}
 	}
 }
 
-func ReadOrCreateFile(fs afero.Fs, path string) ([]byte, error) {
-	exists, err := FileExists(fs, path)
+func ReadOrCreateFile(fs afero.Fs, path string) []byte {
+	exists := FileExists(fs, path)
 
-	if err != nil {
-		return nil, err
-	}
 	if exists {
-		return afero.ReadFile(fs, path)
+		data, err := afero.ReadFile(fs, path)
+		if err != nil {
+			panic(err)
+		}
+		return data
 	} else {
-		return []byte{}, createFile(fs, path)
+		createFile(fs, path)
+		return []byte{}
 	}
 }
 
-func WriteFile(fs afero.Fs, path string, data []byte) error {
-	return afero.WriteFile(fs, path, data, 0600)
+func WriteFile(fs afero.Fs, path string, data []byte) {
+	err := afero.WriteFile(fs, path, data, 0600)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func FileExists(fs afero.Fs, path string) (bool, error) {
+func FileExists(fs afero.Fs, path string) bool {
 	if _, err := fs.Stat(path); err == nil {
-		return true, nil
+		return true
 	} else if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-
+		return false
 	} else {
-		return false, err
+		panic(err)
 	}
 }
 
-func createFile(fs afero.Fs, path string) error {
+func createFile(fs afero.Fs, path string) {
 	if err := fs.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return err
+		panic(err)
 	}
 
 	_, err := fs.Create(path)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	if err = fs.Chmod(path, 0600); err != nil {
-		return err
+		panic(err)
 	}
-
-	return nil
 }

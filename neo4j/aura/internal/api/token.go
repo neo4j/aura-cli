@@ -26,7 +26,7 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data.Encode()))
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 
 	version := cfg.Version
@@ -41,7 +41,7 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 
 	res, err := client.Do(req)
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 	defer res.Body.Close()
 
@@ -57,17 +57,15 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 	}
 
 	resBody, err := io.ReadAll(res.Body)
-
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 
 	var grant Grant
 
 	err = json.Unmarshal(resBody, &grant)
-
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 
 	_, err = cfg.Credentials.Aura.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)

@@ -18,22 +18,19 @@ type Credentials struct {
 	filePath string
 }
 
-func NewCredentials(fs afero.Fs, configPrefix string) (*Credentials, error) {
+func NewCredentials(fs afero.Fs, configPrefix string) *Credentials {
 	configPath := filepath.Join(configPrefix, "neo4j", "cli", "credentials.json")
 	c := Credentials{
 		fs:       fs,
 		filePath: configPath,
 	}
-	err := c.load()
-	return &c, err
+	c.load()
+	return &c
 }
 
-func (c *Credentials) load() error {
-	var data, err = fileutils.ReadFileSafe(c.fs, c.filePath)
+func (c *Credentials) load() {
+	data := fileutils.ReadFileSafe(c.fs, c.filePath)
 	fileHasData := len(data) != 0
-	if err != nil {
-		return err
-	}
 
 	var credentials CredentialsFile = CredentialsFile{
 		Aura: &AuraCredentials{
@@ -43,27 +40,24 @@ func (c *Credentials) load() error {
 	}
 	if fileHasData {
 		if err := json.Unmarshal(data, &credentials); err != nil {
-			return err
+			panic(err)
 		}
 	}
 
 	c.Aura = credentials.Aura
 
 	if !fileHasData {
-		return c.save()
+		c.save()
 	}
-
-	return nil
 }
 
-func (c *Credentials) save() error {
+func (c *Credentials) save() {
 	data, err := json.Marshal(CredentialsFile{
 		Aura: c.Aura,
 	})
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	return fileutils.WriteFile(c.fs, c.filePath, data)
-
+	fileutils.WriteFile(c.fs, c.filePath, data)
 }
