@@ -12,7 +12,7 @@ func TestUpdateGraphQLDataApiFlagsValidation(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	helper.SetConfigValue("aura.beta-enabled", "true")
+	helper.SetConfigValue("aura.beta-enabled", true)
 
 	instanceId := "2f49c2b3"
 	dataApiId := "afdb4e9d"
@@ -20,10 +20,11 @@ func TestUpdateGraphQLDataApiFlagsValidation(t *testing.T) {
 	tests := map[string]struct {
 		executedCommand string
 		expectedError   string
-	}{"provide only one type defs flag": {
-		executedCommand: fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions bla --type-definitions-file blabla %s", instanceId, dataApiId),
-		expectedError:   "Error: only one of '--type-definitions' or '--type-definitions-file' flag can be provided",
-	},
+	}{
+		"provide only one type defs flag": {
+			executedCommand: fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions bla --type-definitions-file blabla %s", instanceId, dataApiId),
+			expectedError:   "Error: if any flags in the group [type-definitions type-definitions-file] are set none of the others can be; [type-definitions type-definitions-file] were all set",
+		},
 		"invalid type defs": {
 			executedCommand: fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions bla %s", instanceId, dataApiId),
 			expectedError:   "Error: provided type definitions are not valid base64",
@@ -68,37 +69,38 @@ func TestUpdateGraphQLDataApiWithResponse(t *testing.T) {
 		executeCommand      string
 		expectedRequestBody string
 		expectedResponse    string
-	}{"update the name": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --name %s %s", instanceId, name, dataApiId),
-		expectedRequestBody: `{"name":"my-data-api-2"}`,
-		expectedResponse:    expectedResponse,
-	}, "update the password": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s %s", instanceId, instancePassword, dataApiId),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow"}}`,
-		expectedResponse:    expectedResponse,
-	}, "update the username": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-username %s %s", instanceId, instanceUsername, dataApiId),
-		expectedRequestBody: `{"aura_instance":{"username":"neo4j"}}`,
-		expectedResponse:    expectedResponse,
-	}, "update the password and instance": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s --instance-username %s %s", instanceId, instancePassword, instanceUsername, dataApiId),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"}}`,
-		expectedResponse:    expectedResponse,
-	}, "update the typeDefs": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions %s %s", instanceId, typeDefs, dataApiId),
-		expectedRequestBody: `{"type_definitions":"dHlwZS=="}`,
-		expectedResponse:    expectedResponse,
-	}, "update all possible values in one request": {
-		mockResponse:        mockResponse,
-		executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s --instance-username %s --type-definitions %s --name %s %s", instanceId, instancePassword, instanceUsername, typeDefs, name, dataApiId),
-		expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-2","type_definitions":"dHlwZS=="}`,
-		expectedResponse:    expectedResponse,
-	},
+	}{
+		"update the name": {
+			mockResponse:        mockResponse,
+			executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --name %s %s", instanceId, name, dataApiId),
+			expectedRequestBody: `{"name":"my-data-api-2"}`,
+			expectedResponse:    expectedResponse,
+		}, "update the password": {
+			mockResponse:        mockResponse,
+			executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s %s", instanceId, instancePassword, dataApiId),
+			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow"}}`,
+			expectedResponse:    expectedResponse,
+		}, "update the username": {
+			mockResponse:        mockResponse,
+			executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-username %s %s", instanceId, instanceUsername, dataApiId),
+			expectedRequestBody: `{"aura_instance":{"username":"neo4j"}}`,
+			expectedResponse:    expectedResponse,
+		}, "update the password and username": {
+			mockResponse:        mockResponse,
+			executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s --instance-username %s %s", instanceId, instancePassword, instanceUsername, dataApiId),
+			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"}}`,
+			expectedResponse:    expectedResponse,
+		}, "update the typeDefs": {
+			mockResponse:        mockResponse,
+			executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions %s %s", instanceId, typeDefs, dataApiId),
+			expectedRequestBody: `{"type_definitions":"dHlwZS=="}`,
+			expectedResponse:    expectedResponse,
+		}, "update all possible values in one request": {
+			mockResponse:        mockResponse,
+			executeCommand:      fmt.Sprintf("data-api graphql update --output json --instance-id %s --instance-password %s --instance-username %s --type-definitions %s --name %s %s", instanceId, instancePassword, instanceUsername, typeDefs, name, dataApiId),
+			expectedRequestBody: `{"aura_instance":{"password":"dfjglhssdopfrow","username":"neo4j"},"name":"my-data-api-2","type_definitions":"dHlwZS=="}`,
+			expectedResponse:    expectedResponse,
+		},
 	}
 
 	for name, tt := range tests {
@@ -106,7 +108,7 @@ func TestUpdateGraphQLDataApiWithResponse(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
-			helper.SetConfigValue("aura.beta-enabled", "true")
+			helper.SetConfigValue("aura.beta-enabled", true)
 
 			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusAccepted, tt.mockResponse)
 

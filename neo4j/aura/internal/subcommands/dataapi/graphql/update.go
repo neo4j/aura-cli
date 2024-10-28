@@ -36,17 +36,10 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Edit a GraphQL Data API",
-		Long:  "This endpoint edits a specific GraphQL Data API.",
-		Args:  cobra.ExactArgs(1),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			typeDefs, _ := cmd.Flags().GetString(typeDefsFlag)
-			typeDefsFile, _ := cmd.Flags().GetString(typeDefsFileFlag)
-			if typeDefs != "" && typeDefsFile != "" {
-				return fmt.Errorf("only one of '--%s' or '--%s' flag can be provided", typeDefsFlag, typeDefsFileFlag)
-			}
-
-			return nil
-		},
+		Long: `This endpoint edits a specific GraphQL Data API.
+		
+Updating a GraphQL Data API is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be ready again. Once the status transitions from "updating" to "ready" you may continue to use your GraphQL Data API.`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body := map[string]any{}
 
@@ -92,7 +85,8 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			if statusCode == http.StatusAccepted {
+			// NOTE: GraphQL Data API update should not return OK (200), it always returns 202, checking both just in case
+			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
 				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url"})
 				if err != nil {
 					return err
@@ -112,8 +106,8 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to get the Data API for")
-	cmd.MarkFlagRequired("instance-id")
+	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to update the Data API for")
+	cmd.MarkFlagRequired(instanceIdFlag)
 
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Data API")
 
@@ -124,8 +118,9 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
 
 	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.x. path/to/typeDefs.graphql")
+	cmd.MarkFlagsMutuallyExclusive(typeDefsFlag, typeDefsFileFlag)
 
-	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
+	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until updated GraphQL Data API is ready again.")
 
 	return cmd
 }
