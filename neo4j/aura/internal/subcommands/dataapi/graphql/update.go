@@ -1,8 +1,6 @@
 package graphql
 
 import (
-	"encoding/base64"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -46,21 +44,15 @@ Updating a GraphQL Data API is an asynchronous operation. Use the --await flag t
 			if name != "" {
 				body["name"] = name
 			}
-			//
-			// TODO: verify the type defs
-			//
-			if typeDefs != "" {
-				if !isBase64(typeDefs) {
-					return errors.New("provided type definitions are not valid base64")
+
+			if typeDefs != "" || typeDefsFile != "" {
+				base64EncodedTypeDefs, err := GetTypeDefsFromFlag(cfg, typeDefs, typeDefsFile)
+				if err != nil {
+					return err
 				}
-				body["type_definitions"] = typeDefs
+				body["type_definitions"] = base64EncodedTypeDefs
 			}
-			if typeDefsFile != "" {
-				//
-				// TODO: get type defs from file! and encode base64. Move helper funcs to shared location
-				//
-				body["type_definitions"] = typeDefsFile
-			}
+
 			if instanceUsername != "" || instancePassword != "" {
 				auraInstance := map[string]string{}
 
@@ -87,10 +79,7 @@ Updating a GraphQL Data API is an asynchronous operation. Use the --await flag t
 
 			// NOTE: GraphQL Data API update should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url"})
 
 				if await {
 					cmd.Println("Waiting for GraphQL Data API to be updated...")
@@ -123,9 +112,4 @@ Updating a GraphQL Data API is an asynchronous operation. Use the --await flag t
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until updated GraphQL Data API is ready again.")
 
 	return cmd
-}
-
-func isBase64(s string) bool {
-	_, err := base64.StdEncoding.DecodeString(s)
-	return err == nil
 }
