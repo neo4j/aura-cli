@@ -34,10 +34,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				err = output.PrintBody(cmd, cfg, resBody, fields)
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, fields)
 			}
 
 			return nil
@@ -46,10 +43,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 }
 
 func getFields(resBody []byte) ([]string, error) {
-	responseBody, err := api.ParseBody(resBody)
-	if err != nil {
-		return nil, err
-	}
+	responseBody := api.ParseBody(resBody)
+
 	fields := []string{"id", "name", "tenant_id", "status", "connection_url", "cloud_provider", "region", "type", "memory", "storage", "customer_managed_key_id"}
 	instance, err := responseBody.GetSingleOrError()
 	if err != nil {

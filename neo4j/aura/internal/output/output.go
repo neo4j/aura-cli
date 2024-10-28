@@ -10,46 +10,34 @@ import (
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 )
 
-func PrintBodyMap(cmd *cobra.Command, cfg *clicfg.Config, values api.ResponseData, fields []string) error {
+func PrintBodyMap(cmd *cobra.Command, cfg *clicfg.Config, values api.ResponseData, fields []string) {
 	outputType := cfg.Aura.Output()
 
 	switch output := outputType; output {
 	case "json":
 		bytes, err := json.MarshalIndent(values, "", "\t")
 		if err != nil {
-			return err
+			panic(err)
 		}
 		cmd.Println(string(bytes))
 	case "table", "default":
-		err := printTable(cmd, values, fields)
-		if err != nil {
-			return err
-		}
+		printTable(cmd, values, fields)
 	default:
 		// This is in case the value is unknown
 		cmd.Println(values)
 	}
-
-	return nil
 }
 
-func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []string) error {
+func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []string) {
 	if len(body) == 0 {
-		return nil
+		return
 	}
-	values, err := api.ParseBody(body)
-	if err != nil {
-		return err
-	}
-	err = PrintBodyMap(cmd, cfg, values, fields)
-	if err != nil {
-		return err
-	}
+	values := api.ParseBody(body)
 
-	return nil
+	PrintBodyMap(cmd, cfg, values, fields)
 }
 
-func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []string) error {
+func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []string) {
 	t := table.NewWriter()
 
 	header := table.Row{}
@@ -74,5 +62,4 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 
 	t.SetStyle(table.StyleLight)
 	cmd.Println(t.Render())
-	return nil
 }
