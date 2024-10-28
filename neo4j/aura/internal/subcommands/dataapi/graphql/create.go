@@ -87,10 +87,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 				cmd.Println("# It is important to store the created API key! If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.")
 				cmd.Println("###############################")
 
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "authentication_providers"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "authentication_providers"})
 
 				if await {
 					cmd.Println("Waiting for GraphQL Data API to be ready...")
@@ -156,10 +153,7 @@ func GetTypeDefsFromFlag(cfg *clicfg.Config, typeDefs string, typeDefsFile strin
 }
 
 func ResolveTypeDefsFileFlagValue(fs afero.Fs, typeDefsFileFlagValue string) (string, error) {
-	data, err := fileutils.ReadFileSafe(fs, typeDefsFileFlagValue)
-	if err != nil {
-		return "", err
-	}
+	data := fileutils.ReadFileSafe(fs, typeDefsFileFlagValue)
 	if len(data) == 0 {
 		return "", fmt.Errorf("type definitions file '%s' does not exist", typeDefsFileFlagValue)
 	}
