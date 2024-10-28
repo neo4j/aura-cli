@@ -11,15 +11,12 @@ import (
 )
 
 func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
-	var (
-		instanceId string
-		await      bool
-	)
+	var instanceId string
 
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a GraphQL Data API",
-		Long:  "Deletes a GraphQL Data API. This action can _not_ be undone.",
+		Long:  "Deletes a GraphQL Data API. This action can not be undone.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
@@ -38,16 +35,6 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 				if err != nil {
 					return err
 				}
-
-				if await {
-					cmd.Println("Waiting for GraphQL Data API to be deleted...")
-					pollResponse, err := api.PollGraphQLDataApi(cfg, instanceId, args[0], api.GraphQLDataApiStatusDeleting)
-					if err != nil {
-						return err
-					}
-
-					cmd.Println("GraphQL Data API Status:", pollResponse.Data.Status)
-				}
 			}
 			return nil
 		},
@@ -55,8 +42,6 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to delete the Data API for")
 	cmd.MarkFlagRequired("instance-id")
-
-	cmd.Flags().BoolVar(&await, "await", false, "Waits until GraphQL Data API is deleted.")
 
 	return cmd
 }
