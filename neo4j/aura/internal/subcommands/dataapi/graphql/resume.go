@@ -36,10 +36,7 @@ Resuming a GraphQL Data API is an asynchronous operation. Use the --await flag t
 
 			// NOTE: resume should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url"})
 
 				if await {
 					cmd.Println("Waiting for GraphQL Data API to be resumed...")
