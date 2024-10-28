@@ -34,10 +34,7 @@ The time taken to complete a snapshot depends on the amount of data stored in th
 			}
 
 			if statusCode == http.StatusAccepted {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"snapshot_id"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"snapshot_id"})
 
 				if await {
 					cmd.Println("Waiting for snapshot to be ready...")

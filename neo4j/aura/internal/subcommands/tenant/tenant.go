@@ -14,13 +14,9 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "tenant",
 		Short: "Relates to an Aura Tenant",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url")); err != nil {
-				return err
-			}
+			cfg.Aura.BindBaseUrl(cmd.Flags().Lookup("base-url"))
 
-			if err := cfg.Aura.BindAuthUrl(cmd.Flags().Lookup("auth-url")); err != nil {
-				return err
-			}
+			cfg.Aura.BindAuthUrl(cmd.Flags().Lookup("auth-url"))
 
 			outputValue := cmd.Flags().Lookup("output").Value.String()
 			if outputValue != "" {
@@ -36,9 +32,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 				}
 			}
 
-			if err := cfg.Aura.BindOutput(cmd.Flags().Lookup("output")); err != nil {
-				return err
-			}
+			cfg.Aura.BindOutput(cmd.Flags().Lookup("output"))
 
 			return nil
 		},

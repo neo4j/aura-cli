@@ -100,9 +100,7 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 
 			// NOTE: Instance create should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				if err := output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "connection_url", "username", "password", "cloud_provider", "region", "type"}); err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "connection_url", "username", "password", "cloud_provider", "region", "type"})
 
 				if await {
 					cmd.Println("Waiting for instance to be ready...")

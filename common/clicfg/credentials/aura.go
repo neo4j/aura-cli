@@ -10,7 +10,7 @@ import (
 type AuraCredentials struct {
 	DefaultCredential string            `json:"default-credential"`
 	Credentials       []*AuraCredential `json:"credentials"`
-	onUpdate          func() error
+	onUpdate          func()
 }
 
 func (c *AuraCredentials) List() []*AuraCredential {
@@ -40,7 +40,8 @@ func (c *AuraCredentials) Add(name string, clientId string, clientSecret string)
 	if len(c.Credentials) == 1 {
 		c.SetDefault(name)
 	}
-	return c.onUpdate()
+	c.onUpdate()
+	return nil
 }
 
 func (c *AuraCredentials) Remove(name string) error {
@@ -62,7 +63,8 @@ func (c *AuraCredentials) Remove(name string) error {
 	}
 
 	c.Credentials = append(c.Credentials[:indexToRemove], c.Credentials[indexToRemove+1:]...)
-	return c.onUpdate()
+	c.onUpdate()
+	return nil
 }
 
 func (c *AuraCredentials) SetDefault(name string) error {
