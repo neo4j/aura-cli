@@ -21,7 +21,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Returns a list of authentication providers of a specific GraphQL Data API",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
-			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-provider", instanceId, dataApiId)
+			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-providers", instanceId, dataApiId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{Method: http.MethodGet})
 			if err != nil {
@@ -29,10 +29,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "type", "enabled", "url"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "type", "enabled", "url"})
 			}
 			return nil
 		},
