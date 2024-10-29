@@ -35,11 +35,7 @@ func main() {
 		}
 	}()
 
-	cfg, err := clicfg.NewConfig(afero.NewOsFs(), Version)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	cfg := clicfg.NewConfig(afero.NewOsFs(), Version)
 
 	cmd := NewCmd(cfg)
 	cmd.SetOut(os.Stdout)

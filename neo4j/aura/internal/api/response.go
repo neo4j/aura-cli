@@ -214,6 +214,35 @@ type CreateSnapshotResponse struct {
 	}
 }
 
+// Response Body of Create GraphQL Data API for successful requests
+type CreateGraphQLDataApiResponse struct {
+	Data struct {
+		Id                      string
+		Name                    string
+		Status                  string
+		Url                     string
+		AuthenticationProviders []struct {
+			Id      string
+			Name    string
+			Type    string
+			Enabled bool
+			Key     string `json:"key,omitempty"`
+			Url     string `json:"url,omitempty"`
+		} `json:"authentication_providers"`
+	}
+}
+
+const (
+	GraphQLDataApiStatusReady    = "ready"
+	GraphQLDataApiStatusCreating = "creating"
+	GraphQLDataApiStatusUpdating = "updating"
+	GraphQLDataApiStatusDeleting = "deleting"
+	GraphQLDataApiStatusPausing  = "pausing"
+	GraphQLDataApiStatusResuming = "resuming"
+	GraphQLDataApiStatusPaused   = "paused"
+	GraphQLDataApiStatusError    = "error"
+)
+
 type ResponseData interface {
 	AsArray() []map[string]any
 	GetSingleOrError() (map[string]any, error)
@@ -259,20 +288,20 @@ func NewResponseData(data []map[string]any) ResponseData {
 	}
 }
 
-func ParseBody(body []byte) (ResponseData, error) {
+func ParseBody(body []byte) ResponseData {
 	var listResponseData ListResponseData
 	err := json.Unmarshal(body, &listResponseData)
 
 	// Try unmarshalling array first, if not it creates an array from the single item
 	if err == nil {
-		return listResponseData, nil
+		return listResponseData
 	} else {
 		var singleValueResponseData SingleValueResponseData
 		err := json.Unmarshal(body, &singleValueResponseData)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
-		return singleValueResponseData, nil
+		return singleValueResponseData
 	}
 }
 

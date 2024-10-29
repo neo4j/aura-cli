@@ -10,33 +10,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
+func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	var instanceId string
 
 	cmd := &cobra.Command{
-		Use:   "get <id>",
-		Short: "Get details of a GraphQL Data API",
-		Long:  "This endpoint returns details of a specific GraphQL Data API.",
+		Use:   "delete <id>",
+		Short: "Delete a GraphQL Data API",
+		Long:  "Deletes a GraphQL Data API. This action can not be undone.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s", instanceId, args[0])
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method: http.MethodGet,
+				Method: http.MethodDelete,
 			})
 			if err != nil {
 				return err
 			}
 
-			if statusCode == http.StatusOK {
-				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url", "type_definitions"})
+			// NOTE: delete should not return OK (200), it always returns 202, checking both just in case
+			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url"})
 			}
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to get the GraphQL Data API details for")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to delete the Data API for")
 	cmd.MarkFlagRequired("instance-id")
 
 	return cmd
