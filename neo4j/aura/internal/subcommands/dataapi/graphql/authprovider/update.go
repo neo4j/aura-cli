@@ -71,19 +71,15 @@ Updating a GraphQL Data API authentication provider is an asynchronous operation
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
 				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "type", "enabled", "url"})
 
-				//
-				// TODO: implement await
-				//
+				if await {
+					cmd.Println("Waiting for GraphQL Data API to be updated...")
+					pollResponse, err := api.PollGraphQLDataApi(cfg, instanceId, args[0], api.GraphQLDataApiStatusUpdating)
+					if err != nil {
+						return err
+					}
 
-				// if await {
-				// 	cmd.Println("Waiting for GraphQL Data API to be updated...")
-				// 	pollResponse, err := api.PollGraphQLDataApi(cfg, instanceId, args[0], api.GraphQLDataApiStatusUpdating)
-				// 	if err != nil {
-				// 		return err
-				// 	}
-
-				// 	cmd.Println("GraphQL Data API Status:", pollResponse.Data.Status)
-				// }
+					cmd.Println("GraphQL Data API Status:", pollResponse.Data.Status)
+				}
 			}
 			return nil
 		},
