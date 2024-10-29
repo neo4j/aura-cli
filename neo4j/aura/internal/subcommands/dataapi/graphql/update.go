@@ -1,7 +1,6 @@
 package graphql
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -65,10 +64,6 @@ Updating a GraphQL Data API is an asynchronous operation. Use the --await flag t
 				}
 
 				body["aura_instance"] = auraInstance
-			}
-
-			if len(body) == 0 {
-				return errors.New("no value to update was provided")
 			}
 
 			cmd.SilenceUsage = true
