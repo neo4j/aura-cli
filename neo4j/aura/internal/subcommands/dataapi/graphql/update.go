@@ -98,7 +98,7 @@ Updating a GraphQL Data API is an asynchronous operation. Use the --await flag t
 	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to update the Data API for")
 	cmd.MarkFlagRequired(instanceIdFlag)
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Data API")
+	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the GraphQL Data API")
 
 	cmd.Flags().StringVar(&instanceUsername, instanceUsernameFlag, "", "The username of the instance this GraphQL Data API will be connected to")
 
