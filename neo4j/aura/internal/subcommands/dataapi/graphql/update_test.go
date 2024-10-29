@@ -29,6 +29,10 @@ func TestUpdateGraphQLDataApiFlagsValidation(t *testing.T) {
 			executedCommand: fmt.Sprintf("data-api graphql update --output json --instance-id %s --type-definitions bla %s", instanceId, dataApiId),
 			expectedError:   "Error: provided type definitions are not valid base64",
 		},
+		"no value to update is provided": {
+			executedCommand: fmt.Sprintf("data-api graphql update --output json --instance-id %s %s", instanceId, dataApiId),
+			expectedError:   "Error: no value to update was provided",
+		},
 	}
 
 	for name, tt := range tests {
