@@ -19,7 +19,7 @@ go test ./...
 The CLI can be run locally without building by running the following command:
 
 ```bash
-go run neo4j/main.go
+go run neo4j-cli/main.go
 ```
 
 ### Pull requests
