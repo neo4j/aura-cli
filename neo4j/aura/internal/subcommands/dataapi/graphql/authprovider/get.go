@@ -22,7 +22,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Long:  "This endpoint returns details of a specific GraphQL Data API authentication provider.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
-			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-provider/%s", instanceId, dataApiId, args[0])
+			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-providers/%s", instanceId, dataApiId, args[0])
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{Method: http.MethodGet})
 			if err != nil {
@@ -30,10 +30,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusOK {
-				err = output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "type", "enabled", "url"})
-				if err != nil {
-					return err
-				}
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "type", "enabled", "url"})
 			}
 			return nil
 		},
