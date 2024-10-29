@@ -2,9 +2,10 @@ package credentials
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"time"
+
+	"github.com/neo4j/cli/common/clierr"
 )
 
 type AuraCredentials struct {
@@ -32,7 +33,7 @@ func (c *AuraCredentials) Add(name string, clientId string, clientSecret string)
 	auraCredentials := c.Credentials
 	for _, credential := range auraCredentials {
 		if credential.Name == name {
-			return fmt.Errorf("already have credential with name %s", name)
+			return clierr.NewUsageError("already have credential with name %s", name)
 		}
 	}
 
@@ -55,7 +56,7 @@ func (c *AuraCredentials) Remove(name string) error {
 	}
 
 	if indexToRemove == -1 {
-		return fmt.Errorf("could not find credential with name %s to remove", name)
+		return clierr.NewUsageError("could not find credential with name %s to remove", name)
 	}
 
 	if c.DefaultCredential == name {
@@ -69,7 +70,7 @@ func (c *AuraCredentials) Remove(name string) error {
 
 func (c *AuraCredentials) SetDefault(name string) error {
 	if !c.credentialExists(name) {
-		return fmt.Errorf("could not find credential with name %s", name)
+		return clierr.NewUsageError("could not find credential with name %s", name)
 	}
 
 	c.DefaultCredential = name
@@ -79,7 +80,7 @@ func (c *AuraCredentials) SetDefault(name string) error {
 
 func (c *AuraCredentials) GetDefault() (*AuraCredential, error) {
 	if c.DefaultCredential == "" {
-		return nil, fmt.Errorf("default credential not set")
+		return nil, clierr.NewUsageError("default credential not set")
 	}
 	return c.Get(c.DefaultCredential)
 }
@@ -90,13 +91,13 @@ func (c *AuraCredentials) Get(name string) (*AuraCredential, error) {
 			return credential, nil
 		}
 	}
-	return nil, fmt.Errorf("could not find credential with name %s", name)
+	return nil, clierr.NewUsageError("could not find credential with name %s", name)
 }
 
-func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken string, expiresInSeconds int64) (*AuraCredential, error) {
+func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken string, expiresInSeconds int64) *AuraCredential {
 	credential, err := c.Get(cred.Name)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	const expireToleranceSeconds = 60
 
@@ -105,7 +106,7 @@ func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken st
 	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
 	credential.AccessToken = accessToken
 	c.onUpdate()
-	return credential, nil
+	return credential
 }
 
 func (c *AuraCredentials) ClearAccessToken(cred *AuraCredential) (*AuraCredential, error) {

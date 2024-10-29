@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 	"github.com/neo4j/cli/neo4j/aura/internal/api"
 	"github.com/neo4j/cli/neo4j/aura/internal/output"
 )
@@ -88,6 +89,6 @@ func getMetricsIntegrationEndpointUrl(cfg *clicfg.Config, tenantId string) (stri
 	case statusCode == http.StatusBadRequest:
 		return "", nil
 	default:
-		return "", fmt.Errorf("unexpected statusCode %d", statusCode)
+		return "", clierr.NewFatalError("unexpected statusCode %d", statusCode)
 	}
 }

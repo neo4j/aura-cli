@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clicfg/credentials"
+	"github.com/neo4j/cli/common/clierr"
 )
 
 func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (string, error) {
@@ -26,7 +26,7 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data.Encode()))
 	if err != nil {
-		panic(err)
+		panic(clierr.NewFatalError("can't retrieve authentication token. %w", err))
 	}
 
 	version := cfg.Version
@@ -41,33 +41,31 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 
 	res, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		panic(clierr.NewFatalError("can't retrieve authentication token. %w", err))
 	}
 	defer res.Body.Close()
 
 	switch statusCode := res.StatusCode; statusCode {
-	case http.StatusBadRequest:
-		return "", errors.New("request is invalid")
 	case http.StatusUnauthorized:
-		return "", errors.New("the provided credentials are invalid, expired, or revoked")
+		return "", clierr.NewUsageError("the provided credentials are invalid, expired, or revoked")
+	case http.StatusBadRequest:
 	case http.StatusForbidden:
-		return "", errors.New("the request body is invalid")
 	case http.StatusNotFound:
-		return "", errors.New("the request body is missing")
+		panic(clierr.NewFatalError("can't retrieve authentication token. Response status code [%d]", http.StatusBadRequest))
 	}
 
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		panic(err)
+		panic(clierr.NewFatalError("can't retrieve authentication token. %w", err))
 	}
 
 	var grant Grant
 
 	err = json.Unmarshal(resBody, &grant)
 	if err != nil {
-		panic(err)
+		panic(clierr.NewFatalError("can't retrieve authentication token. %w", err))
 	}
 
-	_, err = cfg.Credentials.Aura.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)
+	cfg.Credentials.Aura.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)
 	return grant.AccessToken, err
 }

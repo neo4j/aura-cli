@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/shlex"
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 	"github.com/neo4j/cli/neo4j/aura"
 	"github.com/neo4j/cli/test/utils/testfs"
 	"github.com/spf13/afero"
@@ -116,7 +117,7 @@ func (helper *AuraTestHelper) AssertOutJson(expected string) {
 
 	formattedExpected, err := FormatJson(expected, "\t")
 	if err != nil {
-		panic(fmt.Errorf("invalid json in AssertOutJSON: %d", err))
+		panic(clierr.NewFatalError("invalid json in AssertOutJSON: %d", err))
 	}
 
 	assert.Nil(helper.t, err)

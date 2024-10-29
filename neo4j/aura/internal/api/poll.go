@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 )
 
 type PollResponse struct {
@@ -45,13 +46,13 @@ func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollR
 			Method: http.MethodGet,
 		})
 		if err != nil {
-			return nil, err
+			return nil, clierr.NewUpstreamError("error polling: %w", err)
 		}
 
 		if statusCode == http.StatusOK {
 			var response PollResponse
 			if err := json.Unmarshal(resBody, &response); err != nil {
-				return nil, err
+				return nil, clierr.NewUpstreamError("cannot retrieve response polling: %w", err)
 			}
 
 			// Successful poll, return last response
@@ -61,5 +62,5 @@ func Poll(cfg *clicfg.Config, url string, cond func(status string) bool) (*PollR
 		}
 	}
 
-	return nil, fmt.Errorf("hit max retries [%d] for polling", pollingConfig.MaxRetries)
+	return nil, clierr.NewUpstreamError("hit max retries [%d] polling", pollingConfig.MaxRetries)
 }
