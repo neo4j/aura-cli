@@ -57,7 +57,7 @@ Updating a GraphQL Data API authentication provider is an asynchronous operation
 			}
 
 			cmd.SilenceUsage = true
-			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-provider/%s", instanceId, dataApiId, args[0])
+			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-providers/%s", instanceId, dataApiId, args[0])
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:   http.MethodPatch,
