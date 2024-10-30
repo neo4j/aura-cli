@@ -88,14 +88,14 @@ Updating a GraphQL Data API authentication provider is an asynchronous operation
 	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance the GraphQL Data API is connected to")
 	cmd.MarkFlagRequired(instanceIdFlag)
 
-	cmd.Flags().StringVar(&dataApiId, dataApiIdFlag, "", "The ID of the GraphQL Data API to update the authentication providers for")
+	cmd.Flags().StringVar(&dataApiId, dataApiIdFlag, "", "The ID of the GraphQL Data API to update the Authentication provider for")
 	cmd.MarkFlagRequired(dataApiIdFlag)
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the authentication provider")
+	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Authentication provider")
 
-	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the authentication provider is enabled")
+	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the Authentication provider is enabled")
 
-	cmd.Flags().StringVar(&url, urlFlag, "", "The url for the JWKS endpoint, NOTE: only applicable for authentication provider type 'jwks'")
+	cmd.Flags().StringVar(&url, urlFlag, "", "The url for the JWKS endpoint, NOTE: only applicable for Authentication provider type 'jwks'")
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until updated GraphQL Data API is ready again.")
 
