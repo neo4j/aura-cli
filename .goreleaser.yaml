@@ -13,9 +13,9 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./neo4j
-    id: "neo4j"
-    binary: neo4j
+  - main: ./neo4j-cli
+    id: "neo4j-cli"
+    binary: neo4j-cli
     env:
       - CGO_ENABLED=0
     goos:
