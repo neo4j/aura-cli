@@ -20,6 +20,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "get <id>",
 		Short: "Get details of a GraphQL Data API authentication provider",
 		Long:  "This endpoint returns details of a specific GraphQL Data API authentication provider.",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s/auth-providers/%s", instanceId, dataApiId, args[0])
