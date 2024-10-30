@@ -116,18 +116,20 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to create the GraphQL Data API for")
 	cmd.MarkFlagRequired(instanceIdFlag)
 
-	cmd.Flags().StringVar(&dataApiId, dataApiIdFlag, "", "The ID of the GraphQL Data API to update the authentication providers for")
+	cmd.Flags().StringVar(&dataApiId, dataApiIdFlag, "", "The ID of the GraphQL Data API to create the authentication provider for")
 	cmd.MarkFlagRequired(dataApiIdFlag)
 
-	cmd.Flags().StringVar(&_type, typeFlag, "", "The type of the authentication provider, one of 'api-key' or 'jwks'")
+	msgTypeFlag := fmt.Sprintf("The type of the Authentication provider, one of '%s' or '%s'", api.GraphQLDataApiAuthProviderTypeApiKey, api.GraphQLDataApiAuthProviderTypeJwks)
+	cmd.Flags().StringVar(&_type, typeFlag, "", msgTypeFlag)
 	cmd.MarkFlagRequired(typeFlag)
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the authentication provider")
+	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Authentication provider")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the authentication provider is enabled")
+	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the Authentication provider is enabled")
 
-	cmd.Flags().StringVar(&url, urlFlag, "", "The url for the JWKS endpoint, NOTE: only applicable for authentication provider type 'jwks'")
+	msgUrlFlag := fmt.Sprintf("The url for the JWKS endpoint, NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
+	cmd.Flags().StringVar(&url, urlFlag, "", msgUrlFlag)
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
 
