@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/neo4j/cli/common/clicfg"
-	"github.com/neo4j/cli/neo4j/aura/internal/api"
-	"github.com/neo4j/cli/neo4j/aura/internal/output"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
