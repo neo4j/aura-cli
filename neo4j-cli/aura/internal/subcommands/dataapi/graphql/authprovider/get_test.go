@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/neo4j/cli/neo4j/aura/internal/test/testutils"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 )
 
 func TestGetAuthProvider(t *testing.T) {
