@@ -243,6 +243,11 @@ const (
 	GraphQLDataApiStatusError    = "error"
 )
 
+const (
+	GraphQLDataApiAuthProviderTypeJwks   = "jwks"
+	GraphQLDataApiAuthProviderTypeApiKey = "api-key"
+)
+
 type ResponseData interface {
 	AsArray() []map[string]any
 	GetSingleOrError() (map[string]any, error)

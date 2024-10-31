@@ -47,7 +47,7 @@ Updating a GraphQL Data API authentication provider is an asynchronous operation
 			if enabled != "" {
 				isEnabled, err := strconv.ParseBool(enabled)
 				if err != nil {
-					return fmt.Errorf("invalid value for boolean enabled, err: %s", err.Error())
+					return fmt.Errorf("invalid value for boolean 'enabled', err: %s", err.Error())
 				}
 				body["enabled"] = isEnabled
 			}
@@ -95,7 +95,8 @@ Updating a GraphQL Data API authentication provider is an asynchronous operation
 
 	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the Authentication provider is enabled")
 
-	cmd.Flags().StringVar(&url, urlFlag, "", "The url for the JWKS endpoint, NOTE: only applicable for Authentication provider type 'jwks'")
+	urlMsg := fmt.Sprintf("The url for the JWKS endpoint, NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
+	cmd.Flags().StringVar(&url, urlFlag, "", urlMsg)
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until updated GraphQL Data API is ready again.")
 

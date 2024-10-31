@@ -24,7 +24,7 @@ func TestUpdateAuthProviderFlagsValidation(t *testing.T) {
 	}{
 		"enabled flag has invalid value": {
 			executedCommand: fmt.Sprintf("data-api graphql auth-provider update --output json --instance-id %s --data-api-id %s --enabled fg %s", instanceId, dataApiId, authProviderId),
-			expectedError:   "Error: invalid value for boolean enabled, err: strconv.ParseBool: parsing \"fg\": invalid syntax",
+			expectedError:   "Error: invalid value for boolean 'enabled', err: strconv.ParseBool: parsing \"fg\": invalid syntax",
 		},
 	}
 
