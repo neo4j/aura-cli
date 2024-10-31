@@ -8,7 +8,7 @@ import (
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 )
 
-func TesDeleteAuthProvider(t *testing.T) {
+func TestDeleteAuthProvider(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
