@@ -41,7 +41,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 
 Creating a GraphQL Data API authentication provider is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "creating" to "ready" you may begin to use your GraphQL Data API.
 
-If you create a 'api-key' Authentication provider, a API key will be created. It is important to store the API key as it is not currently possible to get it or update it.
+If you create an 'api-key' Authentication provider, an API key will be created. It is important to store the API key as it is not currently possible to get it or update it.
 
 If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
