@@ -66,7 +66,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 			if enabled != "" {
 				isEnabled, err := strconv.ParseBool(enabled)
 				if err != nil {
-					return fmt.Errorf("invalid value for boolean enabled, err: %s", err.Error())
+					return fmt.Errorf("invalid value for boolean 'enabled', err: %s", err.Error())
 				}
 				body["enabled"] = isEnabled
 			}
