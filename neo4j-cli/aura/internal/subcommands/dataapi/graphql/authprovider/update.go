@@ -95,7 +95,7 @@ Updating a GraphQL Data API authentication provider is an asynchronous operation
 
 	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the Authentication provider is enabled")
 
-	urlMsg := fmt.Sprintf("The url for the JWKS endpoint, NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
+	urlMsg := fmt.Sprintf("The JWKS URL that you want the bearer tokens in incoming GraphQL requests to be validated against. NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
 	cmd.Flags().StringVar(&url, urlFlag, "", urlMsg)
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until updated GraphQL Data API is ready again.")
