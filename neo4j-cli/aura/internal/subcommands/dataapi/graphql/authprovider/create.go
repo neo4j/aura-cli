@@ -128,7 +128,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 
 	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the Authentication provider is enabled")
 
-	msgUrlFlag := fmt.Sprintf("The url for the JWKS endpoint, NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
+	msgUrlFlag := fmt.Sprintf("The JWKS URL that you want the bearer tokens in incoming GraphQL requests to be validated against. NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
 	cmd.Flags().StringVar(&url, urlFlag, "", msgUrlFlag)
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
