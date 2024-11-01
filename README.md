@@ -24,6 +24,7 @@ You can then, for example, list your instances:
 
 ```bash
 ./neo4j-cli aura instance list
+```
 
 ## Development
 
