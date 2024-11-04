@@ -4,6 +4,28 @@
 
 Downloadable binaries are available from the [releases](https://github.com/neo4j/cli/releases/latest) page.
 
+Download the appropriate archive for for operating system and architecture.
+
+## Usage
+
+Extract the executable to a directory of your choosing.
+
+Create Aura API Credentials in your [Account Settings](https://console.neo4j.io/#account), and note down the client ID and secret.
+
+Add these credentials into the CLI with a name of your choosing:
+
+```bash
+./neo4j-cli aura credential add --name "Aura API Credentials" --client-id <client-id> --client-secret <client-secret>
+```
+
+This will add the credential and set it as the default credential for use.
+
+You can then, for example, list your instances:
+
+```bash
+./neo4j-cli aura instance list
+```
+
 ## Development
 
 ### Testing

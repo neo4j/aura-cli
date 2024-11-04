@@ -1,9 +1,8 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +16,7 @@ func NewSetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if !cfg.Aura.IsValidConfigKey(args[0]) {
-				return fmt.Errorf("invalid config key specified: %s", args[0])
+				return clierr.NewUsageError("invalid config key specified: %s", args[0])
 			}
 
 			if args[0] == "output" {
@@ -29,7 +28,7 @@ func NewSetCmd(cfg *clicfg.Config) *cobra.Command {
 					}
 				}
 				if !validOutputValue {
-					return fmt.Errorf("invalid output value specified: %s", args[1])
+					return clierr.NewUsageError("invalid output value specified: %s", args[1])
 				}
 			}
 

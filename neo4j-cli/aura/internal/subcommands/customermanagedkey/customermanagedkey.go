@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +29,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 					}
 				}
 				if !validOutputValue {
-					return fmt.Errorf("invalid output value specified: %s", outputValue)
+					return clierr.NewUsageError("invalid output value specified: %s", outputValue)
 				}
 			}
 
