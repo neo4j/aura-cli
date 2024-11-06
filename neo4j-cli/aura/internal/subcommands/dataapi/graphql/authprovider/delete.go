@@ -34,9 +34,6 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 
 			// NOTE: delete should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				//
-				// TODO: check what is returned. Also update in test if need be
-				//
 				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "type", "enabled", "url"})
 			}
 			return nil
