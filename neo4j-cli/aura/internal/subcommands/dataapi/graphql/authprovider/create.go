@@ -98,9 +98,6 @@ If you lose your API key, you will need to create a new Authentication provider.
 
 				if await {
 					cmd.Println("Waiting for GraphQL Data API to be ready...")
-					//
-					// TODO: is it really api.GraphQLDataApiStatusCreating? or are there new statuses?
-					//
 					pollResponse, err := api.PollGraphQLDataApi(cfg, instanceId, dataApiId, api.GraphQLDataApiStatusCreating)
 					if err != nil {
 						return err
@@ -127,6 +124,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.MarkFlagRequired(nameFlag)
 
 	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the Authentication provider is enabled")
+	cmd.MarkFlagRequired(enabledFlag)
 
 	msgUrlFlag := fmt.Sprintf("The JWKS URL that you want the bearer tokens in incoming GraphQL requests to be validated against. NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
 	cmd.Flags().StringVar(&url, urlFlag, "", msgUrlFlag)

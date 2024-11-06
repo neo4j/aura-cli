@@ -24,22 +24,26 @@ func TestCreateAuthProviderFlagsValidation(t *testing.T) {
 	}{
 		"missing all create flags": {
 			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s", instanceId, dataApiId),
-			expectedError:   "Error: required flag(s) \"name\", \"type\" not set",
+			expectedError:   "Error: required flag(s) \"enabled\", \"name\", \"type\" not set",
 		},
 		"missing name flag": {
-			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --type api-key", instanceId, dataApiId),
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --type api-key --enabled false", instanceId, dataApiId),
 			expectedError:   "Error: required flag(s) \"name\" not set",
 		},
 		"missing type flag": {
-			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s", instanceId, dataApiId, name),
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --enabled true", instanceId, dataApiId, name),
 			expectedError:   "Error: required flag(s) \"type\" not set",
 		},
+		"missing enabled flag": {
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type api-key", instanceId, dataApiId, name),
+			expectedError:   "Error: required flag(s) \"enabled\" not set",
+		},
 		"non-existing type flag": {
-			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type bla", instanceId, dataApiId, name),
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type bla --enabled true", instanceId, dataApiId, name),
 			expectedError:   "Error: invalid authentication provider type, got 'bla', expected 'jwks' or 'api-key'",
 		},
 		"missing url flag for jwks": {
-			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type jwks", instanceId, dataApiId, name),
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type jwks  --enabled true", instanceId, dataApiId, name),
 			expectedError:   "Error: required flag(s) \"url\" not set",
 		},
 		"invalid enable flag": {
@@ -128,8 +132,8 @@ func TestCreateAuthProviderWithResponse(t *testing.T) {
 	}{
 		"create api-key only with name": {
 			mockResponse:        mockResponseApiKey,
-			executeCommand:      fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type api-key", instanceId, dataApiId, nameApiKey),
-			expectedRequestBody: `{"name":"my-key-2","type":"api-key"}`,
+			executeCommand:      fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type api-key --enabled false", instanceId, dataApiId, nameApiKey),
+			expectedRequestBody: `{"enabled":false,"name":"my-key-2","type":"api-key"}`,
 			expectedResponse:    expectedResponseJsonApiKey,
 		},
 		"create api-key with name and enabled flag": {
@@ -146,8 +150,8 @@ func TestCreateAuthProviderWithResponse(t *testing.T) {
 		},
 		"create jwks only with name and url": {
 			mockResponse:        mockResponseJwks,
-			executeCommand:      fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --url %s --type jwks", instanceId, dataApiId, nameJwks, url),
-			expectedRequestBody: `{"name":"my-jwks-2","type":"jwks","url":"https://test.com/.well-known/jwks.json"}`,
+			executeCommand:      fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --url %s --type jwks --enabled false", instanceId, dataApiId, nameJwks, url),
+			expectedRequestBody: `{"enabled":false,"name":"my-jwks-2","type":"jwks","url":"https://test.com/.well-known/jwks.json"}`,
 			expectedResponse:    expectedResponseJsonJwks,
 		},
 		"create jwks with name and url and enabled flag": {
