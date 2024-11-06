@@ -123,7 +123,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Authentication provider")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Wether or not the Authentication provider is enabled")
+	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Whether or not the Authentication provider is enabled")
 	cmd.MarkFlagRequired(enabledFlag)
 
 	msgUrlFlag := fmt.Sprintf("The JWKS URL that you want the bearer tokens in incoming GraphQL requests to be validated against. NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
