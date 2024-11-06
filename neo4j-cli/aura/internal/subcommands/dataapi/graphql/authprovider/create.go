@@ -51,6 +51,10 @@ If you lose your API key, you will need to create a new Authentication provider.
 				cmd.MarkFlagRequired(urlFlag)
 			}
 
+			if typeValue == api.GraphQLDataApiAuthProviderTypeApiKey && url != "" {
+				return fmt.Errorf("url flag can not be set for authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeApiKey)
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
