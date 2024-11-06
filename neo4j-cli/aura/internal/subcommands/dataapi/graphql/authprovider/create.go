@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -22,6 +21,8 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		enabledFlag    = "enabled"
 		urlFlag        = "url"
 		awaitFlag      = "await"
+
+		enabledDefault = false
 	)
 
 	var (
@@ -29,7 +30,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		dataApiId  string
 		_type      string
 		name       string
-		enabled    string
+		enabled    bool
 		url        string
 		await      bool
 	)
@@ -59,16 +60,9 @@ If you lose your API key, you will need to create a new Authentication provider.
 			}
 
 			body := map[string]any{
-				"type": _type,
-				"name": name,
-			}
-
-			if enabled != "" {
-				isEnabled, err := strconv.ParseBool(enabled)
-				if err != nil {
-					return fmt.Errorf("invalid value for boolean 'enabled', err: %s", err.Error())
-				}
-				body["enabled"] = isEnabled
+				"type":    _type,
+				"name":    name,
+				"enabled": enabled,
 			}
 
 			if url != "" {
@@ -123,8 +117,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Authentication provider")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().StringVar(&enabled, enabledFlag, "", "Whether or not the Authentication provider is enabled")
-	cmd.MarkFlagRequired(enabledFlag)
+	cmd.Flags().BoolVar(&enabled, enabledFlag, enabledDefault, "Whether or not the Authentication provider is enabled")
 
 	msgUrlFlag := fmt.Sprintf("The JWKS URL that you want the bearer tokens in incoming GraphQL requests to be validated against. NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
 	cmd.Flags().StringVar(&url, urlFlag, "", msgUrlFlag)
