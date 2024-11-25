@@ -2,10 +2,12 @@ package instance
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/flags"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -14,11 +16,11 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		version              string
 		region               string
-		memory               string
+		memory               flags.Memory
 		name                 string
-		_type                string
+		_type                flags.InstanceType
 		tenantId             string
-		cloudProvider        string
+		cloudProvider        flags.CloudProvider
 		customerManagedKeyId string
 		await                bool
 	)
@@ -50,14 +52,18 @@ You must also provide a --cloud-provider flag with the subcommand, which specifi
 
 For Enterprise instances you can specify a --customer-managed-key-id flag to use a Customer Managed Key for encryption.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			typeValue, _ := cmd.Flags().GetString("type")
-			if typeValue != "free-db" {
+			if _type != "free-db" {
 				cmd.MarkFlagRequired(memoryFlag)
 				cmd.MarkFlagRequired(regionFlag)
 			}
 
 			if cfg.Aura.DefaultTenant() == "" {
 				cmd.MarkFlagRequired(tenantIdFlag)
+			}
+
+			versionValue, _ := cmd.Flags().GetString("version")
+			if versionValue != "4" && versionValue != "5" {
+				return fmt.Errorf(`invalid argument "%s" for "--version" flag: must be one of "4" or "5"`, versionValue)
 			}
 
 			return nil
@@ -126,17 +132,17 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 
 	cmd.Flags().StringVar(&region, regionFlag, "", "The region where the instance is hosted.")
 
-	cmd.Flags().StringVar(&memory, memoryFlag, "", "The size of the instance memory in GB.")
+	cmd.Flags().Var(&memory, memoryFlag, "The size of the instance memory in GB.")
 
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().StringVar(&_type, typeFlag, "", "The type of the instance.")
+	cmd.Flags().Var(&_type, typeFlag, "The type of the instance.")
 	cmd.MarkFlagRequired(typeFlag)
 
 	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
 
-	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
+	cmd.Flags().Var(&cloudProvider, cloudProviderFlag, "The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)
 
 	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "An optional customer managed key to be used for instance creation.")
