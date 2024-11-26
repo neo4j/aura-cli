@@ -114,6 +114,48 @@ func TestCreateProfessionalInstanceNoTenant(t *testing.T) {
 `)
 }
 
+func TestCreateProfessionalInstanceInvalidCloudProvider(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --memory 1GB --cloud-provider invalid --tenant-id YOUR_TENANT_ID")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: invalid argument "invalid" for "--cloud-provider" flag: must be one of "aws", "azure", or "gcp"
+`)
+}
+
+func TestCreateProfessionalInstanceInvalidMemory(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --memory 3GB --cloud-provider gcp --tenant-id YOUR_TENANT_ID")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: invalid argument "3GB" for "--memory" flag: must be one of "1GB", "2GB", "4GB", "8GB", "16GB", "24GB", "32GB", "48GB", "64GB", "128GB", "192GB", "256GB", "384GB", or "512GB"
+`)
+}
+
+func TestCreateProfessionalInstanceInvalidInstanceType(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type invalid-db --memory 1GB --cloud-provider gcp --tenant-id YOUR_TENANT_ID")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: invalid argument "invalid-db" for "--type" flag: must be one of "free-db", "professional-db", "business-critical", "enterprise-db", "professional-ds", or "enterprise-ds"
+`)
+}
+
 func TestCreateInstanceError(t *testing.T) {
 	testCases := []struct {
 		statusCode    int

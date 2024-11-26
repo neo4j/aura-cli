@@ -1,13 +1,12 @@
 package authprovider
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/flags"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +27,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		instanceId string
 		dataApiId  string
-		_type      string
+		_type      flags.AuthProviderType
 		name       string
 		enabled    bool
 		url        string
@@ -46,23 +45,17 @@ If you create an 'api-key' Authentication provider, an API key will be created. 
 
 If you lose your API key, you will need to create a new Authentication provider. This will not result in any loss of data.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			typeValue, _ := cmd.Flags().GetString(typeFlag)
-			if typeValue == api.GraphQLDataApiAuthProviderTypeJwks {
+			if _type == api.GraphQLDataApiAuthProviderTypeJwks {
 				cmd.MarkFlagRequired(urlFlag)
 			}
 
-			if typeValue == api.GraphQLDataApiAuthProviderTypeApiKey && url != "" {
+			if _type == api.GraphQLDataApiAuthProviderTypeApiKey && url != "" {
 				return fmt.Errorf("url flag can not be set for authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeApiKey)
 			}
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if _type != api.GraphQLDataApiAuthProviderTypeJwks && _type != api.GraphQLDataApiAuthProviderTypeApiKey {
-				msg := strings.ToLower(fmt.Sprintf("invalid authentication provider type, got '%s', expected '%s' or '%s'", _type, api.GraphQLDataApiAuthProviderTypeJwks, api.GraphQLDataApiAuthProviderTypeApiKey))
-				return errors.New(msg)
-			}
-
 			body := map[string]any{
 				"type":    _type,
 				"name":    name,
@@ -115,7 +108,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.MarkFlagRequired(dataApiIdFlag)
 
 	msgTypeFlag := fmt.Sprintf("The type of the Authentication provider, one of '%s' or '%s'", api.GraphQLDataApiAuthProviderTypeApiKey, api.GraphQLDataApiAuthProviderTypeJwks)
-	cmd.Flags().StringVar(&_type, typeFlag, "", msgTypeFlag)
+	cmd.Flags().Var(&_type, typeFlag, msgTypeFlag)
 	cmd.MarkFlagRequired(typeFlag)
 
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Authentication provider")

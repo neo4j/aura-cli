@@ -36,7 +36,7 @@ func TestCreateAuthProviderFlagsValidation(t *testing.T) {
 		},
 		"non-existing type flag": {
 			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type bla --enabled", instanceId, dataApiId, name),
-			expectedError:   "Error: invalid authentication provider type, got 'bla', expected 'jwks' or 'api-key'",
+			expectedError:   `Error: invalid argument "bla" for "--type" flag: must be one of "api-key" or "jwks"`,
 		},
 		"missing url flag for jwks": {
 			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type jwks --enabled", instanceId, dataApiId, name),

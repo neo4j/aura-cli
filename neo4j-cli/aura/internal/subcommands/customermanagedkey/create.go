@@ -6,6 +6,7 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/flags"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -14,9 +15,9 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		region        string
 		name          string
-		instanceType  string
+		instanceType  flags.InstanceType
 		tenantId      string
-		cloudProvider string
+		cloudProvider flags.CloudProvider
 		keyId         string
 		await         bool
 	)
@@ -103,12 +104,12 @@ Once the key has a status of ready you can use it for creating new instances by 
 	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().StringVar(&instanceType, instanceTypeFlag, "", "The type of the instance.")
+	cmd.Flags().Var(&instanceType, instanceTypeFlag, "The type of the instance.")
 	cmd.MarkFlagRequired(instanceTypeFlag)
 
 	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
 
-	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the instance.")
+	cmd.Flags().Var(&cloudProvider, cloudProviderFlag, "The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)
 
 	cmd.Flags().StringVar(&keyId, keyIdFlag, "", "")
