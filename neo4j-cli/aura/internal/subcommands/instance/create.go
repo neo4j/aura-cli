@@ -56,10 +56,6 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				cmd.MarkFlagRequired(memoryFlag)
 				cmd.MarkFlagRequired(regionFlag)
 				cmd.MarkFlagRequired(cloudProviderFlag)
-
-				if version != "4" && version != "5" {
-					return fmt.Errorf(`invalid argument "%s" for "--version" flag: must be one of "4" or "5"`, version)
-				}
 			} else {
 				if memory != "" {
 					return fmt.Errorf(`invalid argument "%s" for "--memory" flag: must not be set when "--type" flag is set to "free-db"`, memory)
@@ -70,9 +66,10 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				if cloudProvider != "" {
 					return fmt.Errorf(`invalid argument "%s" for "--cloud-provider" flag: must not be set when "--type" flag is set to "free-db"`, cloudProvider)
 				}
-				if version != "" {
-					return fmt.Errorf(`invalid argument "%s" for "--version" flag: must not be set when "--type" flag is set to "free-db"`, version)
-				}
+			}
+
+			if version != "4" && version != "5" {
+				return fmt.Errorf(`invalid argument "%s" for "--version" flag: must be one of "4" or "5"`, version)
 			}
 
 			if cfg.Aura.DefaultTenant() == "" {

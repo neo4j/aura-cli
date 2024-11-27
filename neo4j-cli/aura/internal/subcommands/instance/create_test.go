@@ -32,6 +32,7 @@ func TestCreateFreeInstance(t *testing.T) {
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
 	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
 
+	helper.AssertErr("")
 	helper.AssertOutJson(`{
 	  "data": {
 		"cloud_provider": "gcp",
@@ -195,20 +196,6 @@ func TestCreateFreeInstanceWithCloudProvider(t *testing.T) {
 	mockHandler.AssertCalledTimes(0)
 
 	helper.AssertErr(`Error: invalid argument "gcp" for "--cloud-provider" flag: must not be set when "--type" flag is set to "free-db"
-`)
-}
-
-func TestCreateFreeInstanceWithVersion(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
-
-	helper.ExecuteCommand("instance create --name Instance01 --type free-db --version 4 --tenant-id YOUR_TENANT_ID")
-
-	mockHandler.AssertCalledTimes(0)
-
-	helper.AssertErr(`Error: invalid argument "4" for "--version" flag: must not be set when "--type" flag is set to "free-db"
 `)
 }
 
