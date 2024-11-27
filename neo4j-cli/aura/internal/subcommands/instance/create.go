@@ -55,15 +55,28 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 			if _type != "free-db" {
 				cmd.MarkFlagRequired(memoryFlag)
 				cmd.MarkFlagRequired(regionFlag)
+				cmd.MarkFlagRequired(cloudProviderFlag)
+
+				if version != "4" && version != "5" {
+					return fmt.Errorf(`invalid argument "%s" for "--version" flag: must be one of "4" or "5"`, version)
+				}
+			} else {
+				if memory != "" {
+					return fmt.Errorf(`invalid argument "%s" for "--memory" flag: must not be set when "--type" flag is set to "free-db"`, memory)
+				}
+				if region != "" {
+					return fmt.Errorf(`invalid argument "%s" for "--region" flag: must not be set when "--type" flag is set to "free-db"`, region)
+				}
+				if cloudProvider != "" {
+					return fmt.Errorf(`invalid argument "%s" for "--cloud-provider" flag: must not be set when "--type" flag is set to "free-db"`, cloudProvider)
+				}
+				if version != "" {
+					return fmt.Errorf(`invalid argument "%s" for "--version" flag: must not be set when "--type" flag is set to "free-db"`, version)
+				}
 			}
 
 			if cfg.Aura.DefaultTenant() == "" {
 				cmd.MarkFlagRequired(tenantIdFlag)
-			}
-
-			versionValue, _ := cmd.Flags().GetString("version")
-			if versionValue != "4" && versionValue != "5" {
-				return fmt.Errorf(`invalid argument "%s" for "--version" flag: must be one of "4" or "5"`, versionValue)
 			}
 
 			return nil
@@ -86,6 +99,8 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 			if _type == "free-db" {
 				body["memory"] = "1GB"
 				body["region"] = "europe-west1"
+				body["cloud_provider"] = "gcp"
+				body["version"] = "5"
 			} else {
 				body["memory"] = memory
 				body["region"] = region
@@ -143,7 +158,6 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
 
 	cmd.Flags().Var(&cloudProvider, cloudProviderFlag, "The cloud provider hosting the instance.")
-	cmd.MarkFlagRequired(cloudProviderFlag)
 
 	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "An optional customer managed key to be used for instance creation.")
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created instance is ready.")
