@@ -56,7 +56,7 @@ The time taken to complete a snapshot depends on the amount of data stored in th
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to create a snapshot of")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "(required) The ID of the instance to create a snapshot of")
 	cmd.MarkFlagRequired("instance-id")
 
 	cmd.Flags().BoolVar(&await, "await", false, "Waits until created snapshot is ready.")

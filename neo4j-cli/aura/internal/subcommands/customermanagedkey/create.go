@@ -98,21 +98,21 @@ Once the key has a status of ready you can use it for creating new instances by 
 		},
 	}
 
-	cmd.Flags().StringVar(&region, regionFlag, "", "The region where the instance is hosted.")
+	cmd.Flags().StringVar(&region, regionFlag, "", "(required) The region where the instance is hosted.")
 	cmd.MarkFlagRequired(regionFlag)
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
+	cmd.Flags().StringVar(&name, nameFlag, "", "(required) The name of the customer managed key (any UTF-8 characters with no trailing or leading whitespace).")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().Var(&instanceType, instanceTypeFlag, "The type of the instance.")
+	cmd.Flags().Var(&instanceType, instanceTypeFlag, "(required) The type of the instance.")
 	cmd.MarkFlagRequired(instanceTypeFlag)
 
-	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
+	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "The Aura tenant/project ID")
 
-	cmd.Flags().Var(&cloudProvider, cloudProviderFlag, "The cloud provider hosting the instance.")
+	cmd.Flags().Var(&cloudProvider, cloudProviderFlag, "(required) The cloud provider hosting the instance.")
 	cmd.MarkFlagRequired(cloudProviderFlag)
 
-	cmd.Flags().StringVar(&keyId, keyIdFlag, "", "")
+	cmd.Flags().StringVar(&keyId, keyIdFlag, "", "(required) Encryption Key ARN")
 	cmd.MarkFlagRequired(keyIdFlag)
 
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created customer managed key is ready.")

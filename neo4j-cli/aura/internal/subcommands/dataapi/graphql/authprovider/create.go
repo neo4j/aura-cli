@@ -101,17 +101,17 @@ If you lose your API key, you will need to create a new Authentication provider.
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to create the GraphQL Data API for")
+	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "(required) The ID of the instance to create the GraphQL Data API for")
 	cmd.MarkFlagRequired(instanceIdFlag)
 
-	cmd.Flags().StringVar(&dataApiId, dataApiIdFlag, "", "The ID of the GraphQL Data API to create the authentication provider for")
+	cmd.Flags().StringVar(&dataApiId, dataApiIdFlag, "", "(required) The ID of the GraphQL Data API to create the authentication provider for")
 	cmd.MarkFlagRequired(dataApiIdFlag)
 
-	msgTypeFlag := fmt.Sprintf("The type of the Authentication provider, one of '%s' or '%s'", api.GraphQLDataApiAuthProviderTypeApiKey, api.GraphQLDataApiAuthProviderTypeJwks)
+	msgTypeFlag := fmt.Sprintf("(required) The type of the Authentication provider, one of '%s' or '%s'", api.GraphQLDataApiAuthProviderTypeApiKey, api.GraphQLDataApiAuthProviderTypeJwks)
 	cmd.Flags().Var(&_type, typeFlag, msgTypeFlag)
 	cmd.MarkFlagRequired(typeFlag)
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the Authentication provider")
+	cmd.Flags().StringVar(&name, nameFlag, "", "(required) The name of the Authentication provider")
 	cmd.MarkFlagRequired(nameFlag)
 
 	cmd.Flags().BoolVar(&enabled, enabledFlag, enabledDefault, "Whether or not the Authentication provider is enabled")

@@ -104,16 +104,16 @@ If you lose your API key, you will need to create a new Authentication provider.
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "The ID of the instance to create the GraphQL Data API for")
+	cmd.Flags().StringVar(&instanceId, instanceIdFlag, "", "(required) The ID of the instance to create the GraphQL Data API for")
 	cmd.MarkFlagRequired(instanceIdFlag)
 
-	cmd.Flags().StringVar(&instanceUsername, instanceUsernameFlag, "", "The username of the instance this GraphQL Data API will be connected to")
+	cmd.Flags().StringVar(&instanceUsername, instanceUsernameFlag, "", "(required) The username of the instance this GraphQL Data API will be connected to")
 	cmd.MarkFlagRequired(instanceUsernameFlag)
 
-	cmd.Flags().StringVar(&instancePassword, instancePasswordFlag, "", "The password of the instance this GraphQL Data API will be connected to")
+	cmd.Flags().StringVar(&instancePassword, instancePasswordFlag, "", "(required) The password of the instance this GraphQL Data API will be connected to")
 	cmd.MarkFlagRequired(instancePasswordFlag)
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the GraphQL Data API")
+	cmd.Flags().StringVar(&name, nameFlag, "", "(required) The name of the GraphQL Data API")
 	cmd.MarkFlagRequired(nameFlag)
 
 	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")

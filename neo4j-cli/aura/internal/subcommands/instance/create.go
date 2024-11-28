@@ -146,13 +146,13 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 
 	cmd.Flags().Var(&memory, memoryFlag, "The size of the instance memory in GB.")
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
+	cmd.Flags().StringVar(&name, nameFlag, "", "(required) The name of the instance (any UTF-8 characters with no trailing or leading whitespace).")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().Var(&_type, typeFlag, "The type of the instance.")
+	cmd.Flags().Var(&_type, typeFlag, "(required) The type of the instance.")
 	cmd.MarkFlagRequired(typeFlag)
 
-	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "")
+	cmd.Flags().StringVar(&tenantId, tenantIdFlag, "", "The Aura tenant/project ID")
 
 	cmd.Flags().Var(&cloudProvider, cloudProviderFlag, "The cloud provider hosting the instance.")
 
