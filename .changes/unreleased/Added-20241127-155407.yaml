@@ -1,0 +1,3 @@
+kind: Added
+body: Require less arguments when creating Aura Free instances - allowed values are automatically populated.
+time: 2024-11-27T15:54:07.667786Z

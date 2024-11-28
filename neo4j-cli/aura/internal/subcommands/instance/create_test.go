@@ -26,12 +26,13 @@ func TestCreateFreeInstance(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("instance create --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp")
+	helper.ExecuteCommand("instance create --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
 	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"1GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"free-db","version":"5"}`)
 
+	helper.AssertErr("")
 	helper.AssertOutJson(`{
 	  "data": {
 		"cloud_provider": "gcp",
@@ -156,6 +157,48 @@ func TestCreateProfessionalInstanceInvalidInstanceType(t *testing.T) {
 `)
 }
 
+func TestCreateFreeInstanceWithMemory(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --name Instance01 --type free-db --memory 1GB --tenant-id YOUR_TENANT_ID")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: invalid argument "1GB" for "--memory" flag: must not be set when "--type" flag is set to "free-db"
+`)
+}
+
+func TestCreateFreeInstanceWithRegion(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: invalid argument "europe-west1" for "--region" flag: must not be set when "--type" flag is set to "free-db"
+`)
+}
+
+func TestCreateFreeInstanceWithCloudProvider(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --name Instance01 --type free-db --cloud-provider gcp --tenant-id YOUR_TENANT_ID")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: invalid argument "gcp" for "--cloud-provider" flag: must not be set when "--type" flag is set to "free-db"
+`)
+}
+
 func TestCreateInstanceError(t *testing.T) {
 	testCases := []struct {
 		statusCode    int
@@ -266,7 +309,7 @@ func TestCreateFreeInstanceWithConfigTenantId(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type free-db --cloud-provider gcp")
+	helper.ExecuteCommand("instance create --name Instance01 --type free-db")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
@@ -317,7 +360,7 @@ func TestCreateFreeInstanceWithAwait(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --await")
+	helper.ExecuteCommand("instance create --name Instance01 --type free-db --tenant-id YOUR_TENANT_ID --await")
 
 	createMock.AssertCalledTimes(1)
 	createMock.AssertCalledWithMethod(http.MethodPost)
