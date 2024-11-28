@@ -26,13 +26,13 @@ func NewAddCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&name, nameFlag, "", "Name")
+	cmd.Flags().StringVar(&name, nameFlag, "", "(required) Name")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().StringVar(&clientId, clientIdFlag, "", "Client ID")
+	cmd.Flags().StringVar(&clientId, clientIdFlag, "", "(required) Client ID")
 	cmd.MarkFlagRequired(clientIdFlag)
 
-	cmd.Flags().StringVar(&clientSecret, clientSecretFlag, "", "Client secret")
+	cmd.Flags().StringVar(&clientSecret, clientSecretFlag, "", "(required) Client secret")
 	cmd.MarkFlagRequired(clientSecretFlag)
 
 	return cmd
