@@ -8,16 +8,28 @@
 
 version: 2
 
-project_name: neo4j-cli
+# TODO: Change to neo4j-cli if decided to release "mono-CLI"
+project_name: aura
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - main: ./neo4j-cli
-    id: neo4j-cli
-    binary: neo4j-cli
+  # - main: ./neo4j-cli
+  #   id: neo4j-cli
+  #   binary: neo4j-cli
+  #   env:
+  #     - CGO_ENABLED=0
+  #   goos:
+  #     - linux
+  #     - windows
+  #     - darwin
+  #   ldflags:
+  #     - -X "main.Version={{.Env.GORELEASER_CURRENT_TAG}}"
+  - main: ./neo4j-cli/aura/cmd
+    id: aura
+    binary: aura
     env:
       - CGO_ENABLED=0
     goos:
@@ -32,7 +44,7 @@ archives:
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
-      {{ .Version }}_
+      {{- .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386

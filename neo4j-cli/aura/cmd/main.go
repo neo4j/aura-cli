@@ -7,21 +7,9 @@ import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 )
 
 var Version = "dev"
-
-func NewCmd(cfg *clicfg.Config) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "neo4j-cli",
-		Short:   "Allows you to manage Neo4j resources",
-		Version: Version,
-	}
-
-	cmd.AddCommand(aura.NewCmd(cfg))
-	return cmd
-}
 
 func main() {
 	defer func() {
@@ -34,7 +22,7 @@ func main() {
 
 	cfg := clicfg.NewConfig(afero.NewOsFs(), Version)
 
-	cmd := NewCmd(cfg)
+	cmd := aura.NewCmd(cfg)
 	cmd.SetOut(os.Stdout)
 	cmd.SetErr(os.Stderr)
 	cmd.Execute()
