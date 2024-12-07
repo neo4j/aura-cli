@@ -79,6 +79,10 @@ func printPlainText(cmd *cobra.Command, responseData api.ResponseData, fields []
 		values := make([]string, 0)
 		for _, field := range fields {
 			value := item[field]
+			if value == nil {
+				values = append(values, "")
+				continue
+			}
 			values = append(values, fmt.Sprintf("%v", value))
 		}
 
