@@ -75,6 +75,50 @@ func TestListInstances(t *testing.T) {
 	}`)
 }
 
+func TestListInstancesWithTextOutput(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, `{
+			"data": [
+				{
+					"id": "2f49c2b3",
+					"name": "Production",
+					"tenant_id": "YOUR_TENANT_ID",
+					"cloud_provider": "gcp"
+				},
+				{
+					"id": "b51dc964",
+					"name": "Instance01",
+					"tenant_id": "YOUR_TENANT_ID",
+					"cloud_provider": "aws"
+				},
+				{
+					"id": "432392ae",
+					"name": "Recommendations",
+					"tenant_id": "YOUR_TENANT_ID",
+					"cloud_provider": "azure"
+				},
+				{
+					"id": "524b7d8d",
+					"name": "Northwind",
+					"tenant_id": "YOUR_TENANT_ID",
+					"cloud_provider": "gcp"
+				}
+			]
+		}`)
+
+	helper.SetConfigValue("aura.output", "text")
+	helper.ExecuteCommand("instance list")
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertOut("2f49c2b3\tProduction\tYOUR_TENANT_ID\tgcp\n" +
+		"b51dc964\tInstance01\tYOUR_TENANT_ID\taws\n" +
+		"432392ae\tRecommendations\tYOUR_TENANT_ID\tazure\n" +
+		"524b7d8d\tNorthwind\tYOUR_TENANT_ID\tgcp\n")
+}
+
 func TestListInstancesWithTenantId(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
