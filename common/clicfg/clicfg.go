@@ -24,7 +24,7 @@ const (
 	DefaultAuraBetaEnabled = false
 )
 
-var ValidOutputValues = [3]string{"default", "json", "table"}
+var ValidOutputValues = [4]string{"default", "json", "table", "text"}
 
 type Config struct {
 	Version     string

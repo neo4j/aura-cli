@@ -69,3 +69,7 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 	t.SetStyle(table.StyleLight)
 	cmd.Println(t.Render())
 }
+
+func printPlainText(cmd *cobra.Command, responseData api.ResponseData, fields []string) {
+	cmd.Println(responseData.AsArray())
+}
