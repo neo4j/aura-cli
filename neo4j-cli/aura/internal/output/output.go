@@ -2,7 +2,9 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
@@ -21,6 +23,8 @@ func PrintBodyMap(cmd *cobra.Command, cfg *clicfg.Config, values api.ResponseDat
 			panic(err)
 		}
 		cmd.Println(string(bytes))
+	case "text":
+		printPlainText(cmd, values, fields)
 	case "table", "default":
 		printTable(cmd, values, fields)
 	default:
@@ -71,5 +75,13 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 }
 
 func printPlainText(cmd *cobra.Command, responseData api.ResponseData, fields []string) {
-	cmd.Println(responseData.AsArray())
+	for _, item := range responseData.AsArray() {
+		values := make([]string, 0)
+		for _, field := range fields {
+			value := item[field]
+			values = append(values, fmt.Sprintf("%v", value))
+		}
+
+		cmd.Println(strings.Join(values, "\t"))
+	}
 }
