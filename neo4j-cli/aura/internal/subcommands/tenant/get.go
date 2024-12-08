@@ -37,8 +37,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 					return err
 				}
 				output.PrintBodyMap(cmd, cfg, values, fields)
-				if cfg.Aura.Output() == "table" || cfg.Aura.Output() == "default" {
-					cmd.Println("instance configurations are not visible with table output - please use a different output setting using --output if you would like to view these")
+				if cfg.Aura.Output() == "table" || cfg.Aura.Output() == "default" || cfg.Aura.Output() == "text" {
+					cmd.Println("instance configurations are not visible with table or text output - please use a different output setting using --output if you would like to view these")
 				}
 			}
 
