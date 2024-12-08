@@ -145,6 +145,6 @@ func TestGetTenantWithTableOutput(t *testing.T) {
 ├──────────────────────────────────────┼────────────┤
 │ 6981ace7-efe8-4f5c-b7c5-267b5162ce91 │ Production │
 └──────────────────────────────────────┴────────────┘
-instance configurations are not visible with table output - please use a different output setting using --output if you would like to view these
+instance configurations are not visible with table or text output - please use a different output setting using --output if you would like to view these
 `)
 }
