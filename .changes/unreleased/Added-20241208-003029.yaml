@@ -1,3 +1,3 @@
 kind: Added
-body: Added `text` output support to existing commands that use `--output` flag - tenant list/get - instance list/get - customer-managed-key list/get
+body: Added `text` output support to existing commands that use `--output` flag - tenant list/get - instance list/get - customer-managed-key list/get - data-api graphql commands list/get
 time: 2024-12-08T00:30:29.1496-08:00
