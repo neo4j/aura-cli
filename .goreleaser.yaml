@@ -9,7 +9,7 @@
 version: 2
 
 # TODO: Change to neo4j-cli if decided to release "mono-CLI"
-project_name: aura
+project_name: aura-cli
 
 before:
   hooks:
@@ -28,8 +28,8 @@ builds:
   #   ldflags:
   #     - -X "main.Version={{.Env.GORELEASER_CURRENT_TAG}}"
   - main: ./neo4j-cli/aura/cmd
-    id: aura
-    binary: aura
+    id: aura-cli
+    binary: aura-cli
     env:
       - CGO_ENABLED=0
     goos:
@@ -70,7 +70,7 @@ notarize:
       #
       # Default: the project name.
       ids:
-        - neo4j-cli
+        - aura-cli
 
       sign:
         # The .p12 certificate file path or its base64'd contents.
