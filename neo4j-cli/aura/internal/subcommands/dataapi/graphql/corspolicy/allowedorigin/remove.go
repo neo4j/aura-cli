@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewAddCmd(cfg *clicfg.Config) *cobra.Command {
+func NewRemoveCmd(cfg *clicfg.Config) *cobra.Command {
 	const (
 		instanceIdFlag = "instance-id"
 		dataApiIdFlag  = "data-api-id"
@@ -25,30 +25,37 @@ func NewAddCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "add <origin>",
-		Short: "Adds a new allowed origin to the CORS policy",
-		Long: `This command adds a new allowed origin to the Cross-Origin Resource Sharing (CORS) policy of a GraphQL Data API.
+		Use:   "remove <origin>",
+		Short: "Removes an allowed origin from the CORS policy",
+		Long: `This command removes an allowed origin from the Cross-Origin Resource Sharing (CORS) policy of a GraphQL Data API.
 
 Updating the CORS policy of a GraphQL Data API is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "updating" to "ready" you may begin to use your GraphQL Data API.
 
-Adding a new allowed origin to the CORS policy of a GraphQL Data API allows browsers to make requests to the GraphQL Data API from a web app that is served from the specified origin.`,
+Removing an allowed origin from the CORS policy of a GraphQL Data API means that most browsers are no longer able to make requests to the GraphQL Data API from a web app that is served from the specified origin.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			newOrigin := args[0]
+			originToRemove := args[0]
 
 			existingOrigins, err := getGetExistingOrigins(cfg, dataApiId, instanceId)
 			if err != nil {
 				return err
 			}
 
+			newOrigins := []string{}
+			originFound := false
+
 			for _, origin := range existingOrigins {
-				if origin == newOrigin {
-					cmd.Println("Origin already exists in allowed origins:", newOrigin)
-					return nil
+				if origin != originToRemove {
+					newOrigins = append(newOrigins, origin)
+				} else {
+					originFound = true
 				}
 			}
 
-			newOrigins := append(existingOrigins, newOrigin)
+			if !originFound {
+				cmd.Println("Origin not found in allowed origins:", originToRemove)
+				return nil
+			}
 
 			cmd.SilenceUsage = true
 			body := map[string]any{
@@ -58,6 +65,13 @@ Adding a new allowed origin to the CORS policy of a GraphQL Data API allows brow
 					},
 				},
 			}
+
+			// TODO: theres currently a bug with the API that means you cannot send a body with only an empty array.
+			// Therefore, as a temporary fix we add this dummy data that is ignored
+			if len(newOrigins) == 0 {
+				body["test"] = "ignore me"
+			}
+
 			path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s", instanceId, dataApiId)
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				PostBody: body,
@@ -69,7 +83,11 @@ Adding a new allowed origin to the CORS policy of a GraphQL Data API allows brow
 
 			// NOTE: Update should not return OK (200), it always returns 202, checking both just in case
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				cmd.Printf("New allowed origins: [\"%s\"]\n", strings.Join(newOrigins, "\", \""))
+				if len(newOrigins) == 0 {
+					cmd.Println("New allowed origins: []")
+				} else {
+					cmd.Printf("New allowed origins: [\"%s\"]\n", strings.Join(newOrigins, "\", \""))
+				}
 				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "status", "url"})
 				if await {
 					cmd.Println("Waiting for GraphQL Data API to be ready...")
