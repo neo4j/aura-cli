@@ -37,7 +37,7 @@ Removing an allowed origin from the CORS policy of a GraphQL Data API means that
 		RunE: func(cmd *cobra.Command, args []string) error {
 			originToRemove := args[0]
 
-			existingOrigins, err := getGetExistingOrigins(cfg, dataApiId, instanceId)
+			existingOrigins, err := getExistingOrigins(cfg, dataApiId, instanceId)
 			if err != nil {
 				return err
 			}

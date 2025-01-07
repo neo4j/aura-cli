@@ -37,7 +37,7 @@ Adding a new allowed origin to the CORS policy of a GraphQL Data API allows brow
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newOrigin := args[0]
 
-			existingOrigins, err := getGetExistingOrigins(cfg, dataApiId, instanceId)
+			existingOrigins, err := getExistingOrigins(cfg, dataApiId, instanceId)
 			if err != nil {
 				return err
 			}
