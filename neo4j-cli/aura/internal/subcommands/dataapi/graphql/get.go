@@ -36,7 +36,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to get the GraphQL Data API details for")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "(required) The ID of the instance to get the GraphQL Data API details for")
 	cmd.MarkFlagRequired("instance-id")
 
 	return cmd

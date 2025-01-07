@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/dataapi/graphql/authprovider"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/dataapi/graphql/corspolicy"
 )
 
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
@@ -14,6 +15,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 
 	cmd.AddCommand(authprovider.NewCmd(cfg))
+	cmd.AddCommand(corspolicy.NewCmd(cfg))
 	cmd.AddCommand(NewListCmd(cfg))
 	cmd.AddCommand(NewGetCmd(cfg))
 	cmd.AddCommand(NewUpdateCmd(cfg))

@@ -39,7 +39,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Creates a new GraphQL Data API authentication provider",
 		Long: `This command creates a new GraphQL Data API authentication provider.
 
-Creating a GraphQL Data API authentication provider is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "creating" to "ready" you may begin to use your GraphQL Data API.
+Creating a GraphQL Data API authentication provider is an asynchronous operation. Use the --await flag to wait for the GraphQL Data API to be ready. Once the status transitions from "updating" to "ready" you may begin to use your GraphQL Data API.
 
 If you create an 'api-key' Authentication provider, an API key will be created. It is important to store the API key as it is not currently possible to get it or update it.
 
@@ -119,7 +119,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	msgUrlFlag := fmt.Sprintf("The JWKS URL that you want the bearer tokens in incoming GraphQL requests to be validated against. NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
 	cmd.Flags().StringVar(&url, urlFlag, "", msgUrlFlag)
 
-	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created GraphQL Data API is ready.")
+	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created Authentication provider is ready.")
 
 	return cmd
 }
