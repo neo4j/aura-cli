@@ -118,7 +118,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 
 	cmd.Flags().StringVar(&typeDefs, typeDefsFlag, "", "The GraphQL type definitions, NOTE: must be base64 encoded")
 
-	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.x. path/to/typeDefs.graphql. Must be of file type .graphql")
+	cmd.Flags().StringVar(&typeDefsFile, typeDefsFileFlag, "", "Path to a local GraphQL type definitions file, e.g. path/to/typeDefs.graphql. Must be of file type .graphql")
 	cmd.MarkFlagsMutuallyExclusive(typeDefsFlag, typeDefsFileFlag)
 	cmd.MarkFlagsOneRequired(typeDefsFlag, typeDefsFileFlag)
 

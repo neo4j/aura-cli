@@ -37,7 +37,7 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance to delete the Data API for")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "(required) The ID of the instance to delete the Data API for")
 	cmd.MarkFlagRequired("instance-id")
 
 	return cmd
