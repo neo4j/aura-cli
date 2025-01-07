@@ -14,10 +14,6 @@ func TestRemoveAllowedOriginFlagsValidation(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	instanceId := "2f49c2b3"
-	dataApiId := "e157301d"
-	allowedOrigin := "https://test.com"
-
 	tests := map[string]struct {
 		executedCommand string
 		expectedError   string
@@ -48,12 +44,51 @@ func TestRemoveAllowedOriginFlagsValidation(t *testing.T) {
 	}
 }
 
-func TestRemoveAllowedOriginWithResponse(t *testing.T) {
-	instanceId := "2f49c2b3"
-	dataApiId := "e157301d"
-	allowedOrigin := "https://test.com"
+func TestRemoveAllowedOriginWithRemainingOrigins(t *testing.T) {
+	mockGetResponse := fmt.Sprintf(`{
+		"data": {
+			"id": "2f49c2b3",
+			"name": "my-data-api-1",
+			"status": "ready",
+			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql",
+			"security": {
+				"cors_policy": {
+					"allowed_origins": ["https://test1.com", "https://test2.com", "%s"]
+				}
+			}
+		}
+	}`, allowedOrigin)
+	expectedResponse := `New allowed origins: ["https://test1.com", "https://test2.com"]
+{
+	"data": {
+		"id": "2f49c2b3",
+		"name": "my-data-api-1",
+		"status": "ready",
+		"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
+	}
+}`
 
-	mockGetResponseNoOrigins := `{
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
+
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId))
+
+	mockHandler.AssertCalledTimes(2)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithBody("{\"security\":{\"cors_policy\":{\"allowed_origins\":[\"https://test1.com\",\"https://test2.com\"]}}}")
+
+	helper.AssertOut(expectedResponse)
+}
+
+func TestRemoveAllowedOriginWithNoExistingOrigins(t *testing.T) {
+	mockGetResponse := `{
 		"data": {
 			"id": "2f49c2b3",
 			"name": "my-data-api-1",
@@ -67,21 +102,24 @@ func TestRemoveAllowedOriginWithResponse(t *testing.T) {
 		}
 	}`
 
-	mockGetResponseWithOrigins := fmt.Sprintf(`{
-		"data": {
-			"id": "2f49c2b3",
-			"name": "my-data-api-1",
-			"status": "ready",
-			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql",
-			"security": {
-				"cors_policy": {
-					"allowed_origins": ["https://test1.com", "https://test2.com", "%s"]
-				}
-			}
-		}
-	}`, allowedOrigin)
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
-	mockGetResponseWithLastExistingOrigin := fmt.Sprintf(`{
+	helper.SetConfigValue("aura.beta-enabled", true)
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
+
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertErr(fmt.Sprintf("Error: Origin \"%s\" not found in allowed origins", allowedOrigin))
+}
+
+func TestRemoveAllowedOriginLastAllowedOrigin(t *testing.T) {
+	mockGetResponse := fmt.Sprintf(`{
 		"data": {
 			"id": "2f49c2b3",
 			"name": "my-data-api-1",
@@ -94,36 +132,50 @@ func TestRemoveAllowedOriginWithResponse(t *testing.T) {
 			}
 		}
 	}`, allowedOrigin)
+	expectedResponse := `New allowed origins: []
+{
+	"data": {
+		"id": "2f49c2b3",
+		"name": "my-data-api-1",
+		"status": "ready",
+		"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
+	}
+}`
 
-	mockPatchResponse := `{
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
+
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId))
+
+	mockHandler.AssertCalledTimes(2)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithBody("{\"security\":{\"cors_policy\":{\"allowed_origins\":[]}},\"test\":\"ignore me\"}")
+
+	helper.AssertOut(expectedResponse)
+}
+
+func TestRemoveAllowedOriginWithOutputTable(t *testing.T) {
+	mockGetResponse := fmt.Sprintf(`{
 		"data": {
 			"id": "2f49c2b3",
 			"name": "my-data-api-1",
 			"status": "ready",
-			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
+			"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql",
+			"security": {
+				"cors_policy": {
+					"allowed_origins": ["https://test1.com", "https://test2.com", "%s"]
+				}
+			}
 		}
-	}`
-
-	expectedResponseExistingOrigin := `New allowed origins: ["https://test1.com", "https://test2.com"]
-{
-	"data": {
-		"id": "2f49c2b3",
-		"name": "my-data-api-1",
-		"status": "ready",
-		"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
-	}
-}`
-	expectedResponseNoRemainingOrigins := `New allowed origins: []
-{
-	"data": {
-		"id": "2f49c2b3",
-		"name": "my-data-api-1",
-		"status": "ready",
-		"url": "https://2f49c2b3.28be6e4d8d3e8360197cb6c1fa1d25d1.graphql.neo4j-dev.io/graphql"
-	}
-}`
-
-	expectedResponseTable := `New allowed origins: ["https://test1.com", "https://test2.com"]
+	}`, allowedOrigin)
+	expectedResponse := `New allowed origins: ["https://test1.com", "https://test2.com"]
 ┌──────────┬───────────────┬────────┬────────────────────────────────────────────────────────────────────────────────┐
 │ ID       │ NAME          │ STATUS │ URL                                                                            │
 ├──────────┼───────────────┼────────┼────────────────────────────────────────────────────────────────────────────────┤
@@ -131,73 +183,21 @@ func TestRemoveAllowedOriginWithResponse(t *testing.T) {
 └──────────┴───────────────┴────────┴────────────────────────────────────────────────────────────────────────────────┘
 `
 
-	tests := map[string]struct {
-		mockGetResponse     string
-		mockPatchResponse   string
-		executeCommand      string
-		expectedRequestBody string
-		expectedResponse    string
-		expectedErr         string
-	}{
-		"remove allowed origin successfully": {
-			mockGetResponse:     mockGetResponseWithOrigins,
-			mockPatchResponse:   mockPatchResponse,
-			executeCommand:      fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId),
-			expectedRequestBody: "{\"security\":{\"cors_policy\":{\"allowed_origins\":[\"https://test1.com\",\"https://test2.com\"]}}}",
-			expectedResponse:    expectedResponseExistingOrigin,
-		},
-		"remove allowed origin with no existing origins": {
-			mockGetResponse: mockGetResponseNoOrigins,
-			executeCommand:  fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId),
-			expectedErr:     fmt.Sprintf("Error: Origin \"%s\" not found in allowed origins", allowedOrigin),
-		},
-		"remove last allowed origin": {
-			mockGetResponse:     mockGetResponseWithLastExistingOrigin,
-			mockPatchResponse:   mockPatchResponse,
-			executeCommand:      fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId),
-			expectedRequestBody: "{\"security\":{\"cors_policy\":{\"allowed_origins\":[]}},\"test\":\"ignore me\"}",
-			expectedResponse:    expectedResponseNoRemainingOrigins,
-		},
-		"remove allowed origin with output table": {
-			mockGetResponse:     mockGetResponseWithOrigins,
-			mockPatchResponse:   mockPatchResponse,
-			executeCommand:      fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s --output table", allowedOrigin, instanceId, dataApiId),
-			expectedRequestBody: "{\"security\":{\"cors_policy\":{\"allowed_origins\":[\"https://test1.com\",\"https://test2.com\"]}}}",
-			expectedResponse:    expectedResponseTable,
-		},
-	}
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
 
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			helper := testutils.NewAuraTestHelper(t)
-			defer helper.Close()
+	helper.SetConfigValue("aura.beta-enabled", true)
 
-			helper.SetConfigValue("aura.beta-enabled", true)
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
 
-			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, tt.mockGetResponse)
-			mockHandler.AddResponse(http.StatusAccepted, tt.mockPatchResponse)
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s --output table", allowedOrigin, instanceId, dataApiId))
 
-			helper.ExecuteCommand(tt.executeCommand)
+	mockHandler.AssertCalledTimes(2)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
-			expectedCalls := 0
-			if tt.mockPatchResponse != "" {
-				expectedCalls += 1
-			}
-			if tt.mockGetResponse != "" {
-				expectedCalls += 1
-			}
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithBody("{\"security\":{\"cors_policy\":{\"allowed_origins\":[\"https://test1.com\",\"https://test2.com\"]}}}")
 
-			mockHandler.AssertCalledTimes(expectedCalls)
-			if tt.mockGetResponse != "" {
-				mockHandler.AssertCalledWithMethod(http.MethodGet)
-			}
-			if tt.mockPatchResponse != "" {
-				mockHandler.AssertCalledWithMethod(http.MethodPatch)
-				mockHandler.AssertCalledWithBody(tt.expectedRequestBody)
-			}
-
-			helper.AssertOut(tt.expectedResponse)
-			helper.AssertErr(tt.expectedErr)
-		})
-	}
+	helper.AssertOut(expectedResponse)
 }
