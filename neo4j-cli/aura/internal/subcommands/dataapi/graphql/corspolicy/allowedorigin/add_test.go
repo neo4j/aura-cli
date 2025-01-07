@@ -137,6 +137,7 @@ func TestAddAllowedOriginWithResponse(t *testing.T) {
 		executeCommand      string
 		expectedRequestBody string
 		expectedResponse    string
+		expectedErr         string
 	}{
 		"add allowed origin with no existing origins": {
 			mockGetResponse:     mockGetResponseNoOrigins,
@@ -153,9 +154,9 @@ func TestAddAllowedOriginWithResponse(t *testing.T) {
 			expectedResponse:    expectedResponseJsonMultipleOrigins,
 		},
 		"add existing allowed origin": {
-			mockGetResponse:  mockGetResponseWithExistingOrigin,
-			executeCommand:   fmt.Sprintf("data-api graphql cors-policy allowed-origin add %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId),
-			expectedResponse: fmt.Sprintf("Origin already exists in allowed origins: %s\n", allowedOrigin),
+			mockGetResponse: mockGetResponseWithExistingOrigin,
+			executeCommand:  fmt.Sprintf("data-api graphql cors-policy allowed-origin add %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId),
+			expectedErr:     fmt.Sprintf("Error: Origin \"%s\" already exists in allowed origins\n", allowedOrigin),
 		},
 		"add allowed origin with output table": {
 			mockGetResponse:     mockGetResponseWithOrigins,
@@ -196,6 +197,7 @@ func TestAddAllowedOriginWithResponse(t *testing.T) {
 			}
 
 			helper.AssertOut(tt.expectedResponse)
+			helper.AssertErr(tt.expectedErr)
 		})
 	}
 }

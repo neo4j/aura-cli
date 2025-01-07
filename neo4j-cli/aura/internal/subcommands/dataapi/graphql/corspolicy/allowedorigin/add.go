@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
@@ -43,8 +44,8 @@ Adding a new allowed origin to the CORS policy of a GraphQL Data API allows brow
 
 			for _, origin := range existingOrigins {
 				if origin == newOrigin {
-					cmd.Println("Origin already exists in allowed origins:", newOrigin)
-					return nil
+					cmd.SilenceUsage = true
+					return clierr.NewUsageError("Origin \"%s\" already exists in allowed origins", newOrigin)
 				}
 			}
 

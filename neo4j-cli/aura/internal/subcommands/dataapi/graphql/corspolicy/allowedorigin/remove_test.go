@@ -137,6 +137,7 @@ func TestRemoveAllowedOriginWithResponse(t *testing.T) {
 		executeCommand      string
 		expectedRequestBody string
 		expectedResponse    string
+		expectedErr         string
 	}{
 		"remove allowed origin successfully": {
 			mockGetResponse:     mockGetResponseWithOrigins,
@@ -146,9 +147,9 @@ func TestRemoveAllowedOriginWithResponse(t *testing.T) {
 			expectedResponse:    expectedResponseExistingOrigin,
 		},
 		"remove allowed origin with no existing origins": {
-			mockGetResponse:  mockGetResponseNoOrigins,
-			executeCommand:   fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId),
-			expectedResponse: fmt.Sprintf("Origin not found in allowed origins: %s", allowedOrigin),
+			mockGetResponse: mockGetResponseNoOrigins,
+			executeCommand:  fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId),
+			expectedErr:     fmt.Sprintf("Error: Origin \"%s\" not found in allowed origins", allowedOrigin),
 		},
 		"remove last allowed origin": {
 			mockGetResponse:     mockGetResponseWithLastExistingOrigin,
@@ -196,6 +197,7 @@ func TestRemoveAllowedOriginWithResponse(t *testing.T) {
 			}
 
 			helper.AssertOut(tt.expectedResponse)
+			helper.AssertErr(tt.expectedErr)
 		})
 	}
 }

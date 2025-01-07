@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
@@ -53,8 +54,8 @@ Removing an allowed origin from the CORS policy of a GraphQL Data API means that
 			}
 
 			if !originFound {
-				cmd.Println("Origin not found in allowed origins:", originToRemove)
-				return nil
+				cmd.SilenceUsage = true
+				return clierr.NewUsageError("Origin \"%s\" not found in allowed origins", originToRemove)
 			}
 
 			cmd.SilenceUsage = true
