@@ -15,7 +15,7 @@ import (
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "allowed-origin",
-		Short: "Adds an exact Cross-Origin Resource Sharing (CORS) allowed origin for a specific GraphQL Data API",
+		Short: "Allows you to manage Cross-Origin Resource Sharing (CORS) allowed origins for a specific GraphQL Data API",
 	}
 
 	cmd.AddCommand(NewAddCmd(cfg))
