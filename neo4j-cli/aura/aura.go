@@ -14,7 +14,7 @@ import (
 
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "aura",
+		Use:     "aura-cli",
 		Short:   "Allows you to programmatically provision and manage your Aura resources",
 		Version: cfg.Version,
 	}
