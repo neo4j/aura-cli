@@ -35,10 +35,10 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&instanceId, "instance-id", "", "The ID of the instance the GraphQL Data API is connected to")
+	cmd.Flags().StringVar(&instanceId, "instance-id", "", "(required) The ID of the instance the GraphQL Data API is connected to")
 	cmd.MarkFlagRequired("instance-id")
 
-	cmd.Flags().StringVar(&dataApiId, "data-api-id", "", "The ID of the GraphQL Data API to list the authentication providers of")
+	cmd.Flags().StringVar(&dataApiId, "data-api-id", "", "(required) The ID of the GraphQL Data API to list the authentication providers of")
 	cmd.MarkFlagRequired("data-api-id")
 
 	return cmd
