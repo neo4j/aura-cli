@@ -31,15 +31,15 @@ func TestCreateAuthProviderFlagsValidation(t *testing.T) {
 			expectedError:   "Error: required flag(s) \"name\" not set",
 		},
 		"missing type flag": {
-			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --enabled", instanceId, dataApiId, name),
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --disabled", instanceId, dataApiId, name),
 			expectedError:   "Error: required flag(s) \"type\" not set",
 		},
 		"non-existing type flag": {
-			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type bla --enabled", instanceId, dataApiId, name),
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type bla --disabled", instanceId, dataApiId, name),
 			expectedError:   `Error: invalid argument "bla" for "--type" flag: must be one of "api-key" or "jwks"`,
 		},
 		"missing url flag for jwks": {
-			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type jwks --enabled", instanceId, dataApiId, name),
+			executedCommand: fmt.Sprintf("data-api graphql auth-provider create --instance-id %s --data-api-id %s --name %s --type jwks --disabled", instanceId, dataApiId, name),
 			expectedError:   "Error: required flag(s) \"url\" not set",
 		},
 		"can not set url flag for api-key": {
