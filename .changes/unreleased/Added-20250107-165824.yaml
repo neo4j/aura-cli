@@ -1,3 +1,0 @@
-kind: Added
-body: Added new commands for adding/removing allowed origins from the CORS policy of Data APIs. To access these commands, set the "beta-enabled" config to true
-time: 2025-01-07T16:58:24.708597Z
