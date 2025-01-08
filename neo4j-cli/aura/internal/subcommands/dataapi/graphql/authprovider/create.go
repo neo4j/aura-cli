@@ -17,11 +17,11 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		dataApiIdFlag  = "data-api-id"
 		typeFlag       = "type"
 		nameFlag       = "name"
-		enabledFlag    = "enabled"
+		disabledFlag   = "disabled"
 		urlFlag        = "url"
 		awaitFlag      = "await"
 
-		enabledDefault = false
+		disabledDefault = false
 	)
 
 	var (
@@ -29,7 +29,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		dataApiId  string
 		_type      flags.AuthProviderType
 		name       string
-		enabled    bool
+		disabled   bool
 		url        string
 		await      bool
 	)
@@ -59,7 +59,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 			body := map[string]any{
 				"type":    _type,
 				"name":    name,
-				"enabled": enabled,
+				"enabled": !disabled,
 			}
 
 			if url != "" {
@@ -114,7 +114,7 @@ If you lose your API key, you will need to create a new Authentication provider.
 	cmd.Flags().StringVar(&name, nameFlag, "", "(required) The name of the Authentication provider")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().BoolVar(&enabled, enabledFlag, enabledDefault, "Whether or not the Authentication provider is enabled")
+	cmd.Flags().BoolVar(&disabled, disabledFlag, disabledDefault, "Whether or not the Authentication provider is disabled")
 
 	msgUrlFlag := fmt.Sprintf("The JWKS URL that you want the bearer tokens in incoming GraphQL requests to be validated against. NOTE: only applicable for Authentication provider type '%s'", api.GraphQLDataApiAuthProviderTypeJwks)
 	cmd.Flags().StringVar(&url, urlFlag, "", msgUrlFlag)
