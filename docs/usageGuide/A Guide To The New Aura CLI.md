@@ -6,7 +6,9 @@ Built with ease of use in mind, this CLI bridges the gap between automation and 
 
 # Installation
 
-The new Aura CLI is available on [GitHub](https://github.com/neo4j/aura-cli/releases). Choose the latest release and download the archive suitable for your platform and architecture of choice. The CLI is fully compatible with Mac, Linux and Windows.
+The new Aura CLI is available on [GitHub](https://github.com/neo4j/aura-cli/releases).
+Choose the latest release and download the archive suitable for your platform and architecture of choice.
+The CLI is fully compatible with Mac, Linux and Windows.
 
 1. Using your browser, navigate to <https://github.com/neo4j/aura-cli/releases>
 
