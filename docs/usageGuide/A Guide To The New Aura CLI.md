@@ -461,7 +461,7 @@ Only the id can be used to identify the AuraDB to update. The same properties ca
 
 ## Get AuraDB instance details
 
-Now includes the URL to obtain metrics
+This now includes the URL to obtain metrics.
 
 ## Tenants
 
