@@ -476,4 +476,5 @@ Restoration of a snapshot is performed by using the aura-cli instance overwrite 
 
 # Feedback
 
-Any feedback is reported using [GitHub issues](https://github.com/neo4j/aura-cli/issues).  This covers requested enhancements, defects that you may encounter and general feedback.
+Report feedback via [GitHub issues](https://github.com/neo4j/aura-cli/issues).
+This covers requested enhancements, defects that you may encounter and general feedback.
