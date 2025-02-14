@@ -32,7 +32,7 @@ sudo mv aura-cli /usr/local/bin
 move aura-cli c:\windows\system32
 ```
 
-Check installation with
+Check the installation with:
 
 ```text
 aura-cli -v
