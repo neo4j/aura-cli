@@ -459,10 +459,6 @@ New Aura CLI does not prompt for confirmation when deleting an AuraDB and starts
 
 Only the id can be used to identify the AuraDB to update. The same properties can be changed as previously - it’s name and memory size
 
-## List AuraDBs
-
-No changes
-
 ## Get AuraDB instance details
 
 Now includes the URL to obtain metrics
