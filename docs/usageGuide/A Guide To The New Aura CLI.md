@@ -40,7 +40,7 @@ aura-cli -v
 
 You should see `aura version v1.0.0`.
 
-**Note**: If you are using a Mac, you may receive a rather alarming warning from Apple that aura-cli could not be verified.  If this happens, then open **system settings**, select **Privacy & Security** on the left, and scroll down on the right. Select **Open** **Anyway.**   This should not happen again.   The aura-cli has been through the Apple certification process but this can take time to trickle down through the Apple ecosystem.
+**Note**: If you are using a Mac, you may receive a warning from Apple that aura-cli could not be verified. If this happens, open **System Settings**, select **Privacy & Security** on the left, and scroll down on the right. Select **Open Anyway**. This should not happen again. The aura-cli has been through the Apple certification process but it can take time to trickle down through the Apple ecosystem.
 
 # Initial configuration
 
