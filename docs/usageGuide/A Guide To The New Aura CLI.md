@@ -465,7 +465,9 @@ Now includes the URL to obtain metrics
 
 ## Tenants
 
-No longer includes a flag to obtain metric integration information. This is now part of the details returned for an individual AuraDB.  See _Get AuraDB instance details_
+This command no longer includes a flag to obtain metric integration information.
+It is also now part of the details returned for an individual AuraDB. 
+See Get AuraDB instance details.
 
 ## Snapshots
 
