@@ -46,7 +46,7 @@ You should see `aura version v1.0.0`.
 
 ## Obtain an Aura API Key
 
-**Note:** You need to have some form of payment information in your account to access this functionality.  This also applies to Aura Free
+**Note:** You need to have some form of payment information in your account to access this functionality. This also applies to Aura Free.
 
 ### Aura console classic
 
