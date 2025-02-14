@@ -12,7 +12,7 @@ The CLI is fully compatible with Mac, Linux and Windows.
 
 1. Using your browser, navigate to [https://github.com/neo4j/aura-cli/releases](https://github.com/neo4j/aura-cli/releases).
 
-2. Download the compressed file that matches your computer.  Make a note of the folder where the file is located.
+2. Download the compressed file that matches your computer. Make a note of the folder where the file is located.
 
 3. After the file has been downloaded, extract the contents.
 
