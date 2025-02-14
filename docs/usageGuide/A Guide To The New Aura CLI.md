@@ -471,7 +471,8 @@ See Get AuraDB instance details.
 
 ## Snapshots
 
-Management of snapshots is now a sub-command of instance and allows for their creation, listing and obtaining their details.    Restoration of a snapshot is performed by using aura-cli instance overwrite command.
+Management of snapshots is now a sub-command of instance and allows for their creation, listing and obtaining their details.
+Restoration of a snapshot is performed by using the aura-cli instance overwrite command.
 
 # Feedback
 
