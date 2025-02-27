@@ -62,7 +62,8 @@ func TestCreateProfessionalInstance(t *testing.T) {
 				"cloud_provider": "gcp",
 				"region": "europe-west1",
 				"type": "professional-db",
-				"name": "Instance01"
+				"name": "Instance01",
+    			"vector_optimized": false
 			}
 		}`)
 
@@ -70,7 +71,7 @@ func TestCreateProfessionalInstance(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"professional-db","version":"5"}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"professional-db","version":"5","vector_optimized":false,"graph_analytics_plugin":false}`)
 
 	helper.AssertOutJson(`{
 	  "data": {
@@ -82,7 +83,49 @@ func TestCreateProfessionalInstance(t *testing.T) {
 		"region": "europe-west1",
 		"tenant_id": "YOUR_TENANT_ID",
 		"type": "professional-db",
-		"username": "neo4j"
+		"username": "neo4j",
+    	"vector_optimized": false
+	  }
+	}`)
+}
+
+func TestCreateProfessionalInstanceVectorOptimizedGraphAnalyticsPlugin(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusAccepted, `{
+			"data": {
+				"id": "db1d1234",
+				"connection_url": "YOUR_CONNECTION_URL",
+				"username": "neo4j",
+				"password": "letMeIn123!",
+				"tenant_id": "YOUR_TENANT_ID",
+				"cloud_provider": "gcp",
+				"region": "europe-west1",
+				"type": "professional-db",
+				"name": "Instance01",
+    			"vector_optimized": true
+			}
+		}`)
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --tenant-id YOUR_TENANT_ID --cloud-provider gcp --memory 4GB --vector-optimized --graph-analytics-plugin")
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"professional-db","version":"5","vector_optimized":true,"graph_analytics_plugin":true}`)
+
+	helper.AssertOutJson(`{
+	  "data": {
+		"cloud_provider": "gcp",
+		"connection_url": "YOUR_CONNECTION_URL",
+		"id": "db1d1234",
+		"name": "Instance01",
+		"password": "letMeIn123!",
+		"region": "europe-west1",
+		"tenant_id": "YOUR_TENANT_ID",
+		"type": "professional-db",
+		"username": "neo4j",
+		"vector_optimized": true
 	  }
 	}`)
 }
@@ -154,6 +197,20 @@ func TestCreateProfessionalInstanceInvalidInstanceType(t *testing.T) {
 	mockHandler.AssertCalledTimes(0)
 
 	helper.AssertErr(`Error: invalid argument "invalid-db" for "--type" flag: must be one of "free-db", "professional-db", "business-critical", "enterprise-db", "professional-ds", or "enterprise-ds"
+`)
+}
+
+func TestCreateProfessionalInstanceInvalidVersion(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --region europe-west1 --name Instance01 --type professional-db --memory 1GB --cloud-provider gcp --tenant-id YOUR_TENANT_ID --version 6")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: invalid argument "6" for "--version" flag: must be one of "4" or "5"
 `)
 }
 
@@ -272,7 +329,7 @@ func TestInstanceWithCmkId(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY"}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY","vector_optimized":false,"graph_analytics_plugin":false}`)
 
 	helper.AssertOutJson(`{
 	  "data": {

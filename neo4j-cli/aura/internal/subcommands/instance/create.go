@@ -22,6 +22,8 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		tenantId             string
 		cloudProvider        flags.CloudProvider
 		customerManagedKeyId string
+		vectorOptimized      bool
+		graphAnalyticsPlugin bool
 		await                bool
 	)
 
@@ -34,6 +36,8 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		tenantIdFlag             = "tenant-id"
 		cloudProviderFlag        = "cloud-provider"
 		customerManagedKeyIdFlag = "customer-managed-key-id"
+		vectorOptimizedFlag      = "vector-optimized"
+		graphAnalyticsPluginFlag = "graph-analytics-plugin"
 		awaitFlag                = "await"
 	)
 
@@ -101,6 +105,8 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 			} else {
 				body["memory"] = memory
 				body["region"] = region
+				body["vector_optimized"] = vectorOptimized
+				body["graph_analytics_plugin"] = graphAnalyticsPlugin
 			}
 
 			if customerManagedKeyId != "" {
@@ -157,6 +163,11 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 	cmd.Flags().Var(&cloudProvider, cloudProviderFlag, "The cloud provider hosting the instance.")
 
 	cmd.Flags().StringVar(&customerManagedKeyId, customerManagedKeyIdFlag, "", "An optional customer managed key to be used for instance creation.")
+
+	cmd.Flags().BoolVar(&vectorOptimized, vectorOptimizedFlag, false, "An optional vector optimization configuration to be set during instance creation")
+
+	cmd.Flags().BoolVar(&graphAnalyticsPlugin, graphAnalyticsPluginFlag, false, "An optional graph analytics plugin configuration to be set during instance creation")
+
 	cmd.Flags().BoolVar(&await, awaitFlag, false, "Waits until created instance is ready.")
 
 	return cmd
