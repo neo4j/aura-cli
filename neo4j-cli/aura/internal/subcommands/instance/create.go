@@ -2,6 +2,7 @@ package instance
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -76,6 +77,10 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				return fmt.Errorf(`invalid argument "%s" for "--version" flag: must be one of "4" or "5"`, version)
 			}
 
+			if graphAnalyticsPlugin && _type != "professional-db" {
+				return errors.New(`"--graph-analytics-plugin" flag can only be set when "--type" flag is set to "professional-db"`)
+			}
+
 			if cfg.Aura.DefaultTenant() == "" {
 				cmd.MarkFlagRequired(tenantIdFlag)
 			}
@@ -106,6 +111,9 @@ For Enterprise instances you can specify a --customer-managed-key-id flag to use
 				body["memory"] = memory
 				body["region"] = region
 				body["vector_optimized"] = vectorOptimized
+			}
+
+			if _type == "professional-db" {
 				body["graph_analytics_plugin"] = graphAnalyticsPlugin
 			}
 

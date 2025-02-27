@@ -256,6 +256,20 @@ func TestCreateFreeInstanceWithCloudProvider(t *testing.T) {
 `)
 }
 
+func TestCreateFreeInstanceWithGraphAnalyticsPlugin(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock("/v1/instances", http.StatusOK, "")
+
+	helper.ExecuteCommand("instance create --name Instance01 --type free-db --graph-analytics-plugin --tenant-id YOUR_TENANT_ID")
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr(`Error: "--graph-analytics-plugin" flag can only be set when "--type" flag is set to "professional-db"
+`)
+}
+
 func TestCreateInstanceError(t *testing.T) {
 	testCases := []struct {
 		statusCode    int
@@ -329,7 +343,7 @@ func TestInstanceWithCmkId(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY","vector_optimized":false,"graph_analytics_plugin":false}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"16GB","name":"Instance01","region":"europe-west1","tenant_id":"YOUR_TENANT_ID","type":"enterprise-db","version":"5","customer_managed_key_id":"UUID_OF_YOUR_KEY","vector_optimized":false}`)
 
 	helper.AssertOutJson(`{
 	  "data": {
