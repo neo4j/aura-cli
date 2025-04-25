@@ -50,7 +50,7 @@ func TestListSessions(t *testing.T) {
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
 
-	helper.AssertOut(`{
+	helper.AssertOutJson(`{
 	"data": [
 		{
 			"cloud_provider": "azure",
