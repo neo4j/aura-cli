@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -42,6 +43,13 @@ func PollGraphQLDataApi(cfg *clicfg.Config, instanceId string, graphQLDataApiId 
 	path := fmt.Sprintf("/instances/%s/data-apis/graphql/%s", instanceId, graphQLDataApiId)
 	return Poll(cfg, path, func(status string) bool {
 		return status != waitingStatus
+	})
+}
+
+func PollGraphAnalyticsSessionReady(cfg *clicfg.Config, sessionId string, waitingStatus []string) (*PollResponse, error) {
+	path := fmt.Sprintf("/graph-analytics/sessions/%s", sessionId)
+	return Poll(cfg, path, func(status string) bool {
+		return !slices.Contains(waitingStatus, status)
 	})
 }
 

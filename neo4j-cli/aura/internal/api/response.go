@@ -248,6 +248,19 @@ const (
 	GraphQLDataApiAuthProviderTypeApiKey = "api-key"
 )
 
+const (
+	GraphAnalyticsSessionInitial  = ""
+	GraphAnalyticsSessionCreating = "Creating"
+	GraphAnalyticsSessionReady    = "Ready"
+	GraphAnalyticsSessionExpired  = "Expired"
+	GraphAnalyticsSessionFailed   = "Failed"
+)
+
+var GraphAnalyticsSessionWaitingStatus = []string{
+	GraphAnalyticsSessionCreating,
+	GraphAnalyticsSessionInitial,
+}
+
 type ResponseData interface {
 	AsArray() []map[string]any
 	GetSingleOrError() (map[string]any, error)
