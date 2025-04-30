@@ -26,7 +26,7 @@ func TestGetSession(t *testing.T) {
     "expiry_date": "2025-04-11T09:32:35Z",
     "ttl": "8m",
     "user_id": "YOUR_USER_ID",
-    "project_id": "YOUR_PROJECT_ID",
+    "tenant_id": "YOUR_PROJECT_ID",
     "cloud_provider": "gcp",
     "region": "europe-west1"
   }
@@ -47,9 +47,9 @@ func TestGetSession(t *testing.T) {
     "instance_id": "559c94c7",
     "memory": "4GB",
     "name": "people-and-fruits-with-db",
-    "project_id": "YOUR_PROJECT_ID",
     "region": "europe-west1",
     "status": "Ready",
+    "tenant_id": "YOUR_PROJECT_ID",
     "ttl": "8m",
     "user_id": "YOUR_USER_ID"
   }

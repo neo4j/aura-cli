@@ -21,9 +21,9 @@ func TestCreateAttachedSession(t *testing.T) {
     "created_at": "2025-04-04T09:32:35Z",
     "host": "559c94c7-15de43fg.ORCHESTRA.neo4j.io",
     "expiry_date": "2025-04-11T09:32:35Z",
+    "tenant_id": "YOUR_PROJECT_ID",
     "ttl": "8m",
     "user_id": "YOUR_USER_ID",
-    "project_id": "YOUR_PROJECT_ID",
     "cloud_provider": "gcp",
     "region": "europe-west1"
   }
@@ -46,9 +46,9 @@ func TestCreateAttachedSession(t *testing.T) {
     "instance_id": "559c94c7",
     "memory": "4GB",
     "name": "people-and-fruits-with-db",
-    "project_id": "YOUR_PROJECT_ID",
     "region": "europe-west1",
     "status": "",
+    "tenant_id": "YOUR_PROJECT_ID",
     "ttl": "8m",
     "user_id": "YOUR_USER_ID"
   }
@@ -71,17 +71,17 @@ func TestCreateStandAloneSession(t *testing.T) {
     "expiry_date": "2025-04-11T09:32:35Z",
     "ttl": "8m",
     "user_id": "YOUR_USER_ID",
-    "project_id": "YOUR_PROJECT_ID",
+    "tenant_id": "YOUR_PROJECT_ID",
     "cloud_provider": "gcp",
     "region": "europe-west1"
   }
 }`)
 
-	helper.ExecuteCommand("graph-analytics session create --name session1 --memory 4GB --region europe-west1 --cloud-provider gcp --project-id YOUR_PROJECT_ID")
+	helper.ExecuteCommand("graph-analytics session create --name session1 --memory 4GB --region europe-west1 --cloud-provider gcp --tenant-id YOUR_PROJECT_ID")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
-	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"session1","region":"europe-west1","project_id":"YOUR_PROJECT_ID"}`)
+	mockHandler.AssertCalledWithBody(`{"cloud_provider":"gcp","memory":"4GB","name":"session1","region":"europe-west1","tenant_id":"YOUR_PROJECT_ID"}`)
 
 	helper.AssertOutJson(`{
   "data": {
@@ -93,9 +93,9 @@ func TestCreateStandAloneSession(t *testing.T) {
     "instance_id": "",
     "memory": "4GB",
     "name": "people-and-fruits-with-db",
-    "project_id": "YOUR_PROJECT_ID",
     "region": "europe-west1",
     "status": "",
+    "tenant_id": "YOUR_PROJECT_ID",
     "ttl": "8m",
     "user_id": "YOUR_USER_ID"
   }
@@ -118,7 +118,7 @@ func TestCreateSessionWithAwait(t *testing.T) {
     "expiry_date": "2025-04-11T09:32:35Z",
     "ttl": "8m",
     "user_id": "YOUR_USER_ID",
-    "project_id": "YOUR_PROJECT_ID",
+    "tenant_id": "YOUR_PROJECT_ID",
     "cloud_provider": "gcp",
     "region": "europe-west1"
   }
@@ -156,9 +156,9 @@ func TestCreateSessionWithAwait(t *testing.T) {
 		"instance_id": "559c94c7",
 		"memory": "4GB",
 		"name": "people-and-fruits-with-db",
-		"project_id": "YOUR_PROJECT_ID",
 		"region": "europe-west1",
 		"status": "",
+		"tenant_id": "YOUR_PROJECT_ID",
 		"ttl": "8m",
 		"user_id": "YOUR_USER_ID"
 	}

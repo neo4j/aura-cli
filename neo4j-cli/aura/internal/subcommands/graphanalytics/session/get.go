@@ -35,7 +35,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 					"status",
 					"created_at",
 					"user_id",
-					"project_id",
+					"tenant_id",
 					"cloud_provider",
 					"region",
 					"host",

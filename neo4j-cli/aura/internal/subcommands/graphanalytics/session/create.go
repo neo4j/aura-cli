@@ -15,7 +15,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		memory        string
 		ttl           string
 		instance_id   string
-		project_id    string
+		tenant_id     string
 		cloudProvider string
 		region        string
 		await         bool
@@ -26,7 +26,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		memoryFlag        = "memory"
 		ttlFlag           = "ttl"
 		instanceIdFlag    = "instance-id"
-		projectIdFlag     = "project-id"
+		tenantIdFlag      = "tenant-id"
 		cloudProviderFlag = "cloud-provider"
 		regionFlag        = "region"
 		awaitFlag         = "await"
@@ -35,7 +35,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Creates a new Aura Graph Analytics Serverless session",
-		Long: `This subcommand gets or creates a Aura Graph Analytics Serverless session. If no Session with a matching name and project is found, one will be created. A Session is either attached to an AuraDB, or standalone.
+		Long: `This subcommand gets or creates a Aura Graph Analytics Serverless session. If no Session with a matching name and project/tenant is found, one will be created. A Session is either attached to an AuraDB, or standalone.
 				Creating a session is an asynchronous operation that can be awaited with --await.`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if instance_id == "" {
@@ -43,7 +43,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 				cmd.MarkFlagRequired(regionFlag)
 
 				if cfg.Aura.DefaultTenant() != "" {
-					cmd.MarkFlagRequired(projectIdFlag)
+					cmd.MarkFlagRequired(tenantIdFlag)
 				}
 			}
 
@@ -74,10 +74,10 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 				body["region"] = region
 			}
 
-			if project_id == "" && instance_id == "" {
-				body["project_id"] = cfg.Aura.DefaultTenant()
-			} else if project_id != "" {
-				body["project_id"] = project_id
+			if tenant_id == "" && instance_id == "" {
+				body["tenant_id"] = cfg.Aura.DefaultTenant()
+			} else if tenant_id != "" {
+				body["tenant_id"] = tenant_id
 			}
 
 			cmd.SilenceUsage = true
@@ -91,7 +91,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 
 			// NOTE: Return 202 if new session gets created and 200 if existing session was found
 			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
-				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "project_id", "memory", "status", "created_at"})
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "name", "tenant_id", "memory", "status", "created_at"})
 
 				if await {
 					cmd.Println("Waiting for session to be ready...")
@@ -122,7 +122,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&name, nameFlag, "", "(required) The name of the session.")
 	cmd.MarkFlagRequired(nameFlag)
 
-	cmd.Flags().StringVar(&project_id, projectIdFlag, "", "The Aura project ID")
+	cmd.Flags().StringVar(&tenant_id, tenantIdFlag, "", "The Aura project/tenant ID")
 
 	cmd.Flags().StringVar(&cloudProvider, cloudProviderFlag, "", "The cloud provider hosting the session.")
 	cmd.Flags().StringVar(&region, regionFlag, "", "The region where the session is hosted.")
