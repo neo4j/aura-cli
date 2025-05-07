@@ -477,7 +477,7 @@ After downloading the relevant file and extracting the executable, the new Aura 
 ## Commands
 
 | Labs Aura CLI                      | maps to  | New Aura CLI                                                       |
-| --- | --- | ---
+|------------------------------------|----------|--------------------------------------------------------------------|
 | config                             | →        | config                                                             |
 | credentials                        | →        | credential                                                         |
 | instances                          | →        | instance                                                           |
@@ -485,6 +485,7 @@ After downloading the relevant file and extracting the executable, the new Aura 
 | tenants                            | →        | tenant                                                             |
 | tenants -> get-metrics-integration | →        | instance get \<InstanceID> returns the URL for metrics integration |
 |                                    |          | NEW - customer-managed-key                                         |
+|                                    |          | NEW - graph-analytics                                              |
 |                                    |          | NEW - data-api  ( beta )                                           |
 
 ## Command and flag changes with new Aura CLI
