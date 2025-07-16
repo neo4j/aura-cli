@@ -41,23 +41,24 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 		panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 	// client error responses
 	case http.StatusBadRequest:
-		var errorResponse ErrorResponse
+		var errorResponse interface{}
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
 			panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 		}
+		log.Println(fmt.Sprintf("Bad request err %+v", errorResponse))
 
-		messages := []string{}
-		for _, e := range errorResponse.Errors {
-			message := e.Message
-			if e.Field != "" {
-				message = fmt.Sprintf("%s: %s", e.Field, e.Message)
-			}
-			messages = append(messages, message)
-		}
+		//messages := []string{}
+		//for _, e := range errorResponse.Errors {
+		//	message := e.Message
+		//	if e.Field != "" {
+		//		message = fmt.Sprintf("%s: %s", e.Field, e.Message)
+		//	}
+		//	messages = append(messages, message)
+		//}
 
-		return clierr.NewUpstreamError("%s", messages)
+		return clierr.NewUpstreamError("%s", errorResponse)
 	case http.StatusUnauthorized:
 		return formatAuthorizationError(resBody, statusCode, credential, cfg)
 	case http.StatusForbidden:
@@ -73,7 +74,7 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 
 		return formatAuthorizationError(resBody, statusCode, credential, cfg)
 	case http.StatusNotFound:
-		var errorResponse ErrorResponse
+		var errorResponse interface{}
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		log.Println(fmt.Sprintf("404 ERROR, res %+v, error %+v", err, errorResponse))
@@ -81,12 +82,12 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 			panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 		}
 
-		messages := []string{}
-		for _, e := range errorResponse.Errors {
-			messages = append(messages, e.Message)
-		}
+		//messages := []string{}
+		//for _, e := range errorResponse.Errors {
+		//	messages = append(messages, e.Message)
+		//}
 
-		return clierr.NewUpstreamError("%s", messages)
+		return clierr.NewUpstreamError("%s", errorResponse)
 	case http.StatusMethodNotAllowed:
 		var errorResponse ErrorResponse
 
