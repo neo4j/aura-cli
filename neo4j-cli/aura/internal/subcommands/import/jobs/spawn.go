@@ -11,19 +11,25 @@ import (
 
 func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
-		importModelId string
+		organizationId string
+		projectId      string
+		importModelId  string
 	)
 
 	const (
-		importModelIdFlag = "import-model-id"
+		organizationIdFlag = "organization-id"
+		projectIdFlag      = "project-id"
+		importModelIdFlag  = "import-model-id"
 	)
 	cmd := &cobra.Command{
 		Use:   "spawn",
 		Short: "Allows you to spawn your import jobs",
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			err := cmd.MarkFlagRequired(importModelIdFlag)
-			if err != nil {
-				return err
+			if organizationId == "" {
+				return fmt.Errorf("organizationId is required")
+			}
+			if projectId == "" {
+				return fmt.Errorf("projectId is required")
 			}
 			if importModelId == "" {
 				return fmt.Errorf("importModelId is required")
@@ -31,7 +37,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := "/import/jobs"
+			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs", organizationId, projectId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPost,
@@ -46,6 +52,20 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Organization ID")
+	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
 	cmd.Flags().StringVar(&importModelId, importModelIdFlag, "", "Import model id")
+	err := cmd.MarkFlagRequired(organizationIdFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = cmd.MarkFlagRequired(projectIdFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = cmd.MarkFlagRequired(importModelIdFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return cmd
 }
