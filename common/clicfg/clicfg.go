@@ -162,6 +162,10 @@ func (config *AuraConfig) BetaPathV2() string {
 	return "v2beta1"
 }
 
+func (config *AuraConfig) BaseUrlV2() string {
+	return config.viper.GetString("aura.base-url-v2")
+}
+
 func (config *AuraConfig) BindBaseUrl(flag *pflag.Flag) {
 	if err := config.viper.BindPFlag("aura.base-url", flag); err != nil {
 		panic(err)
