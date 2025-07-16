@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -42,6 +43,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	}
 
 	body := createBody(config.PostBody)
+	log.Printf("body: %+v", body)
 
 	baseUrl := cfg.Aura.BaseUrl()
 	if config.Version == "" {
@@ -52,6 +54,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	u, _ := url.ParseRequestURI(baseUrl)
 	u = u.JoinPath(versionPath)
 	u = u.JoinPath(path)
+	log.Println("u:", u)
 
 	addQueryParams(u, config.QueryParams)
 
