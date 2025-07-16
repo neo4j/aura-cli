@@ -42,6 +42,9 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPost,
 				Version: api.AuraApiVersion2,
+				PostBody: map[string]any{
+					"importModelId": importModelId,
+				},
 			})
 			log.Printf(fmt.Sprintf("Response body: %+v\n", resBody))
 			log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
