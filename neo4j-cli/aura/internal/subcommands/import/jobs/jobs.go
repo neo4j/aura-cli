@@ -5,10 +5,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
+func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "spawn",
-		Short: "Allows you to spawn your import jobs",
+		Use: "jobs",
 	}
+
+	cmd.AddCommand(NewSpawnCmd(cfg))
 	return cmd
 }
