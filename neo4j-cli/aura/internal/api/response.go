@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -75,6 +76,7 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
+		log.Println(fmt.Sprintf("404 ERROR, res %+v, error %+v", err, errorResponse))
 		if err != nil {
 			panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 		}
