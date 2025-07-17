@@ -14,12 +14,14 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 		organizationId string
 		projectId      string
 		importModelId  string
+		auraDbId       string
 	)
 
 	const (
 		organizationIdFlag = "organization-id"
 		projectIdFlag      = "project-id"
 		importModelIdFlag  = "import-model-id"
+		auraDbIdFlag       = "aura-db-id"
 	)
 	cmd := &cobra.Command{
 		Use:   "spawn",
@@ -34,6 +36,9 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 			if importModelId == "" {
 				return fmt.Errorf("importModelId is required")
 			}
+			if auraDbId == "" {
+				return fmt.Errorf("auraDbId is required")
+			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,9 +49,12 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 				Version: api.AuraApiVersion2,
 				PostBody: map[string]any{
 					"importModelId": importModelId,
+					"auraCredentials": map[string]any{
+						"dbId": auraDbId,
+					},
 				},
 			})
-			log.Printf(fmt.Sprintf("Response body: %+v\n", resBody))
+			log.Printf(fmt.Sprintf("Response body: %+v\n", string(resBody)))
 			log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
 			if err != nil {
 				log.Fatal(err)
@@ -58,6 +66,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Organization ID")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
 	cmd.Flags().StringVar(&importModelId, importModelIdFlag, "", "Import model id")
+	cmd.Flags().StringVar(&auraDbId, auraDbIdFlag, "", "Aura DB ID")
 	err := cmd.MarkFlagRequired(organizationIdFlag)
 	if err != nil {
 		log.Fatal(err)
@@ -67,6 +76,10 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 		log.Fatal(err)
 	}
 	err = cmd.MarkFlagRequired(importModelIdFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = cmd.MarkFlagRequired(auraDbIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
