@@ -2,7 +2,10 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"reflect"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
@@ -33,7 +36,9 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 	if len(body) == 0 {
 		return
 	}
+	log.Println(string(body))
 	values := api.ParseBody(body)
+	log.Printf("values: %+v", values)
 
 	PrintBodyMap(cmd, cfg, values, fields)
 }
@@ -50,10 +55,21 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 	for _, v := range responseData.AsArray() {
 		row := table.Row{}
 		for _, f := range fields {
-			formattedValue := v[f]
-
-			if v[f] == nil {
-				formattedValue = ""
+			subfields := strings.Split(f, ":")
+			formattedValue := ""
+			var nestedValues []map[string]any
+			nestedValues = append(nestedValues, v)
+			//log.Printf("nestedValues: %+v", nestedValues)
+			for _, subfield := range subfields {
+				log.Printf("subfield: %s", subfield)
+				lastItem := nestedValues[len(nestedValues)-1]
+				//log.Printf("value: %+v", lastItem[subfield])
+				switch val := lastItem[subfield].(type) {
+				case map[string]any:
+					nestedValues = append(nestedValues, val)
+				default:
+					formattedValue = fmt.Sprintf("%v", val)
+				}
 			}
 
 			if reflect.TypeOf(formattedValue).Kind() == reflect.Slice {
