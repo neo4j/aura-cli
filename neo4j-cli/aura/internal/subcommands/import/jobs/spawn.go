@@ -57,7 +57,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 			log.Printf(fmt.Sprintf("Response body: %+v\n", string(resBody)))
 			log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			return nil
 		},
