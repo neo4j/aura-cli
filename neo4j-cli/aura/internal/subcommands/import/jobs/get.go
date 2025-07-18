@@ -9,23 +9,22 @@ import (
 	"net/http"
 )
 
-func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
+func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		organizationId string
 		projectId      string
-		importModelId  string
-		auraDbId       string
+		jobId          string
 	)
 
 	const (
 		organizationIdFlag = "organization-id"
 		projectIdFlag      = "project-id"
-		importModelIdFlag  = "import-model-id"
-		auraDbIdFlag       = "aura-db-id"
+		jobIdFlag          = "job-id"
 	)
+
 	cmd := &cobra.Command{
-		Use:   "spawn",
-		Short: "Allows you to spawn your import jobs",
+		Use:   "get <id>",
+		Short: "Get a job by id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if organizationId == "" {
 				return fmt.Errorf("organizationId is required")
@@ -33,26 +32,17 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 			if projectId == "" {
 				return fmt.Errorf("projectId is required")
 			}
-			if importModelId == "" {
+			if jobId == "" {
 				return fmt.Errorf("importModelId is required")
-			}
-			if auraDbId == "" {
-				return fmt.Errorf("auraDbId is required")
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs", organizationId, projectId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method:  http.MethodPost,
-				Version: api.AuraApiVersion2,
-				PostBody: map[string]any{
-					"importModelId": importModelId,
-					"auraCredentials": map[string]any{
-						"dbId": auraDbId,
-					},
-				},
+				Method: http.MethodGet,
+				UseV2:  true,
 			})
 			log.Printf(fmt.Sprintf("Response body: %+v\n", string(resBody)))
 			log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
@@ -65,8 +55,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Organization ID")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
-	cmd.Flags().StringVar(&importModelId, importModelIdFlag, "", "Import model id")
-	cmd.Flags().StringVar(&auraDbId, auraDbIdFlag, "", "Aura DB ID")
+	cmd.Flags().StringVar(&jobId, jobIdFlag, "", "Import job id")
 	err := cmd.MarkFlagRequired(organizationIdFlag)
 	if err != nil {
 		log.Fatal(err)
@@ -75,11 +64,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = cmd.MarkFlagRequired(importModelIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(auraDbIdFlag)
+	err = cmd.MarkFlagRequired(jobIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
