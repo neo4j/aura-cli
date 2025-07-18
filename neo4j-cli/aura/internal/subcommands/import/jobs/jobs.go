@@ -11,5 +11,6 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 
 	cmd.AddCommand(NewSpawnCmd(cfg))
+	cmd.AddCommand(NewGetCmd(cfg))
 	return cmd
 }
