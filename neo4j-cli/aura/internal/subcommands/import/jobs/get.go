@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
 	"log"
 	"net/http"
@@ -44,10 +45,13 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				Method: http.MethodGet,
 				UseV2:  true,
 			})
-			log.Printf(fmt.Sprintf("Response body: %+v\n", string(resBody)))
-			log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
+			//log.Printf(fmt.Sprintf("Response body: %+v\n", string(resBody)))
+			//log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
 			if err != nil {
-				log.Fatal(err)
+				return err
+			}
+			if statusCode == http.StatusOK {
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "importType", "info:state"})
 			}
 			return nil
 		},

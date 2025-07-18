@@ -310,17 +310,25 @@ func NewResponseData(data []map[string]any) ResponseData {
 }
 
 func ParseBody(body []byte) ResponseData {
-	var listResponseData ListResponseData
-	err := json.Unmarshal(body, &listResponseData)
+	var list []map[string]any
+	err := json.Unmarshal(body, &list)
+	//log.Printf("parsed body: %v", list)
+	log.Printf("error: %v", err)
 
 	// Try unmarshalling array first, if not it creates an array from the single item
 	if err == nil {
+		listResponseData := ListResponseData{
+			Data: list,
+		}
 		return listResponseData
 	} else {
-		var singleValueResponseData SingleValueResponseData
-		err := json.Unmarshal(body, &singleValueResponseData)
+		var singleValue map[string]any
+		err := json.Unmarshal(body, &singleValue)
 		if err != nil {
 			panic(err)
+		}
+		singleValueResponseData := SingleValueResponseData{
+			Data: singleValue,
 		}
 		return singleValueResponseData
 	}
