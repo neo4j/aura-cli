@@ -303,14 +303,10 @@ func NewSingleValueResponseData(data map[string]any) ResponseData {
 	}
 }
 
-func NewResponseData(data []map[string]any) ResponseData {
-	return ListResponseData{
-		Data: data,
-	}
-}
-
 func ParseBody(body []byte) ResponseData {
 	var list []map[string]any
+	//json.Unmarshal won't return an error when deserializing the  JSON that has no desired field `Data`
+	//err := json.Unmarshal(body, &listResponseData)
 	err := json.Unmarshal(body, &list)
 	//log.Printf("parsed body: %v", list)
 	log.Printf("error: %v", err)
@@ -322,6 +318,8 @@ func ParseBody(body []byte) ResponseData {
 		}
 		return listResponseData
 	} else {
+		//json.Unmarshal won't return an error when deserializing the JSON that has no desired field `Data`
+		//err := json.Unmarshal(body, &singleValueResponseData)
 		var singleValue map[string]any
 		err := json.Unmarshal(body, &singleValue)
 		if err != nil {
