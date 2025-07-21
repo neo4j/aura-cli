@@ -49,6 +49,9 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 		}
 		log.Println(fmt.Sprintf("Bad request err %+v", errorResponse))
 
+		//If the response JSON doesn't follow this structure, we get nothing from json.Unmarshal
+		//var errorResponse ErrorResponse
+		//err = json.Unmarshal(resBody, &errorResponse)
 		//messages := []string{}
 		//for _, e := range errorResponse.Errors {
 		//	message := e.Message
@@ -82,6 +85,9 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 			panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 		}
 
+		//If the response JSON doesn't follow this structure, we get nothing from json.Unmarshal
+		//var errorResponse ErrorResponse
+		//err = json.Unmarshal(resBody, &errorResponse)
 		//messages := []string{}
 		//for _, e := range errorResponse.Errors {
 		//	messages = append(messages, e.Message)
