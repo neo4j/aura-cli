@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -38,9 +37,21 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 	}
 	log.Println(string(body))
 	values := api.ParseBody(body)
-	log.Printf("values: %+v", values)
 
 	PrintBodyMap(cmd, cfg, values, fields)
+}
+
+func getNestedField(v map[string]any, subFields []string, index int) string {
+	if index >= len(subFields)-1 {
+		return fmt.Sprintf("%+v", v[subFields[index]])
+	}
+	switch val := v[subFields[index]].(type) {
+	case map[string]any:
+		return getNestedField(val, subFields, index+1)
+	default:
+		//The field is no longer nested, so we can't proceed in the next level
+		return ""
+	}
 }
 
 func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []string) {
@@ -56,26 +67,7 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 		row := table.Row{}
 		for _, f := range fields {
 			subfields := strings.Split(f, ":")
-			formattedValue := ""
-			var nestedValues []map[string]any
-			nestedValues = append(nestedValues, v)
-			//log.Printf("nestedValues: %+v", nestedValues)
-			for _, subfield := range subfields {
-				log.Printf("subfield: %s", subfield)
-				lastItem := nestedValues[len(nestedValues)-1]
-				//log.Printf("value: %+v", lastItem[subfield])
-				switch val := lastItem[subfield].(type) {
-				case map[string]any:
-					nestedValues = append(nestedValues, val)
-				default:
-					formattedValue = fmt.Sprintf("%v", val)
-				}
-			}
-
-			if reflect.TypeOf(formattedValue).Kind() == reflect.Slice {
-				marshaledSlice, _ := json.MarshalIndent(formattedValue, "", "  ")
-				formattedValue = string(marshaledSlice)
-			}
+			formattedValue := getNestedField(v, subfields, 0)
 
 			row = append(row, formattedValue)
 		}

@@ -45,13 +45,11 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				Method: http.MethodGet,
 				UseV2:  true,
 			})
-			//log.Printf(fmt.Sprintf("Response body: %+v\n", string(resBody)))
-			//log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
 			if err != nil {
 				return err
 			}
 			if statusCode == http.StatusOK {
-				output.PrintBody(cmd, cfg, resBody, []string{"id", "importType", "info:state"})
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "importType", "info:state", "info:exitStatus:message", "info:percentage", "dataSourceMetadata", "auraMetadata"})
 			}
 			return nil
 		},
