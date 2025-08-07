@@ -15,7 +15,7 @@ func TestListGraphQLDataApis(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 
 	instanceId := "2f49c2b3"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql", instanceId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql", instanceId), http.StatusOK, `{
 		"data": [
 			{
 				"id": "7261d20a",

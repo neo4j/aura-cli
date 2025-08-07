@@ -73,7 +73,7 @@ func TestRemoveAllowedOriginWithRemainingOrigins(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
 	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
 
 	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId))
@@ -107,7 +107,7 @@ func TestRemoveAllowedOriginWithNoExistingOrigins(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
 	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
 
 	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId))
@@ -147,7 +147,7 @@ func TestRemoveAllowedOriginLastAllowedOrigin(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
 	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
 
 	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s", allowedOrigin, instanceId, dataApiId))
@@ -188,7 +188,7 @@ func TestRemoveAllowedOriginWithOutputTable(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
 	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
 
 	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove %s --instance-id %s --data-api-id %s --output table", allowedOrigin, instanceId, dataApiId))

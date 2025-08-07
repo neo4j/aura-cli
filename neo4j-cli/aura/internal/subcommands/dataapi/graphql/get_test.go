@@ -16,7 +16,7 @@ func TestGetGraphQLDataApi(t *testing.T) {
 
 	instanceId := "2f49c2b3"
 	dataApiId := "afdb4e9d"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, `{
 			"data": {
                 "features": {
                         "subgraph": false
@@ -56,7 +56,7 @@ func TestGetGraphQLDataApiIncludingGraphQLServerErrors(t *testing.T) {
 
 	instanceId := "2f49c2b3"
 	dataApiId := "afdb4e9d"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, `{
 			"data": {
                 "features": {
                         "subgraph": false

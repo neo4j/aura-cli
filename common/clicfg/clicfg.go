@@ -120,7 +120,7 @@ func (config *AuraConfig) Set(key string, value string) {
 		panic(err)
 	}
 
-	updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange(key, value)
+	updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange()
 	if updatedAuraBaseUrl != "" {
 		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
 		if err != nil {
@@ -151,6 +151,7 @@ func (config *AuraConfig) BaseUrl() string {
 	log.Printf("aura.base-url: %s", parsedUrl.Host)
 	log.Printf("aura.auth-url: %s", parsedUrl.Scheme)
 	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, parsedUrl.Host)
+	//return originalUrl.(string)
 }
 
 func (config *AuraConfig) BetaPathV1() string {
@@ -210,13 +211,9 @@ func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
 	}
 }
 
-func (config *AuraConfig) auraBaseUrlOnBetaEnabledChange(key string, value string) string {
-	if key == "beta-enabled" {
-		nextBaseUrl := DefaultAuraBaseUrl
-		if value == "true" {
-			nextBaseUrl = DefaultAuraBetaPathV1
-		}
-		return nextBaseUrl
+func (config *AuraConfig) auraBaseUrlOnBetaEnabledChange() string {
+	if config.BaseUrl() == "" {
+		return DefaultAuraBaseUrl
 	}
-	return ""
+	return config.BaseUrl()
 }
