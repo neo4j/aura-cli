@@ -151,7 +151,6 @@ func (config *AuraConfig) BaseUrl() string {
 	log.Printf("aura.base-url: %s", parsedUrl.Host)
 	log.Printf("aura.auth-url: %s", parsedUrl.Scheme)
 	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, parsedUrl.Host)
-	//return originalUrl.(string)
 }
 
 func (config *AuraConfig) BetaPathV1() string {
