@@ -38,5 +38,5 @@ func TestGetAuraBaseUrlConfig(t *testing.T) {
 	cfg := clicfg.NewConfig(fs, "test")
 
 	//The path parameter will be removed from GET base url
-	assert.Equal(t, cfg.Aura.BaseUrl(), server.URL)
+	assert.Equal(t, server.URL, cfg.Aura.BaseUrl())
 }

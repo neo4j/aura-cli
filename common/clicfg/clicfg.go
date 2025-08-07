@@ -120,13 +120,20 @@ func (config *AuraConfig) Set(key string, value string) {
 		panic(err)
 	}
 
-	updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange()
+	baseUrlToUpdate := ""
+	if key == "base-url" {
+		baseUrlToUpdate = value
+	}
+	log.Printf("updating aura base url: %s", updateConfig)
+	updatedAuraBaseUrl := config.auraBaseUrlOnConfigChange(baseUrlToUpdate)
+	log.Printf("updated aura base url: %s", updatedAuraBaseUrl)
 	if updatedAuraBaseUrl != "" {
 		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
 		if err != nil {
 			panic(err)
 		}
 		updateConfig = intermediateUpdateConfig
+		log.Printf("updated aura config: %s", updateConfig)
 	}
 
 	fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
@@ -143,8 +150,11 @@ func (config *AuraConfig) Print(cmd *cobra.Command) {
 
 func (config *AuraConfig) BaseUrl() string {
 	originalUrl := config.viper.Get("aura.base-url")
-	log.Printf("aura.base-url: %s", originalUrl)
-	parsedUrl, err := url.Parse(originalUrl.(string))
+	return removePathParametersFromUrl(originalUrl.(string))
+}
+
+func removePathParametersFromUrl(originalUrl string) string {
+	parsedUrl, err := url.Parse(originalUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -210,9 +220,9 @@ func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
 	}
 }
 
-func (config *AuraConfig) auraBaseUrlOnBetaEnabledChange() string {
-	if config.BaseUrl() == "" {
+func (config *AuraConfig) auraBaseUrlOnConfigChange(url string) string {
+	if url == "" {
 		return DefaultAuraBaseUrl
 	}
-	return config.BaseUrl()
+	return removePathParametersFromUrl(url)
 }
