@@ -3,6 +3,8 @@ package clicfg
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/url"
 	"path/filepath"
 	"slices"
 
@@ -18,8 +20,9 @@ import (
 var ConfigPrefix string
 
 const (
-	DefaultAuraBaseUrl     = "https://api.neo4j.io/v1"
-	DefaultAuraBetaBaseUrl = "https://api.neo4j.io/v1beta5"
+	DefaultAuraBaseUrl     = "https://api.neo4j.io"
+	DefaultAuraBetaPathV1  = "v1beta5"
+	DefaultAuraBetaPathV2  = "v2beta1"
 	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
 	DefaultAuraBetaEnabled = false
 )
@@ -139,7 +142,23 @@ func (config *AuraConfig) Print(cmd *cobra.Command) {
 }
 
 func (config *AuraConfig) BaseUrl() string {
-	return config.viper.GetString("aura.base-url")
+	originalUrl := config.viper.Get("aura.base-url")
+	log.Printf("aura.base-url: %s", originalUrl)
+	parsedUrl, err := url.Parse(originalUrl.(string))
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("aura.base-url: %s", parsedUrl.Host)
+	log.Printf("aura.auth-url: %s", parsedUrl.Scheme)
+	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, parsedUrl.Host)
+}
+
+func (config *AuraConfig) BetaPathV1() string {
+	return DefaultAuraBetaPathV1
+}
+
+func (config *AuraConfig) BetaPathV2() string {
+	return DefaultAuraBetaPathV2
 }
 
 func (config *AuraConfig) BindBaseUrl(flag *pflag.Flag) {
@@ -195,7 +214,7 @@ func (config *AuraConfig) auraBaseUrlOnBetaEnabledChange(key string, value strin
 	if key == "beta-enabled" {
 		nextBaseUrl := DefaultAuraBaseUrl
 		if value == "true" {
-			nextBaseUrl = DefaultAuraBetaBaseUrl
+			nextBaseUrl = DefaultAuraBetaPathV1
 		}
 		return nextBaseUrl
 	}
