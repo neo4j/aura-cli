@@ -47,11 +47,9 @@ func TestSetBetaEnabledConfig(t *testing.T) {
 
 	helper.ExecuteCommand("config set beta-enabled true")
 
-	helper.AssertConfigValue("aura.base-url", "https://api.neo4j.io")
 	helper.AssertConfigValue("aura.beta-enabled", "true")
 
 	helper.ExecuteCommand("config set beta-enabled false")
 
-	helper.AssertConfigValue("aura.base-url", "https://api.neo4j.io")
 	helper.AssertConfigValue("aura.beta-enabled", "false")
 }

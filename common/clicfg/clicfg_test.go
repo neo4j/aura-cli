@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestGetAuraBaseUrlConfig(t *testing.T) {
+func TestGetAuraBaseUrlConfigRemovesTrailingPath(t *testing.T) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 

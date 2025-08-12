@@ -98,18 +98,20 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 func getVersionPath(cfg *clicfg.Config, version AuraApiVersion) string {
 	betaEnabled := cfg.Aura.AuraBetaEnabled()
 
-	if version == AuraApiVersion1 {
+	switch version {
+	case AuraApiVersion1:
 		if betaEnabled {
 			return cfg.Aura.BetaPathV1()
 		}
-		return "/v1"
-	} else if version == AuraApiVersion2 {
+		return "v1"
+	case AuraApiVersion2:
 		if betaEnabled {
 			return cfg.Aura.BetaPathV2()
 		}
-		return "/v2"
+		return "v2"
+	default:
+		panic(fmt.Sprintf("version not set in requests %s", version))
 	}
-	return ""
 }
 
 func createBody(data map[string]any) io.Reader {

@@ -120,14 +120,10 @@ func (config *AuraConfig) Set(key string, value string) {
 		panic(err)
 	}
 
-	baseUrlToUpdate := ""
 	if key == "base-url" {
-		baseUrlToUpdate = value
-	}
-	log.Printf("updating aura base url: %s", updateConfig)
-	updatedAuraBaseUrl := config.auraBaseUrlOnConfigChange(baseUrlToUpdate)
-	log.Printf("updated aura base url: %s", updatedAuraBaseUrl)
-	if updatedAuraBaseUrl != "" {
+		log.Printf("updating aura base url: %s", updateConfig)
+		updatedAuraBaseUrl := config.auraBaseUrlOnConfigChange(value)
+		log.Printf("updated aura base url: %s", updatedAuraBaseUrl)
 		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
 		if err != nil {
 			panic(err)
@@ -149,8 +145,10 @@ func (config *AuraConfig) Print(cmd *cobra.Command) {
 }
 
 func (config *AuraConfig) BaseUrl() string {
-	originalUrl := config.viper.Get("aura.base-url")
-	return removePathParametersFromUrl(originalUrl.(string))
+	originalUrl := config.viper.GetString("aura.base-url")
+	//Existing users have base url configs with trailing path /v1.
+	//To make it backward compatible, we allow old config and clear up by removing trailing path /v1 in the url
+	return removePathParametersFromUrl(originalUrl)
 }
 
 func removePathParametersFromUrl(originalUrl string) string {
