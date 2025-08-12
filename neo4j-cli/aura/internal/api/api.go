@@ -2,11 +2,9 @@ package api
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -35,7 +33,6 @@ type RequestConfig struct {
 }
 
 func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (responseBody []byte, statusCode int, err error) {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := http.Client{}
 	var method = config.Method
 	if method == "" {
@@ -48,7 +45,6 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	if config.Version == "" {
 		config.Version = AuraApiVersion1
 	}
-	log.Printf("aura.base-url: %s", baseUrl)
 	versionPath := getVersionPath(cfg, config.Version)
 
 	u, _ := url.ParseRequestURI(baseUrl)
@@ -58,7 +54,6 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	addQueryParams(u, config.QueryParams)
 
 	urlString := u.String()
-	log.Printf("aura.url-string: %s", urlString)
 	req, err := http.NewRequest(method, urlString, body)
 
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clierr"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 func NewSetCmd(cfg *clicfg.Config) *cobra.Command {
@@ -36,7 +35,6 @@ func NewSetCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log.Printf("args: %v", args)
 			cfg.Aura.Set(args[0], args[1])
 
 			return nil

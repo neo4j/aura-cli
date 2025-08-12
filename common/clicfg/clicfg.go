@@ -3,7 +3,6 @@ package clicfg
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"path/filepath"
 	"slices"
@@ -119,15 +118,12 @@ func (config *AuraConfig) Set(key string, value string) {
 	}
 
 	if key == "base-url" {
-		log.Printf("updating aura base url: %s", updateConfig)
 		updatedAuraBaseUrl := config.auraBaseUrlOnConfigChange(value)
-		log.Printf("updated aura base url: %s", updatedAuraBaseUrl)
 		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
 		if err != nil {
 			panic(err)
 		}
 		updateConfig = intermediateUpdateConfig
-		log.Printf("updated aura config: %s", updateConfig)
 	}
 
 	fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
@@ -154,8 +150,6 @@ func removePathParametersFromUrl(originalUrl string) string {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("aura.base-url: %s", parsedUrl.Host)
-	log.Printf("aura.auth-url: %s", parsedUrl.Scheme)
 	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, parsedUrl.Host)
 }
 
