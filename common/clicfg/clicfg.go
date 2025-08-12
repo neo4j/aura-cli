@@ -21,8 +21,6 @@ var ConfigPrefix string
 
 const (
 	DefaultAuraBaseUrl     = "https://api.neo4j.io"
-	DefaultAuraBetaPathV1  = "v1beta5"
-	DefaultAuraBetaPathV2  = "v2beta1"
 	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
 	DefaultAuraBetaEnabled = false
 )
@@ -162,11 +160,13 @@ func removePathParametersFromUrl(originalUrl string) string {
 }
 
 func (config *AuraConfig) BetaPathV1() string {
-	return DefaultAuraBetaPathV1
+	//TBD: if we allow users to config the beta path
+	return "v1beta5"
 }
 
 func (config *AuraConfig) BetaPathV2() string {
-	return DefaultAuraBetaPathV2
+	//TBD: if we allow users to config the beta path
+	return "v2beta1"
 }
 
 func (config *AuraConfig) BindBaseUrl(flag *pflag.Flag) {
