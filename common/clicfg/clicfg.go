@@ -46,21 +46,18 @@ func NewConfig(fs afero.Fs, version string) *Config {
 	bindEnvironmentVariables(Viper)
 	setDefaultValues(Viper)
 
-	// This ensures we have a config file - See issue https://github.com/neo4j/aura-cli/issues/108 
-	Viper.SafeWriteConfig()
-
-	if err := Viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			if err := fs.MkdirAll(configPath, 0755); err != nil {
-				panic(err)
-			}
-			if err = Viper.SafeWriteConfig(); err != nil {
-				panic(err)
-			}
-		} else {
-			// Config file was found but another error was produced
+	if !fileutils.FileExists(fs, configPath) {
+		if err := fs.MkdirAll(configPath, 0755); err != nil {
 			panic(err)
 		}
+		if err := Viper.SafeWriteConfig(); err != nil {
+			panic(err)
+		}
+	}
+
+	if err := Viper.ReadInConfig(); err != nil {
+		fmt.Println("Cannot read config file.")
+		panic(err)
 	}
 
 	credentials := credentials.NewCredentials(fs, ConfigPrefix)
@@ -115,33 +112,29 @@ func (config *AuraConfig) Set(key string, value string) {
 
 	filename := config.viper.ConfigFileUsed()
 
-	// We should always have a config file by this point but just in case
-	// Does the config file exist before we try and write to it?
-	// See  https://github.com/neo4j/aura-cli/issues/108 for why we should do this
-	if fileutils.FileExists(config.fs, filename) {
+	if !fileutils.FileExists(config.fs, filename) {
+		err := fmt.Errorf("unable to write to config file")
+		panic(err)
+	}
 
-		data := fileutils.ReadFileSafe(config.fs, filename)
+	data := fileutils.ReadFileSafe(config.fs, filename)
 
-		updateConfig, err := sjson.Set(string(data), fmt.Sprintf("aura.%s", key), value)
+	updateConfig, err := sjson.Set(string(data), fmt.Sprintf("aura.%s", key), value)
+	if err != nil {
+		panic(err)
+	}
+
+	updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange(key, value)
+
+	if updatedAuraBaseUrl != "" {
+		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
 		if err != nil {
 			panic(err)
 		}
-
-		updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange(key, value)
-		if updatedAuraBaseUrl != "" {
-			intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
-			if err != nil {
-				panic(err)
-			}
-			updateConfig = intermediateUpdateConfig
-		}
-
-		fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
-
-	} else {
-	        err := fmt.Errorf("unable to write to config file")
-		panic(err)
+		updateConfig = intermediateUpdateConfig
 	}
+
+	fileutils.WriteFile(config.fs, filename, []byte(updateConfig))
 
 }
 
