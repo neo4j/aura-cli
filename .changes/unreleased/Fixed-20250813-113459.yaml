@@ -1,3 +1,0 @@
-kind: Fixed
-body: "Fix for issue #108 where running aura-cli for the first time to set a config value causes a panic"
-time: 2025-08-13T11:34:59.820531+01:00
