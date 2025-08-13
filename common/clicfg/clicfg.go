@@ -34,6 +34,7 @@ type Config struct {
 
 func NewConfig(fs afero.Fs, version string) *Config {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
+	fullConfigPath := filepath.Join(configPath, "config.json")
 
 	Viper := viper.New()
 
@@ -46,7 +47,7 @@ func NewConfig(fs afero.Fs, version string) *Config {
 	bindEnvironmentVariables(Viper)
 	setDefaultValues(Viper)
 
-	if !fileutils.FileExists(fs, configPath) {
+	if !fileutils.FileExists(fs, fullConfigPath) {
 		if err := fs.MkdirAll(configPath, 0755); err != nil {
 			panic(err)
 		}
