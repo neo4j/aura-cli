@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -43,7 +44,15 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 
 func getNestedField(v map[string]any, subFields []string, index int) string {
 	if index >= len(subFields)-1 {
-		return fmt.Sprintf("%+v", v[subFields[index]])
+		value := v[subFields[index]]
+		if value == nil {
+			return ""
+		}
+		if reflect.TypeOf(value).Kind() == reflect.Slice {
+			marshaledSlice, _ := json.MarshalIndent(value, "", "  ")
+			return string(marshaledSlice)
+		}
+		return fmt.Sprintf("%+v", value)
 	}
 	switch val := v[subFields[index]].(type) {
 	case map[string]any:
