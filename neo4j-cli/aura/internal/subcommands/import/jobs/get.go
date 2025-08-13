@@ -42,8 +42,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method: http.MethodGet,
-				UseV2:  true,
+				Method:  http.MethodGet,
+				Version: api.AuraApiVersion2,
 			})
 			if err != nil {
 				return err
