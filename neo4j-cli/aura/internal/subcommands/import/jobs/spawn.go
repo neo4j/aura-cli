@@ -44,7 +44,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs", organizationId, projectId)
 
-			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
+			_, _, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPost,
 				Version: api.AuraApiVersion2,
 				PostBody: map[string]any{
@@ -54,8 +54,6 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 					},
 				},
 			})
-			log.Printf(fmt.Sprintf("Response body: %+v\n", string(resBody)))
-			log.Printf(fmt.Sprintf("Response status code: %d\n", statusCode))
 			if err != nil {
 				return err
 			}
