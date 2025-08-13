@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -41,27 +40,23 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 		panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 	// client error responses
 	case http.StatusBadRequest:
-		var errorResponse interface{}
+		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
 		if err != nil {
 			panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 		}
-		log.Println(fmt.Sprintf("Bad request err %+v", errorResponse))
 
-		//If the response JSON doesn't follow this structure, we get nothing from json.Unmarshal
-		//var errorResponse ErrorResponse
-		//err = json.Unmarshal(resBody, &errorResponse)
-		//messages := []string{}
-		//for _, e := range errorResponse.Errors {
-		//	message := e.Message
-		//	if e.Field != "" {
-		//		message = fmt.Sprintf("%s: %s", e.Field, e.Message)
-		//	}
-		//	messages = append(messages, message)
-		//}
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			message := e.Message
+			if e.Field != "" {
+				message = fmt.Sprintf("%s: %s", e.Field, e.Message)
+			}
+			messages = append(messages, message)
+		}
 
-		return clierr.NewUpstreamError("%s", errorResponse)
+		return clierr.NewUpstreamError("%s", messages)
 	case http.StatusUnauthorized:
 		return formatAuthorizationError(resBody, statusCode, credential, cfg)
 	case http.StatusForbidden:
@@ -77,23 +72,19 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 
 		return formatAuthorizationError(resBody, statusCode, credential, cfg)
 	case http.StatusNotFound:
-		var errorResponse interface{}
+		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(resBody, &errorResponse)
-		log.Println(fmt.Sprintf("404 ERROR, res %+v, error %+v", err, errorResponse))
 		if err != nil {
 			panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 		}
 
-		//If the response JSON doesn't follow this structure, we get nothing from json.Unmarshal
-		//var errorResponse ErrorResponse
-		//err = json.Unmarshal(resBody, &errorResponse)
-		//messages := []string{}
-		//for _, e := range errorResponse.Errors {
-		//	messages = append(messages, e.Message)
-		//}
+		messages := []string{}
+		for _, e := range errorResponse.Errors {
+			messages = append(messages, e.Message)
+		}
 
-		return clierr.NewUpstreamError("%s", errorResponse)
+		return clierr.NewUpstreamError("%s", messages)
 	case http.StatusMethodNotAllowed:
 		var errorResponse ErrorResponse
 
@@ -309,30 +300,24 @@ func NewSingleValueResponseData(data map[string]any) ResponseData {
 	}
 }
 
+func NewResponseData(data []map[string]any) ResponseData {
+	return ListResponseData{
+		Data: data,
+	}
+}
+
 func ParseBody(body []byte) ResponseData {
-	var list []map[string]any
-	//json.Unmarshal won't return an error when deserializing the  JSON that has no desired field `Data`
-	//err := json.Unmarshal(body, &listResponseData)
-	err := json.Unmarshal(body, &list)
-	//log.Printf("parsed body: %v", list)
-	log.Printf("error: %v", err)
+	var listResponseData ListResponseData
+	err := json.Unmarshal(body, &listResponseData)
 
 	// Try unmarshalling array first, if not it creates an array from the single item
 	if err == nil {
-		listResponseData := ListResponseData{
-			Data: list,
-		}
 		return listResponseData
 	} else {
-		//json.Unmarshal won't return an error when deserializing the JSON that has no desired field `Data`
-		//err := json.Unmarshal(body, &singleValueResponseData)
-		var singleValue map[string]any
-		err := json.Unmarshal(body, &singleValue)
+		var singleValueResponseData SingleValueResponseData
+		err := json.Unmarshal(body, &singleValueResponseData)
 		if err != nil {
 			panic(err)
-		}
-		singleValueResponseData := SingleValueResponseData{
-			Data: singleValue,
 		}
 		return singleValueResponseData
 	}
