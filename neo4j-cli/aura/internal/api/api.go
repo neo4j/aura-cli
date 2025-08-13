@@ -18,7 +18,15 @@ type Grant struct {
 	ExpiresIn   int64  `json:"expires_in"`
 }
 
+type AuraApiVersion string
+
+const (
+	AuraApiVersion1 AuraApiVersion = "1"
+	AuraApiVersion2 AuraApiVersion = "2"
+)
+
 type RequestConfig struct {
+	Version     AuraApiVersion
 	Method      string
 	PostBody    map[string]any
 	QueryParams map[string]string
@@ -34,8 +42,13 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	body := createBody(config.PostBody)
 
 	baseUrl := cfg.Aura.BaseUrl()
+	if config.Version == "" {
+		config.Version = AuraApiVersion1
+	}
+	versionPath := getVersionPath(cfg, config.Version)
 
 	u, _ := url.ParseRequestURI(baseUrl)
+	u = u.JoinPath(versionPath)
 	u = u.JoinPath(path)
 
 	addQueryParams(u, config.QueryParams)
@@ -75,6 +88,25 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	}
 
 	return responseBody, res.StatusCode, handleResponseError(res, credential, cfg)
+}
+
+func getVersionPath(cfg *clicfg.Config, version AuraApiVersion) string {
+	betaEnabled := cfg.Aura.AuraBetaEnabled()
+
+	switch version {
+	case AuraApiVersion1:
+		if betaEnabled {
+			return cfg.Aura.BetaPathV1()
+		}
+		return "v1"
+	case AuraApiVersion2:
+		if betaEnabled {
+			return cfg.Aura.BetaPathV2()
+		}
+		return "v2"
+	default:
+		panic(fmt.Sprintf("version not set in requests %s", version))
+	}
 }
 
 func createBody(data map[string]any) io.Reader {

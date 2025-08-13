@@ -147,7 +147,8 @@ func (helper *AuraTestHelper) AssertConfigValue(key string, expected string) {
 	out, err := io.ReadAll(file)
 	assert.Nil(helper.t, err)
 
-	actual := gjson.Get(string(out), key)
+	strOut := string(out)
+	actual := gjson.Get(strOut, key)
 
 	formattedExpected, err := FormatJson(expected, "\t")
 	if err != nil {

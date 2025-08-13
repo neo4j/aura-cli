@@ -16,7 +16,7 @@ func TestListAuthProviders(t *testing.T) {
 
 	instanceId := "2f49c2b3"
 	dataApiId := "a342b824"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s/auth-providers", instanceId, dataApiId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s/auth-providers", instanceId, dataApiId), http.StatusOK, `{
 		"data": [
 			{
 				"id": "87d46b4b-3bfb-4ad2-8dac-0e95cf72d39f",

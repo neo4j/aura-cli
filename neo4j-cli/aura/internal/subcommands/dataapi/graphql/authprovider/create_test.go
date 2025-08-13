@@ -171,7 +171,7 @@ func TestCreateAuthProviderWithResponse(t *testing.T) {
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
-			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s/auth-providers", instanceId, dataApiId), http.StatusAccepted, tt.mockResponse)
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s/auth-providers", instanceId, dataApiId), http.StatusAccepted, tt.mockResponse)
 
 			helper.ExecuteCommand(tt.executeCommand)
 

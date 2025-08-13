@@ -3,6 +3,7 @@ package clicfg
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"slices"
 
@@ -18,8 +19,7 @@ import (
 var ConfigPrefix string
 
 const (
-	DefaultAuraBaseUrl     = "https://api.neo4j.io/v1"
-	DefaultAuraBetaBaseUrl = "https://api.neo4j.io/v1beta5"
+	DefaultAuraBaseUrl     = "https://api.neo4j.io"
 	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
 	DefaultAuraBetaEnabled = false
 )
@@ -117,8 +117,8 @@ func (config *AuraConfig) Set(key string, value string) {
 		panic(err)
 	}
 
-	updatedAuraBaseUrl := config.auraBaseUrlOnBetaEnabledChange(key, value)
-	if updatedAuraBaseUrl != "" {
+	if key == "base-url" {
+		updatedAuraBaseUrl := config.auraBaseUrlOnConfigChange(value)
 		intermediateUpdateConfig, err := sjson.Set(string(updateConfig), "aura.base-url", updatedAuraBaseUrl)
 		if err != nil {
 			panic(err)
@@ -139,7 +139,26 @@ func (config *AuraConfig) Print(cmd *cobra.Command) {
 }
 
 func (config *AuraConfig) BaseUrl() string {
-	return config.viper.GetString("aura.base-url")
+	originalUrl := config.viper.GetString("aura.base-url")
+	//Existing users have base url configs with trailing path /v1.
+	//To make it backward compatible, we allow old config and clear up by removing trailing path /v1 in the url
+	return removePathParametersFromUrl(originalUrl)
+}
+
+func removePathParametersFromUrl(originalUrl string) string {
+	parsedUrl, err := url.Parse(originalUrl)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, parsedUrl.Host)
+}
+
+func (config *AuraConfig) BetaPathV1() string {
+	return "v1beta5"
+}
+
+func (config *AuraConfig) BetaPathV2() string {
+	return "v2beta1"
 }
 
 func (config *AuraConfig) BindBaseUrl(flag *pflag.Flag) {
@@ -191,13 +210,9 @@ func (config *AuraConfig) SetPollingConfig(maxRetries int, interval int) {
 	}
 }
 
-func (config *AuraConfig) auraBaseUrlOnBetaEnabledChange(key string, value string) string {
-	if key == "beta-enabled" {
-		nextBaseUrl := DefaultAuraBaseUrl
-		if value == "true" {
-			nextBaseUrl = DefaultAuraBetaBaseUrl
-		}
-		return nextBaseUrl
+func (config *AuraConfig) auraBaseUrlOnConfigChange(url string) string {
+	if url == "" {
+		return DefaultAuraBaseUrl
 	}
-	return ""
+	return removePathParametersFromUrl(url)
 }

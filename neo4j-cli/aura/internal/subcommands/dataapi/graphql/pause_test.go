@@ -16,7 +16,7 @@ func TestPauseGraphQLDataApi(t *testing.T) {
 
 	instanceId := "2f49c2b3"
 	dataApiId := "afdb4e9d"
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1/instances/%s/data-apis/graphql/%s/pause", instanceId, dataApiId), http.StatusAccepted, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s/pause", instanceId, dataApiId), http.StatusAccepted, `{
 			"data": {
                 "id": "afdb4e9d",
                 "name": "friendly-name",
