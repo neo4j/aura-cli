@@ -34,6 +34,7 @@ type Config struct {
 
 func NewConfig(fs afero.Fs, version string) *Config {
 	configPath := filepath.Join(ConfigPrefix, "neo4j", "cli")
+	fullConfigPath := filepath.Join(configPath, "config.json")
 
 	Viper := viper.New()
 
@@ -46,18 +47,18 @@ func NewConfig(fs afero.Fs, version string) *Config {
 	bindEnvironmentVariables(Viper)
 	setDefaultValues(Viper)
 
-	if err := Viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			if err := fs.MkdirAll(configPath, 0755); err != nil {
-				panic(err)
-			}
-			if err = Viper.SafeWriteConfig(); err != nil {
-				panic(err)
-			}
-		} else {
-			// Config file was found but another error was produced
+	if !fileutils.FileExists(fs, fullConfigPath) {
+		if err := fs.MkdirAll(configPath, 0755); err != nil {
 			panic(err)
 		}
+		if err := Viper.SafeWriteConfig(); err != nil {
+			panic(err)
+		}
+	}
+
+	if err := Viper.ReadInConfig(); err != nil {
+		fmt.Println("Cannot read config file.")
+		panic(err)
 	}
 
 	credentials := credentials.NewCredentials(fs, ConfigPrefix)
