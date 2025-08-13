@@ -38,6 +38,8 @@ changie new
 
 Simply commit the file that this command produces and you're done!
 
+If changie is not available, you may need to add /go/bin to your path: `export PATH="$HOME/go/bin:$PATH"`
+
 ### Building
 
 Builds for releases are handled in GitHub Actions. If you want to create local builds, there are a couple of approaches.
