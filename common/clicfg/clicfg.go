@@ -154,12 +154,10 @@ func removePathParametersFromUrl(originalUrl string) string {
 }
 
 func (config *AuraConfig) BetaPathV1() string {
-	//TBD: if we allow users to config the beta path
 	return "v1beta5"
 }
 
 func (config *AuraConfig) BetaPathV2() string {
-	//TBD: if we allow users to config the beta path
 	return "v2beta1"
 }
 
