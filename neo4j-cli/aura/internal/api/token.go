@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -37,7 +36,6 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 		"User-Agent":   {fmt.Sprintf(userAgent, version)},
 	}
 	req.SetBasicAuth(credential.ClientId, credential.ClientSecret)
-	log.Println(fmt.Sprintf("making request to %s, req %+v", url, req))
 
 	client := http.Client{}
 
