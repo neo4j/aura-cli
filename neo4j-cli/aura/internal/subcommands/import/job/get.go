@@ -12,34 +12,29 @@ import (
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
-		organizationId string
-		projectId      string
-		jobId          string
+		projectId string
+		jobId     string
 	)
 
 	const (
-		organizationIdFlag = "organization-id"
-		projectIdFlag      = "project-id"
-		jobIdFlag          = "job-id"
+		projectIdFlag = "project-id"
+		jobIdFlag     = "job-id"
 	)
 
 	cmd := &cobra.Command{
 		Use:   "get <id>",
 		Short: "Get a job by id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if organizationId == "" {
-				return fmt.Errorf("organizationId is required")
-			}
 			if projectId == "" {
 				return fmt.Errorf("projectId is required")
 			}
 			if jobId == "" {
-				return fmt.Errorf("importModelId is required")
+				return fmt.Errorf("jobId is required")
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/organizations/%s/projects/%s/import/job/%s", organizationId, projectId, jobId)
+			path := fmt.Sprintf("/projects/%s/import/jobs/%s", projectId, jobId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodGet,
@@ -49,20 +44,16 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 			if statusCode == http.StatusOK {
-				output.PrintBody(cmd, cfg, resBody, []string{"id", "importType", "info:state", "info:exitStatus:message", "info:percentage", "dataSourceMetadata", "auraMetadata"})
+				output.PrintBody(cmd, cfg, resBody, []string{"id", "import_type", "info:state", "info:exit_status:state", "info:percentage_complete", "data_source:name", "aura_target:db_id"})
+				output.PrintBody(cmd, cfg, resBody, []string{"info:exit_status:message"})
 			}
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Organization ID")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
-	cmd.Flags().StringVar(&jobId, jobIdFlag, "", "Import job id")
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
+	cmd.Flags().StringVar(&jobId, jobIdFlag, "", "Import job ID")
+	err := cmd.MarkFlagRequired(projectIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
