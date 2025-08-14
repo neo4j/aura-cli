@@ -1,4 +1,4 @@
-package jobs
+package job
 
 import (
 	"github.com/neo4j/cli/common/clicfg"
@@ -7,7 +7,7 @@ import (
 
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "jobs",
+		Use: "job",
 	}
 
 	cmd.AddCommand(NewSpawnCmd(cfg))

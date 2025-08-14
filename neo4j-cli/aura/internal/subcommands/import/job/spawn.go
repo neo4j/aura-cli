@@ -1,4 +1,4 @@
-package jobs
+package job
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "spawn",
-		Short: "Allows you to spawn your import jobs",
+		Short: "Allows you to spawn your import job",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if organizationId == "" {
 				return fmt.Errorf("organizationId is required")
@@ -42,7 +42,7 @@ func NewSpawnCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs", organizationId, projectId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/import/job", organizationId, projectId)
 
 			_, _, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPost,

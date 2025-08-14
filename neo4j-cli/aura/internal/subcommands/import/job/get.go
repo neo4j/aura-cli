@@ -1,4 +1,4 @@
-package jobs
+package job
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/import/job/%s", organizationId, projectId, jobId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodGet,
