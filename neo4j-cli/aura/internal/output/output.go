@@ -2,7 +2,9 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
@@ -33,9 +35,31 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 	if len(body) == 0 {
 		return
 	}
+	//log.Println(string(body))
 	values := api.ParseBody(body)
 
 	PrintBodyMap(cmd, cfg, values, fields)
+}
+
+func getNestedField(v map[string]any, subFields []string, index int) string {
+	if index >= len(subFields)-1 {
+		value := v[subFields[index]]
+		if value == nil {
+			return ""
+		}
+		if reflect.TypeOf(value).Kind() == reflect.Slice {
+			marshaledSlice, _ := json.MarshalIndent(value, "", "  ")
+			return string(marshaledSlice)
+		}
+		return fmt.Sprintf("%+v", value)
+	}
+	switch val := v[subFields[index]].(type) {
+	case map[string]any:
+		return getNestedField(val, subFields, index+1)
+	default:
+		//The field is no longer nested, so we can't proceed in the next level
+		return ""
+	}
 }
 
 func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []string) {
@@ -50,16 +74,8 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 	for _, v := range responseData.AsArray() {
 		row := table.Row{}
 		for _, f := range fields {
-			formattedValue := v[f]
-
-			if v[f] == nil {
-				formattedValue = ""
-			}
-
-			if reflect.TypeOf(formattedValue).Kind() == reflect.Slice {
-				marshaledSlice, _ := json.MarshalIndent(formattedValue, "", "  ")
-				formattedValue = string(marshaledSlice)
-			}
+			subfields := strings.Split(f, ":")
+			formattedValue := getNestedField(v, subfields, 0)
 
 			row = append(row, formattedValue)
 		}

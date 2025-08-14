@@ -2,9 +2,11 @@ package api
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -33,6 +35,7 @@ type RequestConfig struct {
 }
 
 func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (responseBody []byte, statusCode int, err error) {
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := http.Client{}
 	var method = config.Method
 	if method == "" {
@@ -50,6 +53,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	u, _ := url.ParseRequestURI(baseUrl)
 	u = u.JoinPath(versionPath)
 	u = u.JoinPath(path)
+	log.Printf("url: %s", u)
 
 	addQueryParams(u, config.QueryParams)
 
