@@ -3,7 +3,6 @@ package output
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -36,7 +35,7 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 	if len(body) == 0 {
 		return
 	}
-	log.Println(string(body))
+	//log.Println(string(body))
 	values := api.ParseBody(body)
 
 	PrintBodyMap(cmd, cfg, values, fields)
