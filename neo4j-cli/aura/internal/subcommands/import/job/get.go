@@ -48,12 +48,15 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			outputType := cfg.Aura.Output()
+
 			if statusCode == http.StatusOK {
 				output.PrintBody(cmd, cfg, resBody, []string{"id", "import_type", "info:state", "info:exit_status:state", "info:percentage_complete", "data_source:name", "aura_target:db_id"})
-				output.PrintBody(cmd, cfg, resBody, []string{"info:exit_status:message"})
+				if outputType != "json" {
+					output.PrintBody(cmd, cfg, resBody, []string{"info:exit_status:message"})
+				}
 			}
 
-			outputType := cfg.Aura.Output()
 			if showProgress && outputType != "json" {
 				cmd.Println("###############################")
 				cmd.Println("# The progress details are shown as follows.")
