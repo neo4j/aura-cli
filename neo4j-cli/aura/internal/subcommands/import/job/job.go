@@ -10,7 +10,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		Use: "job",
 	}
 
-	cmd.AddCommand(NewSpawnCmd(cfg))
+	cmd.AddCommand(NewCreateCmd(cfg))
 	cmd.AddCommand(NewGetCmd(cfg))
 	return cmd
 }
