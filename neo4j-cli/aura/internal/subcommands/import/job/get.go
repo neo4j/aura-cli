@@ -82,7 +82,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				cmd.Println("###############################")
 				cmd.Println("# Nodes progress details are shown as follows.")
 				cmd.Println("###############################")
-				output.PrintBodyMap(cmd, cfg, nodesResponseData, []string{"id", "processed_rows", "total_rows", "created_nodes", "created_constraints", "created_indexes"})
+				output.PrintBodyMap(cmd, cfg, nodesResponseData, []string{"id", "labels", "processed_rows", "total_rows", "created_nodes", "created_constraints", "created_indexes"})
 
 				relationships := progress["relationships"].([]interface{})
 				//log.Printf("nodes: %v", nodes)
@@ -95,7 +95,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				cmd.Println("###############################")
 				cmd.Println("# Relationships progress details are shown as follows.")
 				cmd.Println("###############################")
-				output.PrintBodyMap(cmd, cfg, relationshipsResponseData, []string{"id", "processed_rows", "total_rows", "created_relationships", "created_constraints", "created_indexes"})
+				output.PrintBodyMap(cmd, cfg, relationshipsResponseData, []string{"id", "type", "processed_rows", "total_rows", "created_relationships", "created_constraints", "created_indexes"})
 			}
 			return nil
 		},
