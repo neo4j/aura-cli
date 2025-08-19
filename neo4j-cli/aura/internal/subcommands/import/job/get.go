@@ -55,37 +55,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if showProgress && outputType != "json" {
-				cmd.Println("###############################")
-				cmd.Println("# The progress details are shown as follows.")
-				cmd.Println("###############################")
-				parsedBody := api.ParseBody(resBody)
-				data, err := parsedBody.GetSingleOrError()
-				if err != nil {
-					panic(err)
-				}
-				info := data["info"].(map[string]interface{})
-				progress := info["progress"].(map[string]interface{})
-				nodes := progress["nodes"].([]interface{})
-				wrappedNodes := make([]map[string]any, 0)
-				for _, node := range nodes {
-					wrappedNodes = append(wrappedNodes, node.(map[string]interface{}))
-				}
-				nodesResponseData := api.NewListResponseData(wrappedNodes)
-				cmd.Println("###############################")
-				cmd.Println("# Nodes progress details are shown as follows.")
-				cmd.Println("###############################")
-				output.PrintBodyMap(cmd, cfg, nodesResponseData, []string{"id", "labels", "processed_rows", "total_rows", "created_nodes", "created_constraints", "created_indexes"})
-
-				relationships := progress["relationships"].([]interface{})
-				wrappedRelationships := make([]map[string]any, 0)
-				for _, relationship := range relationships {
-					wrappedRelationships = append(wrappedRelationships, relationship.(map[string]interface{}))
-				}
-				relationshipsResponseData := api.NewListResponseData(wrappedRelationships)
-				cmd.Println("###############################")
-				cmd.Println("# Relationships progress details are shown as follows.")
-				cmd.Println("###############################")
-				output.PrintBodyMap(cmd, cfg, relationshipsResponseData, []string{"id", "type", "processed_rows", "total_rows", "created_relationships", "created_constraints", "created_indexes"})
+				printJobProgressTable(cmd, cfg, resBody)
 			}
 			return nil
 		},
@@ -98,4 +68,32 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		log.Fatal(err)
 	}
 	return cmd
+}
+
+func printJobProgressTable(cmd *cobra.Command, cfg *clicfg.Config, resBody []byte) {
+	cmd.Println("# Progress details:")
+	parsedBody := api.ParseBody(resBody)
+	data, err := parsedBody.GetSingleOrError()
+	if err != nil {
+		panic(err)
+	}
+	info := data["info"].(map[string]interface{})
+	progress := info["progress"].(map[string]interface{})
+	nodes := progress["nodes"].([]interface{})
+	wrappedNodes := make([]map[string]any, 0)
+	for _, node := range nodes {
+		wrappedNodes = append(wrappedNodes, node.(map[string]interface{}))
+	}
+	nodesResponseData := api.NewListResponseData(wrappedNodes)
+	cmd.Println("# Nodes progress:")
+	output.PrintBodyMap(cmd, cfg, nodesResponseData, []string{"id", "labels", "processed_rows", "total_rows", "created_nodes", "created_constraints", "created_indexes"})
+
+	relationships := progress["relationships"].([]interface{})
+	wrappedRelationships := make([]map[string]any, 0)
+	for _, relationship := range relationships {
+		wrappedRelationships = append(wrappedRelationships, relationship.(map[string]interface{}))
+	}
+	relationshipsResponseData := api.NewListResponseData(wrappedRelationships)
+	cmd.Println("# Relationships progress:")
+	output.PrintBodyMap(cmd, cfg, relationshipsResponseData, []string{"id", "type", "processed_rows", "total_rows", "created_relationships", "created_constraints", "created_indexes"})
 }
