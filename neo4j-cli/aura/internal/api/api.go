@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -53,7 +52,6 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	u, _ := url.ParseRequestURI(baseUrl)
 	u = u.JoinPath(versionPath)
 	u = u.JoinPath(path)
-	log.Printf("url: %s", u.Query())
 
 	addQueryParams(u, config.QueryParams)
 
