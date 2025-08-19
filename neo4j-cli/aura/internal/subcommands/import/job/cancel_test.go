@@ -19,7 +19,7 @@ func TestCancelImportJob(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	helper.ExecuteCommand("import job cancel --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --job-id=87d485b4-73fc-4a7f-bb03-720f4672947e")
+	helper.ExecuteCommand("import job cancel --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee 87d485b4-73fc-4a7f-bb03-720f4672947e")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPatch)
@@ -74,7 +74,7 @@ func TestCancelImportJobError(t *testing.T) {
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
-			helper.ExecuteCommand("import job cancel --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --job-id=87d485b4-73fc-4a7f-bb03-720f4672947e")
+			helper.ExecuteCommand("import job cancel --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee 87d485b4-73fc-4a7f-bb03-720f4672947e")
 
 			mockHandler.AssertCalledTimes(1)
 			mockHandler.AssertCalledWithMethod(http.MethodPatch)
