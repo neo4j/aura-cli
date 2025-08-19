@@ -45,7 +45,7 @@ func TestGetImportJobByIdWithoutProgress(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	helper.ExecuteCommand("import job get --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --job-id=87d485b4-73fc-4a7f-bb03-720f4672947e")
+	helper.ExecuteCommand("import job get --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee 87d485b4-73fc-4a7f-bb03-720f4672947e")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
@@ -297,7 +297,7 @@ func TestGetImportJobByIdWithProgress(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	helper.ExecuteCommand("import job get --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --job-id=87d485b4-73fc-4a7f-bb03-720f4672947e --progress=true")
+	helper.ExecuteCommand("import job get --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee 87d485b4-73fc-4a7f-bb03-720f4672947e --progress=true")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
@@ -553,7 +553,7 @@ func TestGetImportJobByIdError(t *testing.T) {
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
-			helper.ExecuteCommand("import job get --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --job-id=87d485b4-73fc-4a7f-bb03-720f4672947e")
+			helper.ExecuteCommand("import job get --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee 87d485b4-73fc-4a7f-bb03-720f4672947e")
 
 			mockHandler.AssertCalledTimes(1)
 			mockHandler.AssertCalledWithMethod(http.MethodGet)

@@ -35,7 +35,6 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 	if len(body) == 0 {
 		return
 	}
-	//log.Println(string(body))
 	values := api.ParseBody(body)
 
 	PrintBodyMap(cmd, cfg, values, fields)
