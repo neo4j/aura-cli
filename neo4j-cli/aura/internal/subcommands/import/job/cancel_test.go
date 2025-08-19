@@ -70,14 +70,14 @@ func TestCancelImportJobError(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
-			mockHandler := helper.NewRequestHandlerMock("/v2beta1/projects/f607bebe-0cc0-4166-b60c-b4eed69ee7ee/import/jobs", testCase.statusCode, testCase.returnBody)
+			mockHandler := helper.NewRequestHandlerMock("/v2beta1/projects/f607bebe-0cc0-4166-b60c-b4eed69ee7ee/import/jobs/87d485b4-73fc-4a7f-bb03-720f4672947e/cancel", testCase.statusCode, testCase.returnBody)
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
-			helper.ExecuteCommand("import job create --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --aura-db-id=07e49cf5")
+			helper.ExecuteCommand("import job cancel --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --job-id=87d485b4-73fc-4a7f-bb03-720f4672947e")
 
 			mockHandler.AssertCalledTimes(1)
-			mockHandler.AssertCalledWithMethod(http.MethodPost)
+			mockHandler.AssertCalledWithMethod(http.MethodPatch)
 
 			helper.AssertErr(testCase.expectedError)
 		})
