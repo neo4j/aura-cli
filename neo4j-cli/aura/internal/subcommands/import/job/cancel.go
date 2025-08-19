@@ -18,19 +18,21 @@ func NewCancelCommand(cfg *clicfg.Config) *cobra.Command {
 
 	const (
 		projectIdFlag = "project-id"
-		jobIdFlag     = "job-id"
 	)
 
 	cmd := &cobra.Command{
 		Use:   "cancel <id>",
 		Short: "Cancel a job by id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if jobId == "" {
+			if len(args) != 1 {
 				return fmt.Errorf("jobId is required")
 			}
+			jobId = args[0]
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			jobId = args[0]
 			path := fmt.Sprintf("/projects/%s/import/jobs/%s/cancel", projectId, jobId)
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPatch,
@@ -45,12 +47,7 @@ func NewCancelCommand(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
-	cmd.Flags().StringVar(&jobId, jobIdFlag, "", "Import job ID")
 	err := cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(jobIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

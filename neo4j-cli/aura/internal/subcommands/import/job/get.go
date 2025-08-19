@@ -26,16 +26,17 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "get <id>",
 		Short: "Get a job by id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			jobId = args[0]
-			if jobId == "" {
+			if len(args) != 1 {
 				return fmt.Errorf("jobId is required")
 			}
+			jobId = args[0]
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/projects/%s/import/jobs/%s", projectId, jobId)
-			queryParams := make(map[string]string)
-			queryParams["progress"] = fmt.Sprintf("%v", showProgress)
+			queryParams := map[string]string{
+				"progress": fmt.Sprintf("%v", showProgress),
+			}
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:      http.MethodGet,
