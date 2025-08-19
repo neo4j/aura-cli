@@ -40,9 +40,9 @@ func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []str
 	PrintBodyMap(cmd, cfg, values, fields)
 }
 
-func getNestedField(v map[string]any, subFields []string, index int) string {
-	if index >= len(subFields)-1 {
-		value := v[subFields[index]]
+func getNestedField(v map[string]any, subFields []string) string {
+	if len(subFields) == 1 {
+		value := v[subFields[0]]
 		if value == nil {
 			return ""
 		}
@@ -52,9 +52,9 @@ func getNestedField(v map[string]any, subFields []string, index int) string {
 		}
 		return fmt.Sprintf("%+v", value)
 	}
-	switch val := v[subFields[index]].(type) {
+	switch val := v[subFields[0]].(type) {
 	case map[string]any:
-		return getNestedField(val, subFields, index+1)
+		return getNestedField(val, subFields[1:])
 	default:
 		//The field is no longer nested, so we can't proceed in the next level
 		return ""
@@ -74,7 +74,7 @@ func printTable(cmd *cobra.Command, responseData api.ResponseData, fields []stri
 		row := table.Row{}
 		for _, f := range fields {
 			subfields := strings.Split(f, ":")
-			formattedValue := getNestedField(v, subfields, 0)
+			formattedValue := getNestedField(v, subfields)
 
 			row = append(row, formattedValue)
 		}
