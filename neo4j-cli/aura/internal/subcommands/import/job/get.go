@@ -19,7 +19,6 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 
 	const (
 		projectIdFlag    = "project-id"
-		jobIdFlag        = "job-id"
 		showProgressFlag = "progress"
 	)
 
@@ -27,9 +26,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "get <id>",
 		Short: "Get a job by id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if projectId == "" {
-				return fmt.Errorf("projectId is required")
-			}
+			jobId = args[0]
 			if jobId == "" {
 				return fmt.Errorf("jobId is required")
 			}
@@ -66,32 +63,25 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				if err != nil {
 					panic(err)
 				}
-				//log.Printf("nodes: %v", data)
 				info := data["info"].(map[string]interface{})
-				//log.Printf("info: %v", info)
 				progress := info["progress"].(map[string]interface{})
-				//log.Printf("progress: %v", progress)
 				nodes := progress["nodes"].([]interface{})
-				//log.Printf("nodes: %v", nodes)
 				wrappedNodes := make([]map[string]any, 0)
 				for _, node := range nodes {
 					wrappedNodes = append(wrappedNodes, node.(map[string]interface{}))
 				}
 				nodesResponseData := api.NewListResponseData(wrappedNodes)
-				//log.Printf("nodesResponseData: %v", nodesResponseData)
 				cmd.Println("###############################")
 				cmd.Println("# Nodes progress details are shown as follows.")
 				cmd.Println("###############################")
 				output.PrintBodyMap(cmd, cfg, nodesResponseData, []string{"id", "labels", "processed_rows", "total_rows", "created_nodes", "created_constraints", "created_indexes"})
 
 				relationships := progress["relationships"].([]interface{})
-				//log.Printf("nodes: %v", nodes)
 				wrappedRelationships := make([]map[string]any, 0)
 				for _, relationship := range relationships {
 					wrappedRelationships = append(wrappedRelationships, relationship.(map[string]interface{}))
 				}
 				relationshipsResponseData := api.NewListResponseData(wrappedRelationships)
-				//log.Printf("nodesResponseData: %v", nodesResponseData)
 				cmd.Println("###############################")
 				cmd.Println("# Relationships progress details are shown as follows.")
 				cmd.Println("###############################")
@@ -102,13 +92,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
-	cmd.Flags().StringVar(&jobId, jobIdFlag, "", "Import job ID")
 	cmd.Flags().BoolVar(&showProgress, showProgressFlag, false, "Show progress details")
 	err := cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(jobIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
