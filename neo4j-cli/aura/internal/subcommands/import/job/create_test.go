@@ -83,19 +83,19 @@ func TestCreateImportJobError(t *testing.T) {
 			executeCommand:      fmt.Sprintf("import job create --import-model-id=%s --aura-db-id=%s", importModelId, auraDbId),
 			expectedCalledTimes: 0,
 			statusCode:          http.StatusNotFound,
-			expectedError:       "Error: projectId is required",
+			expectedError:       "Error: required flag(s) \"project-id\" not set",
 			returnBody:          ``,
 		},
 		"incorrect command with missing importModelId": {
 			executeCommand: fmt.Sprintf("import job create --project-id=%s --aura-db-id=%s", projectId, auraDbId),
 			statusCode:     http.StatusNotFound,
-			expectedError:  "Error: importModelId is required",
+			expectedError:  "Error: required flag(s) \"import-model-id\" not set",
 			returnBody:     ``,
 		},
 		"incorrect command with missing auraDbId": {
 			executeCommand: fmt.Sprintf("import job create --project-id=%s --import-model-id=%s", projectId, importModelId),
 			statusCode:     http.StatusNotFound,
-			expectedError:  "Error: auraDbId is required",
+			expectedError:  "Error: required flag(s) \"aura-db-id\" not set",
 			returnBody:     ``,
 		},
 	}
