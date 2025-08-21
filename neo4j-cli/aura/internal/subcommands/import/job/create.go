@@ -25,18 +25,6 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Allows you to create a new import job",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if projectId == "" {
-				return fmt.Errorf("projectId is required")
-			}
-			if importModelId == "" {
-				return fmt.Errorf("importModelId is required")
-			}
-			if auraDbId == "" {
-				return fmt.Errorf("auraDbId is required")
-			}
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/projects/%s/import/jobs", projectId)
 
