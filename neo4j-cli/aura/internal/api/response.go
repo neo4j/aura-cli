@@ -300,7 +300,7 @@ func NewSingleValueResponseData(data map[string]any) ResponseData {
 	}
 }
 
-func NewResponseData(data []map[string]any) ResponseData {
+func NewListResponseData(data []map[string]any) ResponseData {
 	return ListResponseData{
 		Data: data,
 	}
