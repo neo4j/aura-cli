@@ -8,10 +8,9 @@ import (
 )
 
 func TestGetImportJobByIdWithoutProgress(t *testing.T) {
-	helper := testutils.NewAuraTestHelper(t)
-	defer helper.Close()
-
-	mockHandler := helper.NewRequestHandlerMock("/v2beta1/projects/f607bebe-0cc0-4166-b60c-b4eed69ee7ee/import/jobs/87d485b4-73fc-4a7f-bb03-720f4672947e", http.StatusOK, `
+	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	jobId := "87d485b4-73fc-4a7f-bb03-720f4672947e"
+	mockedResponseWithoutProgress := `
 {
     "data": {
         "id": "87d485b4-73fc-4a7f-bb03-720f4672947e",
@@ -41,47 +40,81 @@ func TestGetImportJobByIdWithoutProgress(t *testing.T) {
         "user_id": "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
     }
 }
-	`)
-
-	helper.SetConfigValue("aura.beta-enabled", true)
-
-	helper.ExecuteCommand("import job get --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee 87d485b4-73fc-4a7f-bb03-720f4672947e")
-
-	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodGet)
-
-	helper.AssertErr("")
-	helper.AssertOutJson(`
+`
+	expectedResponseJson := `
 {
-    "data": {
-        "aura_target": {
-            "db_id": "07e49cf5",
-            "project_id": "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
-        },
-        "data_source": {
-            "id": "177216b3-49b9-4e24-a414-a9ecbb448c53",
-            "name": "AWS_POSTGRES_FLIGHTS",
-            "type": "postgresql"
-        },
-        "id": "87d485b4-73fc-4a7f-bb03-720f4672947e",
-        "import_type": "cloud",
-        "info": {
-            "cancellation_requested_time": "2025-08-15T13:15:19.655209Z",
-            "completion_time": "2025-08-15T13:15:19Z",
-            "exit_status": {
-                "message": "Cancelled",
-                "state": "Cancelled"
-            },
-            "last_update_time": "2025-08-18T12:25:53.469873Z",
-            "percentage_complete": 95.23,
-            "start_time": "2025-08-15T13:12:51Z",
-            "state": "Completed",
-            "submitted_time": "2025-08-15T13:12:50.499797Z"
-        },
-        "user_id": "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
-    }
+	"data": {
+		"aura_target": {
+			"db_id": "07e49cf5",
+			"project_id": "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+		},
+		"data_source": {
+			"id": "177216b3-49b9-4e24-a414-a9ecbb448c53",
+			"name": "AWS_POSTGRES_FLIGHTS",
+			"type": "postgresql"
+		},
+		"id": "87d485b4-73fc-4a7f-bb03-720f4672947e",
+		"import_type": "cloud",
+		"info": {
+			"cancellation_requested_time": "2025-08-15T13:15:19.655209Z",
+			"completion_time": "2025-08-15T13:15:19Z",
+			"exit_status": {
+				"message": "Cancelled",
+				"state": "Cancelled"
+			},
+			"last_update_time": "2025-08-18T12:25:53.469873Z",
+			"percentage_complete": 95.23,
+			"start_time": "2025-08-15T13:12:51Z",
+			"state": "Completed",
+			"submitted_time": "2025-08-15T13:12:50.499797Z"
+		},
+		"user_id": "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	}
 }
-	`)
+`
+	tests := map[string]struct {
+		mockResponse     string
+		executeCommand   string
+		expectedResponse string
+	}{
+		"query with default output format": {
+			mockResponse:     mockedResponseWithoutProgress,
+			executeCommand:   fmt.Sprintf("import job get --project-id=%s %s", projectId, jobId),
+			expectedResponse: expectedResponseJson,
+		}, "query with table output format": {
+			mockResponse:   mockedResponseWithoutProgress,
+			executeCommand: fmt.Sprintf("import job get --project-id=%s %s --output=table", projectId, jobId),
+			expectedResponse: `
+┌──────────────────────────────────────┬─────────────┬────────────┬────────────────────────┬──────────────────────────┬──────────────────────┬───────────────────┐
+│ ID                                   │ IMPORT_TYPE │ INFO:STATE │ INFO:EXIT_STATUS:STATE │ INFO:PERCENTAGE_COMPLETE │ DATA_SOURCE:NAME     │ AURA_TARGET:DB_ID │
+├──────────────────────────────────────┼─────────────┼────────────┼────────────────────────┼──────────────────────────┼──────────────────────┼───────────────────┤
+│ 87d485b4-73fc-4a7f-bb03-720f4672947e │ cloud       │ Completed  │ Cancelled              │ 95.23                    │ AWS_POSTGRES_FLIGHTS │ 07e49cf5          │
+└──────────────────────────────────────┴─────────────┴────────────┴────────────────────────┴──────────────────────────┴──────────────────────┴───────────────────┘
+┌──────────────────────────┐
+│ INFO:EXIT_STATUS:MESSAGE │
+├──────────────────────────┤
+│ Cancelled                │
+└──────────────────────────┘
+`,
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			helper := testutils.NewAuraTestHelper(t)
+			defer helper.Close()
+
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/projects/%s/import/jobs/%s", projectId, jobId), http.StatusOK, mockedResponseWithoutProgress)
+
+			helper.SetConfigValue("aura.beta-enabled", true)
+
+			helper.ExecuteCommand(tt.executeCommand)
+
+			mockHandler.AssertCalledTimes(1)
+			mockHandler.AssertCalledWithMethod(http.MethodGet)
+			mockHandler.AssertCalledWithQueryParam("progress", "false")
+			helper.AssertOut(tt.expectedResponse)
+		})
+	}
 }
 
 func TestGetImportJobByIdWithProgress(t *testing.T) {
@@ -301,6 +334,7 @@ func TestGetImportJobByIdWithProgress(t *testing.T) {
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
+	mockHandler.AssertCalledWithQueryParam("progress", "true")
 
 	helper.AssertErr("")
 	helper.AssertOutJson(`
