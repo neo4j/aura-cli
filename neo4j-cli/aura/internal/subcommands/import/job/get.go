@@ -25,14 +25,9 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <id>",
 		Short: "Get a job by id",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return fmt.Errorf("jobId is required")
-			}
-			jobId = args[0]
-			return nil
-		},
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			jobId = args[0]
 			path := fmt.Sprintf("/projects/%s/import/jobs/%s", projectId, jobId)
 			queryParams := map[string]string{
 				"progress": fmt.Sprintf("%v", showProgress),
