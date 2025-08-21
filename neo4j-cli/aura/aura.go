@@ -29,8 +29,8 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(graphanalytics.NewCmd(cfg))
 	if cfg.Aura.AuraBetaEnabled() {
 		cmd.AddCommand(dataapi.NewCmd(cfg))
+		cmd.AddCommand(_import.NewCmd(cfg))
 	}
-	cmd.AddCommand(_import.NewCmd(cfg))
 
 	return cmd
 }
