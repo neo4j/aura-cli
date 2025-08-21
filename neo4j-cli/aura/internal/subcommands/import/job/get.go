@@ -29,14 +29,13 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			jobId = args[0]
 			path := fmt.Sprintf("/projects/%s/import/jobs/%s", projectId, jobId)
-			queryParams := map[string]string{
-				"progress": fmt.Sprintf("%v", showProgress),
-			}
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method:      http.MethodGet,
-				Version:     api.AuraApiVersion2,
-				QueryParams: queryParams,
+				Method:  http.MethodGet,
+				Version: api.AuraApiVersion2,
+				QueryParams: map[string]string{
+					"progress": fmt.Sprintf("%v", showProgress),
+				},
 			})
 			if err != nil {
 				return err
