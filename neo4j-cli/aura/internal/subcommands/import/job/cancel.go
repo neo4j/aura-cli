@@ -26,9 +26,9 @@ func NewCancelCommand(cfg *clicfg.Config) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			jobId = args[0]
-			path := fmt.Sprintf("/projects/%s/import/jobs/%s/cancel", projectId, jobId)
+			path := fmt.Sprintf("/projects/%s/import/jobs/%s/cancellation", projectId, jobId)
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method:  http.MethodPatch,
+				Method:  http.MethodPost,
 				Version: api.AuraApiVersion2,
 			})
 			if err != nil || statusCode != http.StatusOK {

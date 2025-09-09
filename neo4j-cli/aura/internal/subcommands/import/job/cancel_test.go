@@ -11,7 +11,7 @@ func TestCancelImportJob(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
-	mockHandler := helper.NewRequestHandlerMock("/v2beta1/projects/f607bebe-0cc0-4166-b60c-b4eed69ee7ee/import/jobs/87d485b4-73fc-4a7f-bb03-720f4672947e/cancel", http.StatusOK, `
+	mockHandler := helper.NewRequestHandlerMock("/v2beta1/projects/f607bebe-0cc0-4166-b60c-b4eed69ee7ee/import/jobs/87d485b4-73fc-4a7f-bb03-720f4672947e/cancellation", http.StatusOK, `
 		{
 			"data": {"id": "87d485b4-73fc-4a7f-bb03-720f4672947e"}
 		}
@@ -22,7 +22,7 @@ func TestCancelImportJob(t *testing.T) {
 	helper.ExecuteCommand("import job cancel --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee 87d485b4-73fc-4a7f-bb03-720f4672947e")
 
 	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
 
 	helper.AssertErr("")
 	helper.AssertOutJson(`
@@ -92,7 +92,7 @@ func TestCancelImportJobError(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
-			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/projects/%s/import/jobs/%s/cancel", projectId, jobId), testCase.statusCode, testCase.returnBody)
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/projects/%s/import/jobs/%s/cancellation", projectId, jobId), testCase.statusCode, testCase.returnBody)
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
@@ -100,7 +100,7 @@ func TestCancelImportJobError(t *testing.T) {
 
 			mockHandler.AssertCalledTimes(testCase.expectedCalledTimes)
 			if testCase.expectedCalledTimes > 0 {
-				mockHandler.AssertCalledWithMethod(http.MethodPatch)
+				mockHandler.AssertCalledWithMethod(http.MethodPost)
 			}
 
 			helper.AssertErr(testCase.expectedError)
