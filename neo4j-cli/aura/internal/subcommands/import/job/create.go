@@ -12,21 +12,27 @@ import (
 
 func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
-		projectId     string
-		importModelId string
-		auraDbId      string
+		organizationId string
+		projectId      string
+		importModelId  string
+		auraDbId       string
+		user           string
+		password       string
 	)
 
 	const (
-		projectIdFlag     = "project-id"
-		importModelIdFlag = "import-model-id"
-		auraDbIdFlag      = "aura-db-id"
+		organizationIdFlag = "organization-id"
+		projectIdFlag      = "project-id"
+		importModelIdFlag  = "import-model-id"
+		auraDbIdFlag       = "aura-db-id"
+		userFlag           = "user"
+		passwordFlag       = "password"
 	)
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Allows you to create a new import job",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/projects/%s/import/jobs", projectId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs", organizationId, projectId)
 
 			responseBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPost,
@@ -34,7 +40,9 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 				PostBody: map[string]any{
 					"importModelId": importModelId,
 					"auraCredentials": map[string]any{
-						"dbId": auraDbId,
+						"dbId":     auraDbId,
+						"user":     user,
+						"password": password,
 					},
 				},
 			})
@@ -46,10 +54,17 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Sets the organization ID the job belongs to")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project/Tenant ID")
 	cmd.Flags().StringVar(&importModelId, importModelIdFlag, "", "Import model ID, you can find it from your Aura Console")
 	cmd.Flags().StringVar(&auraDbId, auraDbIdFlag, "", "Aura DB ID targeting for import data goes in")
-	err := cmd.MarkFlagRequired(projectIdFlag)
+	cmd.Flags().StringVar(&user, userFlag, "", "Username to use for authentication")
+	cmd.Flags().StringVar(&password, passwordFlag, "", "Password to use for authentication")
+	err := cmd.MarkFlagRequired(organizationIdFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = cmd.MarkFlagRequired(projectIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,5 +76,6 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return cmd
 }
