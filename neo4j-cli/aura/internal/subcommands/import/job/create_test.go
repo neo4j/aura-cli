@@ -26,7 +26,9 @@ func TestCreateImportJob(t *testing.T) {
 	mockHandler.AssertCalledWithBody(`{
 		"importModelId": "e01cdc6d-2f50-4f46-b04b-8ec8fc8de839",
 		"auraCredentials": {
-			"dbId": "07e49cf5"
+			"dbId": "07e49cf5",
+			"user": "",
+			"password": ""
 		}
 	}`)
 
