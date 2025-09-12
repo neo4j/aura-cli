@@ -12,14 +12,16 @@ import (
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
-		projectId    string
-		jobId        string
-		showProgress bool
+		organizationId string
+		projectId      string
+		jobId          string
+		showProgress   bool
 	)
 
 	const (
-		projectIdFlag    = "project-id"
-		showProgressFlag = "progress"
+		organizationIdFlag = "organization-id"
+		projectIdFlag      = "project-id"
+		showProgressFlag   = "progress"
 	)
 
 	cmd := &cobra.Command{
@@ -28,7 +30,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			jobId = args[0]
-			path := fmt.Sprintf("/projects/%s/import/jobs/%s", projectId, jobId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId)
 
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodGet,
@@ -56,9 +58,14 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Organization ID targeting for import job")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
 	cmd.Flags().BoolVar(&showProgress, showProgressFlag, false, "Show progress details")
-	err := cmd.MarkFlagRequired(projectIdFlag)
+	err := cmd.MarkFlagRequired(organizationIdFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = cmd.MarkFlagRequired(projectIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

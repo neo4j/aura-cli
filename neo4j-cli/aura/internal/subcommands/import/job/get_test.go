@@ -8,6 +8,7 @@ import (
 )
 
 func TestGetImportJobById(t *testing.T) {
+	organizationId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
 	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
 	jobId := "87d485b4-73fc-4a7f-bb03-720f4672947e"
 	mockedResponseWithoutProgress := `
@@ -493,13 +494,13 @@ func TestGetImportJobById(t *testing.T) {
 	}{
 		"query with default output format": {
 			mockResponse:          mockedResponseWithoutProgress,
-			executeCommand:        fmt.Sprintf("import job get --project-id=%s %s", projectId, jobId),
+			executeCommand:        fmt.Sprintf("import job get --organization-id=%s --project-id=%s %s", organizationId, projectId, jobId),
 			expectedQueryParamKey: "progress",
 			expectedQueryParamVal: "false",
 			expectedResponse:      expectedResponseJsonWithoutProgress,
 		}, "query with table output format": {
 			mockResponse:          mockedResponseWithoutProgress,
-			executeCommand:        fmt.Sprintf("import job get --project-id=%s %s --output=table", projectId, jobId),
+			executeCommand:        fmt.Sprintf("import job get --organization-id=%s --project-id=%s %s --output=table", organizationId, projectId, jobId),
 			expectedQueryParamKey: "progress",
 			expectedQueryParamVal: "false",
 			expectedResponse: `
@@ -516,13 +517,13 @@ func TestGetImportJobById(t *testing.T) {
 `,
 		}, "query includes progress with default output format": {
 			mockResponse:          mockedResponseWithProgress,
-			executeCommand:        fmt.Sprintf("import job get --project-id=%s %s --progress", projectId, jobId),
+			executeCommand:        fmt.Sprintf("import job get --organization-id=%s --project-id=%s %s --progress", organizationId, projectId, jobId),
 			expectedQueryParamKey: "progress",
 			expectedQueryParamVal: "true",
 			expectedResponse:      expectedResponseJsonWithProgress,
 		}, "query includes progress with table output format": {
 			mockResponse:          mockedResponseWithProgress,
-			executeCommand:        fmt.Sprintf("import job get --project-id=%s %s --progress --output=table", projectId, jobId),
+			executeCommand:        fmt.Sprintf("import job get --organization-id=%s --project-id=%s %s --progress --output=table", organizationId, projectId, jobId),
 			expectedQueryParamKey: "progress",
 			expectedQueryParamVal: "true",
 			expectedResponse: `
@@ -588,7 +589,7 @@ func TestGetImportJobById(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
-			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/projects/%s/import/jobs/%s", projectId, jobId), http.StatusOK, tt.mockResponse)
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId), http.StatusOK, tt.mockResponse)
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
@@ -603,6 +604,7 @@ func TestGetImportJobById(t *testing.T) {
 }
 
 func TestGetImportJobError(t *testing.T) {
+	organizationId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
 	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
 	jobId := "87d485b4-73fc-4a7f-bb03-720f4672947e"
 	testCases := map[string]struct {
@@ -613,7 +615,7 @@ func TestGetImportJobError(t *testing.T) {
 		returnBody          string
 	}{
 		"correct command with error response 1": {
-			executeCommand:      fmt.Sprintf("import job get --project-id=%s %s", projectId, jobId),
+			executeCommand:      fmt.Sprintf("import job get --organization-id=%s --project-id=%s %s", organizationId, projectId, jobId),
 			statusCode:          http.StatusNotFound,
 			expectedCalledTimes: 1,
 			expectedError:       "Error: [The job 87d485b4-73fc-4a7f-bb03-720f4672947e does not exist]",
@@ -627,7 +629,7 @@ func TestGetImportJobError(t *testing.T) {
 			}`,
 		},
 		"correct command with error response 2": {
-			executeCommand:      fmt.Sprintf("import job get --project-id=%s %s", projectId, jobId),
+			executeCommand:      fmt.Sprintf("import job get --organization-id=%s --project-id=%s %s", organizationId, projectId, jobId),
 			statusCode:          http.StatusMethodNotAllowed,
 			expectedCalledTimes: 1,
 			expectedError:       "Error: [string]",
@@ -641,15 +643,22 @@ func TestGetImportJobError(t *testing.T) {
 				]
 			}`,
 		},
+		"incorrect command with missing organization id": {
+			executeCommand:      fmt.Sprintf("import job get --project-id=%s %s", projectId, jobId),
+			statusCode:          http.StatusBadRequest,
+			expectedCalledTimes: 0,
+			expectedError:       "Error: required flag(s) \"organization-id\" not set",
+			returnBody:          ``,
+		},
 		"incorrect command with missing project id": {
-			executeCommand:      fmt.Sprintf("import job get %s", jobId),
+			executeCommand:      fmt.Sprintf("import job get --organization-id=%s %s", organizationId, jobId),
 			statusCode:          http.StatusBadRequest,
 			expectedCalledTimes: 0,
 			expectedError:       "Error: required flag(s) \"project-id\" not set",
 			returnBody:          ``,
 		},
 		"incorrect command with missing job id": {
-			executeCommand:      fmt.Sprintf("import job get --project-id=%s", projectId),
+			executeCommand:      fmt.Sprintf("import job get --organization-id=%s --project-id=%s", organizationId, projectId),
 			statusCode:          http.StatusBadRequest,
 			expectedCalledTimes: 0,
 			expectedError:       "Error: accepts 1 arg(s), received 0",
@@ -662,7 +671,7 @@ func TestGetImportJobError(t *testing.T) {
 			helper := testutils.NewAuraTestHelper(t)
 			defer helper.Close()
 
-			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/projects/%s/import/jobs/%s", projectId, jobId), testCase.statusCode, testCase.returnBody)
+			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId), testCase.statusCode, testCase.returnBody)
 
 			helper.SetConfigValue("aura.beta-enabled", true)
 
