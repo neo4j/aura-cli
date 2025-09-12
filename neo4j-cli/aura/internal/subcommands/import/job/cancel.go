@@ -12,12 +12,14 @@ import (
 
 func NewCancelCommand(cfg *clicfg.Config) *cobra.Command {
 	var (
-		projectId string
-		jobId     string
+		organizationId string
+		projectId      string
+		jobId          string
 	)
 
 	const (
-		projectIdFlag = "project-id"
+		organizationIdFlag = "organization-id"
+		projectIdFlag      = "project-id"
 	)
 
 	cmd := &cobra.Command{
@@ -26,7 +28,7 @@ func NewCancelCommand(cfg *clicfg.Config) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			jobId = args[0]
-			path := fmt.Sprintf("/projects/%s/import/jobs/%s/cancellation", projectId, jobId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s/cancellation", organizationId, projectId, jobId)
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPost,
 				Version: api.AuraApiVersion2,
@@ -39,8 +41,13 @@ func NewCancelCommand(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Organization ID")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
-	err := cmd.MarkFlagRequired(projectIdFlag)
+	err := cmd.MarkFlagRequired(organizationIdFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = cmd.MarkFlagRequired(projectIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
