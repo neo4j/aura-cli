@@ -58,8 +58,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Organization ID targeting for import job")
-	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project ID")
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Organization ID targeting for import job")
+	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
 	cmd.Flags().BoolVar(&showProgress, showProgressFlag, false, "Show progress details")
 	err := cmd.MarkFlagRequired(organizationIdFlag)
 	if err != nil {
