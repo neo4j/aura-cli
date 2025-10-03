@@ -19,7 +19,7 @@ func TestCreateImportJob(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	helper.ExecuteCommand("import job create --organization-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee  --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --aura-db-id=07e49cf5")
+	helper.ExecuteCommand("import job create --organization-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee  --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --db-id=07e49cf5")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
@@ -53,7 +53,7 @@ func TestCreateImportJobError(t *testing.T) {
 		returnBody          string
 	}{
 		"correct command with error response 1": {
-			executeCommand:      fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s --aura-db-id=%s", organizationId, projectId, importModelId, auraDbId),
+			executeCommand:      fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s --db-id=%s", organizationId, projectId, importModelId, auraDbId),
 			expectedCalledTimes: 1,
 			statusCode:          http.StatusBadRequest,
 			expectedError:       "Error: [DataSourceId: Import model data source id is required]",
@@ -68,7 +68,7 @@ func TestCreateImportJobError(t *testing.T) {
 			}`,
 		},
 		"correct command with error response 2": {
-			executeCommand:      fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s --aura-db-id=%s", organizationId, projectId, importModelId, auraDbId),
+			executeCommand:      fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s --db-id=%s", organizationId, projectId, importModelId, auraDbId),
 			expectedCalledTimes: 1,
 			statusCode:          http.StatusMethodNotAllowed,
 			expectedError:       "Error: [string]",
@@ -83,21 +83,21 @@ func TestCreateImportJobError(t *testing.T) {
 			}`,
 		},
 		"incorrect command with missing organizationId": {
-			executeCommand:      fmt.Sprintf("import job create --project-id=%s --import-model-id=%s --aura-db-id=%s", projectId, importModelId, auraDbId),
+			executeCommand:      fmt.Sprintf("import job create --project-id=%s --import-model-id=%s --db-id=%s", projectId, importModelId, auraDbId),
 			expectedCalledTimes: 0,
 			statusCode:          http.StatusBadRequest,
 			expectedError:       "Error: required flag(s) \"organization-id\" not set",
 			returnBody:          ``,
 		},
 		"incorrect command with missing projectId": {
-			executeCommand:      fmt.Sprintf("import job create --organization-id=%s --import-model-id=%s --aura-db-id=%s", organizationId, importModelId, auraDbId),
+			executeCommand:      fmt.Sprintf("import job create --organization-id=%s --import-model-id=%s --db-id=%s", organizationId, importModelId, auraDbId),
 			expectedCalledTimes: 0,
 			statusCode:          http.StatusBadRequest,
 			expectedError:       "Error: required flag(s) \"project-id\" not set",
 			returnBody:          ``,
 		},
 		"incorrect command with missing importModelId": {
-			executeCommand: fmt.Sprintf("import job create --organization-id=%s --project-id=%s --aura-db-id=%s", organizationId, projectId, auraDbId),
+			executeCommand: fmt.Sprintf("import job create --organization-id=%s --project-id=%s --db-id=%s", organizationId, projectId, auraDbId),
 			statusCode:     http.StatusNotFound,
 			expectedError:  "Error: required flag(s) \"import-model-id\" not set",
 			returnBody:     ``,
@@ -105,7 +105,7 @@ func TestCreateImportJobError(t *testing.T) {
 		"incorrect command with missing auraDbId": {
 			executeCommand: fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s", organizationId, projectId, importModelId),
 			statusCode:     http.StatusNotFound,
-			expectedError:  "Error: required flag(s) \"aura-db-id\" not set",
+			expectedError:  "Error: required flag(s) \"db-id\" not set",
 			returnBody:     ``,
 		},
 	}

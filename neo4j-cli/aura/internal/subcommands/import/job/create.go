@@ -24,7 +24,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		organizationIdFlag = "organization-id"
 		projectIdFlag      = "project-id"
 		importModelIdFlag  = "import-model-id"
-		auraDbIdFlag       = "aura-db-id"
+		dbIdFlag           = "db-id"
 		userFlag           = "user"
 		passwordFlag       = "password"
 	)
@@ -54,10 +54,10 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "Sets the organization ID the job belongs to")
-	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "Project/Tenant ID")
-	cmd.Flags().StringVar(&importModelId, importModelIdFlag, "", "Import model ID, you can find it from your Aura Console")
-	cmd.Flags().StringVar(&auraDbId, auraDbIdFlag, "", "Aura DB ID targeting for import data goes in")
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Sets the organization ID the job belongs to")
+	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/Tenant ID")
+	cmd.Flags().StringVar(&importModelId, importModelIdFlag, "", "(required) The model ID can be found in the URL as such console-preview.neo4j.io/tools/import/model/<model ID>.")
+	cmd.Flags().StringVar(&auraDbId, dbIdFlag, "", "(required) Aura database ID to import data into. Currently, it's the same as Aura instance ID. In the future, instance ID and database ID are different")
 	cmd.Flags().StringVar(&user, userFlag, "", "Username to use for authentication")
 	cmd.Flags().StringVar(&password, passwordFlag, "", "Password to use for authentication")
 	err := cmd.MarkFlagRequired(organizationIdFlag)
@@ -72,7 +72,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = cmd.MarkFlagRequired(auraDbIdFlag)
+	err = cmd.MarkFlagRequired(dbIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
