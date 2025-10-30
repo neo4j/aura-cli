@@ -62,12 +62,28 @@ In the above command, `GORELEASER_CURRENT_TAG` can be substituted for any versio
 
 The Aura CLI aims to provide a consistent and reliable experience to the end user. Any change made to the CLI must comform to the following guidelines:
 
--   All commandds must be singular
+-   All commands must be singular
     -   ✅ `aura-cli instance`
     -   ❌ `aura-cli instances`
 -   Output should support the following options:
     -   `json`: Provides the raw JSON output of the API, formatted to be human-readable.
     -   `table`: Provides a subset of the output, formatted to be human readable on a table. Try to keep the table output below 120 characters to avoid overflowing the screen.
+-   Verbs and nouns should be separate, with the action at the end
+    -   ✅ `aura-cli instance list`
+    -   ❌ `aura-cli list-instance`
+    -   ❌ `aura-cli list instance`
+-   Only one parameter should be used, if more than one is needed, use flags instead. This is to avoid confusion when passing parameters without enough context
+    -   ✅ `aura-cli instance get <id>`
+    -   ❌ `aura-cli instance get <id> <deployment-id>`
+    -   ✅ `aura-cli instance get <id> --deployment-id <deployment-id>`
+    -   ⚠️ `aura-cli instance get --instance-id <id> --deployment-id <deployment-id>`  
+        This valid, but the option above is preferred as it is more concise
+-   The parameter must always refer to the closest noun
+    -   ❌ `aura-cli instance snapshot list <instance-id>`
+    -   ✅ `aura-cli instance snapshot list --instance-id <instance-id>`
+-   No parameters between commands
+    -   ❌ `aura-cli tenant <tenant-id> instance get <id>`
+    -   ✅ `aura-cli instance get <id> --tenant-id <tenant-id>`
 -   Flags, if set, take precedence over global configuration or default values
 
 > These guidelines are based on https://clig.dev
