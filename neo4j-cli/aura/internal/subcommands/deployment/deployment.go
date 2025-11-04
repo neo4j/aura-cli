@@ -6,6 +6,8 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clierr"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/database"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/server"
 
 	"github.com/spf13/cobra"
 )
@@ -41,6 +43,8 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.AddCommand(NewGetCmd(cfg))
 	cmd.AddCommand(NewListCmd(cfg))
+	cmd.AddCommand(database.NewCmd(cfg))
+	cmd.AddCommand(server.NewCmd(cfg))
 
 	cmd.PersistentFlags().String("auth-url", "", "")
 	cmd.PersistentFlags().String("base-url", "", "")
