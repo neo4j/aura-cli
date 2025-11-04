@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
@@ -41,9 +40,23 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			spew.Dump(resBody)
 			if statusCode == http.StatusOK {
-				fields := []string{"id", "name", "created_by", "dbms", "token"}
+				fields := []string{
+					"id",
+					"name",
+					"created_by",
+					"dbms:edition",
+					"dbms:metric_collection_enabled",
+					"dbms:packaging",
+					"token:id",
+					"token:claimed_time",
+					"token:expiry_time",
+					"token:last_used_time",
+					"token:release_time",
+					"token:auto_rotated",
+					"token:created_by",
+					"token:creation_time",
+				}
 				output.PrintBody(cmd, cfg, resBody, fields)
 			}
 
