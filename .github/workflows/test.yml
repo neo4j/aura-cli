@@ -17,10 +17,10 @@ jobs:
                 os: [ubuntu-latest, windows-latest, macos-latest]
         runs-on: ${{ matrix.os }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
             - name: Set up Go
-              uses: actions/setup-go@v5
+              uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
               with:
                   go-version: "stable"
 
@@ -36,6 +36,6 @@ jobs:
             - name: fmt
               run: go fmt ./...
 
-            - uses: dominikh/staticcheck-action@v1.3.1
+            - uses: dominikh/staticcheck-action@fe1dd0c3658873b46f8c9bb3291096a617310ca6 # v1.3.1
               with:
                   install-go: false
