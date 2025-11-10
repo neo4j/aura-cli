@@ -46,6 +46,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(NewCreateCmd(cfg))
 	cmd.AddCommand(NewRegisterCmd(cfg))
 	cmd.AddCommand(NewRefreshCmd(cfg))
+	cmd.AddCommand(NewDeleteCmd(cfg))
 	cmd.AddCommand(database.NewCmd(cfg))
 	cmd.AddCommand(server.NewCmd(cfg))
 
