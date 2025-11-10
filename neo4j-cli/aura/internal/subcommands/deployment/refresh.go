@@ -5,13 +5,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
+func NewRefreshCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		organizationId string
 		projectId      string
@@ -29,9 +30,9 @@ func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "register",
-		Short: "Register a deployment",
-		Long:  "This endpoint registers a Fleet Manager deployment and returns a token that can be used to activate Fleet Manager in a Neo4j database.",
+		Use:   "refresh",
+		Short: "Refresh the deployment token",
+		Long:  "This endpoint refreshes a Fleet Manager deployment token.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/deployments/%s/token", organizationId, projectId, deploymentId)
@@ -50,16 +51,17 @@ func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method:   http.MethodPost,
+				Method:   http.MethodPatch,
 				PostBody: body,
 				Version:  api.AuraApiVersion2,
 			})
 			if err != nil {
 				return err
 			}
+			spew.Dump(resBody)
 
-			// NOTE: Deployment register should not return OK (200), it always returns 201, checking both just in case
-			if statusCode == http.StatusCreated || statusCode == http.StatusOK {
+			// NOTE: Token refresh should not return OK (200), it always returns 202, checking both just in case
+			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
 				output.PrintBody(cmd, cfg, resBody, []string{"token"})
 			}
 
@@ -86,11 +88,4 @@ func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 
 	return cmd
-}
-
-func validateExpiresIn(expiresIn string) error {
-	if expiresIn != "15 minutes" && expiresIn != "3 months" && expiresIn != "6 months" && expiresIn != "9 months" && expiresIn != "12 months" {
-		return fmt.Errorf("incorrect expires-in value, must be one of '15 minutes', '3 months', '6 months', '9 months' and '12 months'")
-	}
-	return nil
 }
