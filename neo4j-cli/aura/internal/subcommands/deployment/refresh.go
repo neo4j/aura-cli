@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
@@ -58,10 +57,8 @@ func NewRefreshCmd(cfg *clicfg.Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			spew.Dump(resBody)
 
-			// NOTE: Token refresh should not return OK (200), it always returns 202, checking both just in case
-			if statusCode == http.StatusAccepted || statusCode == http.StatusOK {
+			if statusCode == http.StatusOK {
 				output.PrintBody(cmd, cfg, resBody, []string{"token"})
 			}
 
