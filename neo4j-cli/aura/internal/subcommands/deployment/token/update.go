@@ -1,4 +1,4 @@
-package deployment
+package token
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
+func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
 		organizationId string
 		projectId      string
@@ -29,9 +29,9 @@ func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "register",
-		Short: "Register a deployment",
-		Long:  "This endpoint registers a Fleet Manager deployment and returns a token that can be used to activate Fleet Manager in a Neo4j database.",
+		Use:   "update",
+		Short: "Refresh the deployment token",
+		Long:  "This endpoint refreshes a Fleet Manager deployment token.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/deployments/%s/token", organizationId, projectId, deploymentId)
@@ -50,7 +50,7 @@ func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method:   http.MethodPost,
+				Method:   http.MethodPatch,
 				PostBody: body,
 				Version:  api.AuraApiVersion2,
 			})
@@ -58,8 +58,7 @@ func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			// NOTE: Deployment register should not return OK (200), it always returns 201, checking both just in case
-			if statusCode == http.StatusCreated || statusCode == http.StatusOK {
+			if statusCode == http.StatusOK {
 				output.PrintBody(cmd, cfg, resBody, []string{"token"})
 			}
 
@@ -86,11 +85,4 @@ func NewRegisterCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 
 	return cmd
-}
-
-func validateExpiresIn(expiresIn string) error {
-	if expiresIn != "15 minutes" && expiresIn != "3 months" && expiresIn != "6 months" && expiresIn != "9 months" && expiresIn != "12 months" {
-		return fmt.Errorf("incorrect expires-in value, must be one of '15 minutes', '3 months', '6 months', '9 months' and '12 months'")
-	}
-	return nil
 }
