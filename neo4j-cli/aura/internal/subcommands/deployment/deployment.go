@@ -8,6 +8,7 @@ import (
 	"github.com/neo4j/cli/common/clierr"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/database"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/server"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/token"
 
 	"github.com/spf13/cobra"
 )
@@ -44,11 +45,10 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(NewGetCmd(cfg))
 	cmd.AddCommand(NewListCmd(cfg))
 	cmd.AddCommand(NewCreateCmd(cfg))
-	cmd.AddCommand(NewRegisterCmd(cfg))
-	cmd.AddCommand(NewRefreshCmd(cfg))
 	cmd.AddCommand(NewDeleteCmd(cfg))
 	cmd.AddCommand(database.NewCmd(cfg))
 	cmd.AddCommand(server.NewCmd(cfg))
+	cmd.AddCommand(token.NewCmd(cfg))
 
 	cmd.PersistentFlags().String("auth-url", "", "")
 	cmd.PersistentFlags().String("base-url", "", "")
