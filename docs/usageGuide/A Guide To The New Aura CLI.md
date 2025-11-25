@@ -386,12 +386,12 @@ The Aura CLI provides a full set of commands to manage Fleet Manager deployments
 The workflow to setup a new monitored deployment is as follows:
 
 - Use the `deployment create` command to create a new deployment with the wanted properties.
-- Use the `deployment token create` command to create a new Fleet Manager token with the wanter properties for the newly created deployment.
+- Use the `deployment token create` command to create a new Fleet Manager token with the wanted properties for the newly created deployment.
 - Log into the Neo4j database that you want to monitor and register the new token with the `call fleetManagement.registerToken('TOKEN\_HERE');` procedure
 
 ### Commands at a glance
 
-Each commands requires a organization and project ID as a required parameter
+Each command requires an organization and project ID parameter
 ```text
 --organization-id YOUR\_ORGANIZATION\_ID --project-id YOUR\_PROJECT\_ID
 ```
@@ -428,7 +428,7 @@ Create a new Fleet Manager deployment in your project. The command will return t
 - `connection-url`
 
 ```text
-aura-cli deployment create  --name DEPLOYMENT\_NAME --connection_url CONNECTION\_URL --organization-id YOUR\_ORGANIZATION\_ID --project-id YOUR\_PROJECT\_ID
+aura-cli deployment create  --name DEPLOYMENT\_NAME --connection-url CONNECTION\_URL --organization-id YOUR\_ORGANIZATION\_ID --project-id YOUR\_PROJECT\_ID
 ```
 
 ## Delete

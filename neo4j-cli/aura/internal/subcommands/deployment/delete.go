@@ -40,7 +40,7 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if statusCode == http.StatusNoContent || statusCode == http.StatusOK {
-				log.Default().Printf("Deployment %s deleted successfully", deploymentId)
+				cmd.Println("Deployment deleted successfully", deploymentId)
 			}
 
 			return nil
