@@ -34,7 +34,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 		Long:  "This endpoint refreshes a Fleet Manager deployment token.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/organizations/%s/projects/%s/deployments/%s/token", organizationId, projectId, deploymentId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/token", organizationId, projectId, deploymentId)
 
 			body := map[string]any{}
 			if expiresIn != "" {

@@ -17,7 +17,7 @@ func TestListDeploymentServerDatabase(t *testing.T) {
 	deploymentId := "9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2"
 	serverId := "66c6ee3b-de03-4e8a-ba57-066b34730092"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments/%s/servers/%s/databases", organizationId, projectId, deploymentId, serverId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments/%s/servers/%s/databases", organizationId, projectId, deploymentId, serverId), http.StatusOK, `{
 		"data": [
 			{
 				"current_status": "online",
@@ -108,7 +108,7 @@ func TestListDeploymentServerDatabaseWithTableOutput(t *testing.T) {
 	deploymentId := "9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2"
 	serverId := "66c6ee3b-de03-4e8a-ba57-066b34730092"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments/%s/servers/%s/databases", organizationId, projectId, deploymentId, serverId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments/%s/servers/%s/databases", organizationId, projectId, deploymentId, serverId), http.StatusOK, `{
 		"data": [
 			{
 				"current_status": "online",

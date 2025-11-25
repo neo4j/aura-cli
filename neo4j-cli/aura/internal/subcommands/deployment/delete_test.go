@@ -16,7 +16,7 @@ func TestDeleteDeployment(t *testing.T) {
 	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
 	deploymentId := "9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments/%s", organizationId, projectId, deploymentId), http.StatusNoContent, "")
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments/%s", organizationId, projectId, deploymentId), http.StatusNoContent, "")
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetConfigValue("aura.output", "json")

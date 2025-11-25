@@ -30,7 +30,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		Long:  "This endpoint returns servers for the given Fleet Manager deployment.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/organizations/%s/projects/%s/deployments/%s/servers", organizationId, projectId, deploymentId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/servers", organizationId, projectId, deploymentId)
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
