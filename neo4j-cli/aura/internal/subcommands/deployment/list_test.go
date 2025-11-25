@@ -15,7 +15,7 @@ func TestListDeployment(t *testing.T) {
 	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
 	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments", organizationId, projectId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId), http.StatusOK, `{
 		"data": [{
 			"created_by": "941d32f6-6abf-42d7-beb8-012341376dc6",
 			"connection_url": "",
@@ -64,7 +64,7 @@ func TestListDeploymentWithTableOutput(t *testing.T) {
 	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
 	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments", organizationId, projectId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId), http.StatusOK, `{
 		"data": [{
 			"created_by": "941d32f6-6abf-42d7-beb8-012341376dc6",
 			"connection_url": "",

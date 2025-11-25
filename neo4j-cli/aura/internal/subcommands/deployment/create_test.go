@@ -16,7 +16,7 @@ func TestCreateDeployment(t *testing.T) {
 	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
 	name := "Test Deployment"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments", organizationId, projectId), http.StatusCreated, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId), http.StatusCreated, `{
 		"data": {
 			"id": "9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2"
 		}
@@ -45,7 +45,7 @@ func TestCreateDeploymentWithConnectionUrl(t *testing.T) {
 	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
 	name := "Test Deployment"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments", organizationId, projectId), http.StatusCreated, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId), http.StatusCreated, `{
 		"data": {
 			"id": "9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2"
 		}

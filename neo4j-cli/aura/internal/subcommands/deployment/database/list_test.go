@@ -16,7 +16,7 @@ func TestListDeploymentDatabase(t *testing.T) {
 	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
 	deploymentId := "9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments/%s/databases", organizationId, projectId, deploymentId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments/%s/databases", organizationId, projectId, deploymentId), http.StatusOK, `{
 		"data": [
 			{
 				"access": "read-write",
@@ -114,7 +114,7 @@ func TestListDeploymentDatabaseWithTableOutput(t *testing.T) {
 	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
 	deploymentId := "9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2"
 
-	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/deployments/%s/databases", organizationId, projectId, deploymentId), http.StatusOK, `{
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments/%s/databases", organizationId, projectId, deploymentId), http.StatusOK, `{
 		"data": [
 			{
 				"access": "read-write",

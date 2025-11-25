@@ -29,7 +29,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			deploymentId := args[0]
-			path := fmt.Sprintf("/organizations/%s/projects/%s/deployments/%s", organizationId, projectId, deploymentId)
+			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s", organizationId, projectId, deploymentId)
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
