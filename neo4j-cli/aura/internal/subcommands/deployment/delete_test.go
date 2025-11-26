@@ -25,5 +25,5 @@ func TestDeleteDeployment(t *testing.T) {
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodDelete)
 
-	helper.AssertOut("")
+	helper.AssertOut("Deployment deleted successfully 9a1e6181-7d0b-48a2-bc2b-4250c36b5cc2")
 }
