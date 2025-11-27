@@ -16,42 +16,26 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 		organizationId string
 		projectId      string
 		deploymentId   string
-		expiresIn      string
-		noAutoRotate   bool
 	)
 
 	const (
 		organizationIdFlag = "organization-id"
 		projectIdFlag      = "project-id"
 		deploymentIdFlag   = "deployment-id"
-		expiresInFlag      = "expires-in"
-		noAutoRotateFlag   = "no-auto-rotate"
 	)
 
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Refresh the deployment token",
-		Long:  "This endpoint refreshes a Fleet Manager deployment token.",
+		Short: "Update the deployment token",
+		Long:  "This endpoint creates a new auto rotating Fleet Manager deployment token with a three month rotation interval.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/token", organizationId, projectId, deploymentId)
 
-			body := map[string]any{}
-			if expiresIn != "" {
-				err := validateExpiresIn(expiresIn)
-				if err != nil {
-					log.Fatal(err)
-				}
-				body["expires_in"] = expiresIn
-			}
-			if noAutoRotate {
-				body["auto_rotate"] = false
-			}
-
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:   http.MethodPatch,
-				PostBody: body,
+				PostBody: map[string]any{},
 				Version:  api.AuraApiVersion2,
 			})
 			if err != nil {
@@ -68,8 +52,6 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&organizationId, organizationIdFlag, "o", "", "(required) Organization ID")
 	cmd.Flags().StringVarP(&projectId, projectIdFlag, "p", "", "(required) Project/tenant ID")
 	cmd.Flags().StringVarP(&deploymentId, deploymentIdFlag, "d", "", "(required) Deployment ID")
-	cmd.Flags().BoolVarP(&noAutoRotate, noAutoRotateFlag, "r", false, "An optional argument to prevent the token from auto rotating when it expires.")
-	cmd.Flags().StringVarP(&expiresIn, expiresInFlag, "e", "", "An optional expires in time. Accepted values are '15 minutes', '3 months', '6 months', '9 months' and '12 months'")
 
 	err := cmd.MarkFlagRequired(organizationIdFlag)
 	if err != nil {

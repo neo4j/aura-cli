@@ -403,7 +403,7 @@ Each command requires an organization and project ID parameter
 
 #### Token subcommand
 - `token create` Create a token to register a deployment for Fleet Manager monitoring.
-- `token update` Refresh an existing token for a deployment.
+- `token update` Recreate a token to override an  existing token for a deployment.
 - `token delete` Delete a token from a deployment to stop monitoring the deployment.
 
 #### Database subcommand
@@ -455,36 +455,20 @@ aura-cli deployment get DEPLOYMENT\_ID --organization-id YOUR\_ORGANIZATION\_ID 
 
 ### Create
 
-Create a token that can be registered to a Fleet Manager deployment using the Neo4j procedure `call fleetManagement.registerToken('CREATED\_TOKEN');`
-
-#### Mandatory flags
-- `organization-id`
-- `project-id`
-- `deployment-id`
-
-#### Optional flags
-- `no-auto-rotate` Use to prevent the created token from being automatically renewed when it expires.
-- `expires-in` Accepted values are `15 minutes`, `3 months`, `6 months`, `9 months`, `12 months`.
+Create a token that can be registered to a Fleet Manager deployment using the Neo4j procedure `call fleetManagement.registerToken('CREATED\_TOKEN');`.
+The token will be created as an auto-rotating token with a three month rotation interval.
 
 ```text
-aura-cli deployment token create --deployment-id DEPLOYMENT\_ID --organization-id YOUR\_ORGANIZATION\_ID --project-id YOUR\_PROJECT\_ID --no-auto-rotate --expires-in "3 months"
+aura-cli deployment token create --deployment-id DEPLOYMENT\_ID --organization-id YOUR\_ORGANIZATION\_ID --project-id YOUR\_PROJECT\_ID
 ```
 
 ### Update
 
-Renew the token for an existing monitored deployment. This will only be needed if the original token was created with the `--no-auto-rotate` flag. The newly created token should be registered to the same deployment using the Neo4j procedure `call fleetManagement.registerToken('CREATED\_TOKEN');`
+Renew the token for an existing monitored deployment. This command should only be needed if you need to manually rotate the token earlier than the set rotation interval. The newly created token should be registered to the same deployment using the Neo4j procedure `call fleetManagement.registerToken('CREATED\_TOKEN');`
 
-#### Mandatory flags
-- `organization-id`
-- `project-id`
-- `deployment-id`
-
-#### Optional flags
-- `no-auto-rotate` Use to prevent the created token from being automatically renewed when it expires.
-- `expires-in` Accepted values are `15 minutes`, `3 months`, `6 months`, `9 months`, `12 months`.
 
 ```text
-aura-cli deployment token update --deployment-id DEPLOYMENT\_ID --organization-id YOUR\_ORGANIZATION\_ID --project-id YOUR\_PROJECT\_ID --no-auto-rotate --expires-in "3 months"
+aura-cli deployment token update --deployment-id DEPLOYMENT\_ID --organization-id YOUR\_ORGANIZATION\_ID --project-id YOUR\_PROJECT\_ID
 ```
 
 ### Delete
