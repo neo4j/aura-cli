@@ -104,6 +104,8 @@ Nested subcommands are also allowed, for example:
 
 -   `instance snapshot list`
 
+Folders and files should follow the same structure as the commands. So for example, `instance snapshot list` should be implemented in the folder `subcommands/instance/snapshot/list.go`. A single command per file
+
 ### Common subcommands
 
 Most commands targetting API resources contain some of the following subcommands as actions:
