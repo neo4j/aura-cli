@@ -30,7 +30,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new deployment",
-		Long:  "This endpoint creates a new Fleet Manager deployment.",
+		Long:  "Creates a new unmonitored Fleet Manager deployment.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId)

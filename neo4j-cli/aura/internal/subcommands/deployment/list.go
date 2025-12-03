@@ -26,7 +26,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Returns all deployments",
-		Long:  "This endpoint returns all Fleet Manager deployments for the given project.",
+		Long:  "Returns all Fleet Manager deployments for the given project.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId)
