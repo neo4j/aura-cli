@@ -27,7 +27,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a deployment token",
-		Long:  "Create a new auto rototating Fleet Manager deployment token with a three month rotation interval. Register the deployment with Fleet Manager with the `call fleetManagement.registerToken('$token');` database procedure.",
+		Long:  "Create a new auto rotating Fleet Manager deployment token with a three month rotation interval. Register the deployment with Fleet Manager with the `call fleetManagement.registerToken('$token');` database procedure.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/token", organizationId, projectId, deploymentId)
