@@ -8,6 +8,7 @@ import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -42,8 +43,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			// NOTE: Deployment register should not return OK (200), it always returns 201, checking both just in case
-			if statusCode == http.StatusCreated || statusCode == http.StatusOK {
+			if utils.IsSuccessful(statusCode) {
 				output.PrintBody(cmd, cfg, resBody, []string{"token"})
 			}
 

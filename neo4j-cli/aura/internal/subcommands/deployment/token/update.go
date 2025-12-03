@@ -8,6 +8,7 @@ import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +43,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			if statusCode == http.StatusOK {
+			if utils.IsSuccessful(statusCode) {
 				output.PrintBody(cmd, cfg, resBody, []string{"token"})
 			}
 

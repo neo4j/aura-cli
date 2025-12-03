@@ -7,6 +7,7 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +41,7 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			if statusCode == http.StatusNoContent {
+			if utils.IsSuccessful(statusCode) {
 				cmd.Println("Deployment token deleted successfully for deployment", deploymentId)
 			}
 
