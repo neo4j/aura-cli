@@ -26,7 +26,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <id>",
 		Short: "Returns deployment details",
-		Long:  "This endpoint returns details about a specific Fleet Manager deployment.",
+		Long:  "Returns details about a specific Fleet Manager deployment.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			deploymentId := args[0]
