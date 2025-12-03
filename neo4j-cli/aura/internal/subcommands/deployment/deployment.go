@@ -24,18 +24,14 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 
 			outputValue := cmd.Flags().Lookup("output").Value.String()
 			if outputValue != "" {
-				validOutputValue := false
 				for _, v := range clicfg.ValidOutputValues {
 					if v == outputValue {
-						validOutputValue = true
-						break
+						cfg.Aura.BindOutput(cmd.Flags().Lookup("output"))
+						return nil
 					}
 				}
-				if !validOutputValue {
-					return clierr.NewUsageError("invalid output value specified: %s", outputValue)
-				}
+				return clierr.NewUsageError("invalid output value specified: %s", outputValue)
 			}
-
 			cfg.Aura.BindOutput(cmd.Flags().Lookup("output"))
 
 			return nil
