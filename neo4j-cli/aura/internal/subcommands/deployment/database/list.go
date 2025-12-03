@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
@@ -32,7 +31,6 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/databases", organizationId, projectId, deploymentId)
-			spew.Dump(path)
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
