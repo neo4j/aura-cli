@@ -60,18 +60,22 @@ In the above command, `GORELEASER_CURRENT_TAG` can be substituted for any versio
 
 ## CLI Guidelines
 
-The Aura CLI aims to provide a consistent and reliable experience to the end user. Any change made to the CLI must comform to the following guidelines:
+The Aura CLI aims to provide a consistent and reliable experience to the end user. Any change made to the CLI must comform to the following guidelines.
+
+### Commands
 
 -   All commands must be singular
     -   ✅ `aura-cli instance`
     -   ❌ `aura-cli instances`
--   Output should support the following options:
-    -   `json`: Provides the raw JSON output of the API, formatted to be human-readable.
-    -   `table`: Provides a subset of the output, formatted to be human readable on a table. Try to keep the table output below 120 characters to avoid overflowing the screen.
 -   Verbs and nouns should be separate, with the action at the end
     -   ✅ `aura-cli instance list`
     -   ❌ `aura-cli list-instance`
     -   ❌ `aura-cli list instance`
+
+### Parameters
+
+To avoid confusion, this guide uses the term **flags** to refer to any named argument, wether it has values or not (e.g. `-l`, `--output json`) and **arguments** exclusively for positional arguments (e.g. `list 1234`).
+
 -   Only one argument should be used, if more than one is needed, use flags instead. This is to avoid confusion when passing parameters without enough context
     -   ✅ `aura-cli instance get <id>`
     -   ❌ `aura-cli instance get <id> <deployment-id>`
@@ -85,6 +89,13 @@ The Aura CLI aims to provide a consistent and reliable experience to the end use
     -   ❌ `aura-cli tenant <tenant-id> instance get <id>`
     -   ✅ `aura-cli instance get <id> --tenant-id <tenant-id>`
 -   Flags, if set, take precedence over global configuration or default values
+-   Flags should have descriptions, if the flag is expected to be always set. The description must start with `(required)`
+
+#### Output
+
+-   Read operations should support the following `--output` options:
+    -   `json`: Provides the raw JSON output of the API, formatted to be human-readable.
+    -   `table`: Provides a subset of the output, formatted to be human readable on a table. Try to keep the table output below 120 characters to avoid overflowing the screen.
 
 > These guidelines are based on https://clig.dev
 
