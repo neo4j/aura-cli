@@ -50,9 +50,9 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVarP(&organizationId, organizationIdFlag, "o", "", "(required) Organization ID")
-	cmd.Flags().StringVarP(&projectId, projectIdFlag, "p", "", "(required) Project/tenant ID")
-	cmd.Flags().StringVarP(&deploymentId, deploymentIdFlag, "d", "", "(required) Deployment ID")
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Organization ID")
+	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
+	cmd.Flags().StringVar(&deploymentId, deploymentIdFlag, "", "(required) Deployment ID")
 
 	err := cmd.MarkFlagRequired(organizationIdFlag)
 	if err != nil {

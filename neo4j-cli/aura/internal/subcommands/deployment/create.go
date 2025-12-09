@@ -57,10 +57,10 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVarP(&organizationId, organizationIdFlag, "o", "", "(required) Organization ID")
-	cmd.Flags().StringVarP(&projectId, projectIdFlag, "p", "", "(required) Project/tenant ID")
-	cmd.Flags().StringVarP(&name, nameFlag, "n", "", "(required) Deployment name")
-	cmd.Flags().StringVarP(&connectionUrl, connectionUrlFlag, "c", "", "An optional connection URL for the deployment")
+	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Organization ID")
+	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
+	cmd.Flags().StringVar(&name, nameFlag, "", "(required) Deployment name")
+	cmd.Flags().StringVar(&connectionUrl, connectionUrlFlag, "", "An optional connection URL for the deployment")
 
 	err := cmd.MarkFlagRequired(organizationIdFlag)
 	if err != nil {
