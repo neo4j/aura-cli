@@ -403,7 +403,7 @@ Each command requires an organization and project ID parameter
 
 #### Token subcommand
 - `token create` Create a token to register a deployment for Fleet Manager monitoring.
-- `token update` Recreate a token to override an  existing token for a deployment.
+- `token update` Recreate a token to override an existing token for a deployment.
 - `token delete` Delete a token from a deployment to stop monitoring the deployment.
 
 #### Database subcommand
