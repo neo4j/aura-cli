@@ -97,3 +97,64 @@ func TestListDeploymentWithTableOutput(t *testing.T) {
 └──────────────────────────────────────┴───────────────────┴──────────────────────────────────────┴─────────┴───────────────────────┘
 	`)
 }
+
+func TestListDeploymentsWithNoDeployments(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId), http.StatusOK, `{
+		"data": []
+	}`)
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.SetConfigValue("aura.output", "json")
+	helper.ExecuteCommand(fmt.Sprintf("deployment list --organization-id=%s --project-id=%s", organizationId, projectId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+
+	helper.AssertOutJson(`{"data": []}`)
+}
+
+func TestListDeploymentsWithMissingProjectId(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId), http.StatusOK, `{
+		"data": []
+	}`)
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.SetConfigValue("aura.output", "json")
+	helper.ExecuteCommand(fmt.Sprintf("deployment list --organization-id=%s", organizationId))
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr("Error: required flag(s) \"project-id\" not set")
+}
+
+func TestListDeploymentsWithMissingOrganizationId(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId), http.StatusOK, `{
+		"data": []
+	}`)
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.SetConfigValue("aura.output", "json")
+	helper.ExecuteCommand(fmt.Sprintf("deployment list --project-id=%s", projectId))
+
+	mockHandler.AssertCalledTimes(0)
+
+	helper.AssertErr("Error: required flag(s) \"organization-id\" not set")
+}
