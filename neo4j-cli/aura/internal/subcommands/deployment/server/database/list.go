@@ -45,17 +45,11 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 
 			if api.IsSuccessful(statusCode) {
 				fields := []string{
-					"id",
-					"deployment_id",
-					"server_id",
 					"name",
 					"type",
 					"current_status",
-					"status_message",
-					"graph_shards",
 					"last_committed_txn",
 					"last_seen",
-					"property_shards",
 					"replication_lag",
 					"role",
 					"writer",

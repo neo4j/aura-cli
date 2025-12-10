@@ -44,17 +44,10 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 				fields := []string{
 					"id",
 					"name",
-					"created_by",
 					"dbms:edition",
-					"dbms:metric_collection_enabled",
 					"dbms:packaging",
-					"token:id",
-					"token:claimed_time",
 					"token:expiry_time",
-					"token:last_used_time",
-					"token:release_time",
 					"token:auto_rotated",
-					"token:created_by",
 					"token:creation_time",
 				}
 				output.PrintBody(cmd, cfg, resBody, fields)
