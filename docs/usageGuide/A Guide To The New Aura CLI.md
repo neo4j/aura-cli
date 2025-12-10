@@ -543,6 +543,36 @@ Get detailed information about all of the physical databases on the given server
 aura-cli deployment server database list --deployment-id DEPLOYMENT_ID --server-id SERVER_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
 ```
 
+## Troubleshooting
+
+### Error: unknown command "deployment" for "aura-cli"
+
+Make sure that you have set your CLI to run with beta enabled
+```text
+aura-cli config set beta-enabled true
+```
+
+### Deployment not found
+
+Check that you are using the correct organization ID and project ID in the commands.
+
+Make sure that you have the right deployment ID. You can verify that it exists by listing all the deployments in your project.
+```text
+aura-cli deployment list --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Failed to create a token for a deployment
+Error: [failed to create api key: failed to save new api key: no rows in result set]
+
+The token creation will fail if the deployment already has a token registered to it. To verify if a token already exists check the information given by:
+```text
+aura-cli deployment get DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+If there is a need to update the current token, a new one can be created with:
+```text
+aura-cli deployment token update --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
 
 # Configuration of Aura CLI
 
