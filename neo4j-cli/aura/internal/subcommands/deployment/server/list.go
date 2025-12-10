@@ -8,7 +8,6 @@ import (
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
-	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +41,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			if utils.IsSuccessful(statusCode) {
+			if api.IsSuccessful(statusCode) {
 				fields := []string{
 					"id",
 					"deployment_id",
