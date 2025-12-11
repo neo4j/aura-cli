@@ -77,7 +77,7 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 
 	defer res.Body.Close()
 
-	if isSuccessful(res.StatusCode) {
+	if IsSuccessful(res.StatusCode) {
 		responseBody, err = io.ReadAll(res.Body)
 
 		if err != nil {
@@ -134,6 +134,6 @@ func addQueryParams(u *url.URL, params map[string]string) {
 }
 
 // Checks status code is 2xx
-func isSuccessful(statusCode int) bool {
+func IsSuccessful(statusCode int) bool {
 	return statusCode >= 200 && statusCode <= 299
 }

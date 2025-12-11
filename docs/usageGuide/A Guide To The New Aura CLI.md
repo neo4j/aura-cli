@@ -377,6 +377,203 @@ Provide detailed information for a particular CMEK:
 aura-cli customer-managed-key get YOUR\_CMEK\_ID
 ```
 
+# Managing Fleet Manager deployments
+
+The Aura CLI provides a full set of commands to manage Fleet Manager deployments.
+
+## Example workflow
+
+The workflow to setup a new monitored deployment is as follows:
+
+Create a new deployment with the wanted properties.
+```text
+aura-cli deployment create --name DEPLOYMENT_NAME --connection-url DATABASE_CONNECTION_URL --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+Create a new Fleet Manager token with the wanted properties for the newly created deployment.
+```text
+aura-cli deployment token create --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+Then log into the Neo4j database that you want to monitor and register the new token with the `call fleetManagement.registerToken('TOKEN_HERE');` procedure
+
+## Commands at a glance
+
+Each command requires an organization and project ID parameter
+```text
+--organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT\_ID
+```
+Create a new deployment (Connection URL is optional).
+```text
+aura-cli deployment create --name DEPLOYMENT_NAME --connection-url DATABASE_CONNECTION_URL --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+Delete a deployment.
+```text
+aura-cli deployment delete DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+Fetch information about the given deployment.
+```text
+aura-cli deployment get DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+``` 
+List all deployments for a project.
+```text
+aura-cli deployment list --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Token subcommand
+Create a token to register a deployment for Fleet Manager monitoring.
+```text
+aura-cli deployment token create --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+Recreate a token to override an existing token for a deployment.
+```text
+aura-cli deployment token update --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+Delete a token from a deployment to stop monitoring the deployment.
+```text
+aura-cli deployment token delete --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Database subcommand
+List all logical databases for a deployment.
+```text
+aura-cli deployment database list --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Server subcommand
+List all servers for a deployment.
+```text
+aura-cli deployment deployment server list --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Server database subcommand
+List all physical databases for a deployment server.
+```text
+aura-cli deployment deployment server database list --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID`
+```
+
+## Create
+
+Create a new Fleet Manager deployment in your project. The command will return the deployment ID for the new deployment which can then be used in future commands to fetch information about the deployment or register it as a monitored deployment using the `token create` subcommand.
+
+### Mandatory flags
+- `organization-id`
+- `project-id`
+- `name`
+
+### Optional flags
+- `connection-url`
+
+```text
+aura-cli deployment create  --name DEPLOYMENT_NAME --connection-url CONNECTION_URL --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## Delete
+
+Delete a Fleet Manager deployment. This will also delete the associated token for the deployment if the deployment is being monitored.
+
+```text
+aura-cli deployment delete DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## List
+List all deployments
+
+```text
+aura-cli deployment list --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## Get
+Get details about the given deployment
+
+```text
+aura-cli deployment get DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## Token
+
+### Create
+
+Create a token that can be registered to a Fleet Manager deployment using the Neo4j procedure `call fleetManagement.registerToken('CREATED_TOKEN');`.
+The token will be created as an auto-rotating token with a three month rotation interval.
+
+```text
+aura-cli deployment token create --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Update
+
+Renew the token for an existing monitored deployment. This command should only be needed if you need to manually rotate the token earlier than the set rotation interval. The newly created token should be registered to the same deployment using the Neo4j procedure `call fleetManagement.registerToken('CREATED\_TOKEN');`
+
+
+```text
+aura-cli deployment token update --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Delete
+
+Delete the token from the given deployment. This will set the deployment back to an unmonitored state.
+
+```text
+aura-cli deployment token delete --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## Database
+
+### List
+Get detailed information about all of the logical databases for the given deployment.
+
+```text
+aura-cli deployment database list --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## Server
+
+### List
+Get detailed information about all of the servers for the given deployment.
+
+```text
+aura-cli deployment server list --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## Server database
+
+### List
+Get detailed information about all of the physical databases on the given server.
+
+```text
+aura-cli deployment server database list --deployment-id DEPLOYMENT_ID --server-id SERVER_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+## Troubleshooting
+
+### Error: unknown command "deployment" for "aura-cli"
+
+Make sure that you have set your CLI to run with beta enabled
+```text
+aura-cli config set beta-enabled true
+```
+
+### Deployment not found
+
+Check that you are using the correct organization ID and project ID in the commands.
+
+Make sure that you have the right deployment ID. You can verify that it exists by listing all the deployments in your project.
+```text
+aura-cli deployment list --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+### Failed to create a token for a deployment
+Error: [failed to create api key: failed to save new api key: no rows in result set]
+
+The token creation will fail if the deployment already has a token registered to it. To verify if a token already exists check the information given by:
+```text
+aura-cli deployment get DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
+If there is a need to update the current token, a new one can be created with:
+```text
+aura-cli deployment token update --deployment-id DEPLOYMENT_ID --organization-id YOUR_ORGANIZATION_ID --project-id YOUR_PROJECT_ID
+```
+
 # Configuration of Aura CLI
 
 Aura CLI has two commands for its own configuration:
