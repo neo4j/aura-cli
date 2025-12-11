@@ -31,6 +31,7 @@ func PrintBodyMap(cmd *cobra.Command, cfg *clicfg.Config, values api.ResponseDat
 	}
 }
 
+// Prints the response body, taking the output configuration into account. Only the defined fields will be printed in table mode. The full output will be printed in json
 func PrintBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []string) {
 	if len(body) == 0 {
 		return
