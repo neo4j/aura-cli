@@ -130,6 +130,16 @@ Do this with:
 aura-cli config set default-tenant TENANT-ID 
 ```
 
+# Working with subcommands that use organization ID and project ID instead of tenant ID
+
+If you have a single organization ID and/or project ID or one that you use most frequently, it is recommended that you set it as the default to avoid repetition with other Aura CLI commands.
+Do this with:
+
+```text
+aura-cli config set default-organization ORGANIZATION-ID
+aura-cli config set default-project PROJECT-ID
+```
+
 # Managing AuraDB instances
 
 The Aura CLI provides a full set of commands to manage the lifecycle of an AuraDB instance.
