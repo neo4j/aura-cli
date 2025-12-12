@@ -2,12 +2,13 @@ package job
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
-	"log"
-	"net/http"
 )
 
 func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
@@ -29,9 +30,16 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		passwordFlag       = "password"
 	)
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Allows you to create a new import job",
+		Use:     "create",
+		Short:   "Allows you to create a new import job",
+		PreRunE: cfg.Aura.PreRunWithDefaultOrganizationAndProject(organizationId, projectId),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if organizationId == "" {
+				organizationId = cfg.Aura.DefaultOrganization()
+			}
+			if projectId == "" {
+				projectId = cfg.Aura.DefaultProject()
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs", organizationId, projectId)
 
 			responseBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
@@ -60,15 +68,8 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&auraDbId, dbIdFlag, "", "(required) Aura database ID to import data into. Currently, it's the same as Aura instance ID. In the future, instance ID and database ID are different")
 	cmd.Flags().StringVar(&user, userFlag, "", "Username to use for authentication")
 	cmd.Flags().StringVar(&password, passwordFlag, "", "Password to use for authentication")
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(importModelIdFlag)
+
+	err := cmd.MarkFlagRequired(importModelIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

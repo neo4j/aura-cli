@@ -2,9 +2,10 @@ package job_test
 
 import (
 	"fmt"
-	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 	"net/http"
 	"testing"
+
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 )
 
 func TestCancelImportJob(t *testing.T) {
@@ -24,6 +25,37 @@ func TestCancelImportJob(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 
 	helper.ExecuteCommand(fmt.Sprintf("import job cancel --organization-id=%s --project-id=%s %s", organizationId, projectId, jobId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+
+	helper.AssertErr("")
+	helper.AssertOutJson(fmt.Sprintf(`
+		{
+			"data": {"id": "%s"}
+		}
+	`, jobId))
+}
+
+func TestCancelImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
+	organizationId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	jobId := "87d485b4-73fc-4a7f-bb03-720f4672947e"
+
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/import/jobs/%s/cancellation", organizationId, projectId, jobId), http.StatusOK, fmt.Sprintf(`
+		{
+			"data": {"id": "%s"}
+		}
+	`, jobId))
+
+	helper.SetConfigValue("aura.default-organization", organizationId)
+	helper.SetConfigValue("aura.default-project", projectId)
+	helper.SetConfigValue("aura.beta-enabled", true)
+
+	helper.ExecuteCommand(fmt.Sprintf("import job cancel %s", jobId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
