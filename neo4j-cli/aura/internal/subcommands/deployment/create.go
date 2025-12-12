@@ -31,7 +31,30 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Create a new deployment",
 		Long:  "Creates a new unmonitored Fleet Manager deployment.",
 		Args:  cobra.ExactArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cfg.Aura.DefaultOrganization() == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if cfg.Aura.DefaultProject() == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if organizationId == "" {
+				organizationId = cfg.Aura.DefaultOrganization()
+			}
+			if projectId == "" {
+				projectId = cfg.Aura.DefaultProject()
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId)
 
 			body := map[string]any{
@@ -61,15 +84,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&name, nameFlag, "", "(required) Deployment name")
 	cmd.Flags().StringVar(&connectionUrl, connectionUrlFlag, "", "An optional connection URL for the deployment")
 
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(nameFlag)
+	err := cmd.MarkFlagRequired(nameFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

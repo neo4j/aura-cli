@@ -29,7 +29,30 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Returns deployment servers",
 		Long:  "Returns servers for the given Fleet Manager deployment.",
 		Args:  cobra.ExactArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cfg.Aura.DefaultOrganization() == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if cfg.Aura.DefaultProject() == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if organizationId == "" {
+				organizationId = cfg.Aura.DefaultOrganization()
+			}
+			if projectId == "" {
+				projectId = cfg.Aura.DefaultProject()
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/servers", organizationId, projectId, deploymentId)
 
 			cmd.SilenceUsage = true
@@ -61,15 +84,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
 	cmd.Flags().StringVar(&deploymentId, deploymentIdFlag, "", "(required) Deployment ID")
 
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(deploymentIdFlag)
+	err := cmd.MarkFlagRequired(deploymentIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
