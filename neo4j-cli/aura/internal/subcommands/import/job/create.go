@@ -30,9 +30,25 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		passwordFlag       = "password"
 	)
 	cmd := &cobra.Command{
-		Use:     "create",
-		Short:   "Allows you to create a new import job",
-		PreRunE: cfg.Aura.PreRunWithDefaultOrganizationAndProject(organizationId, projectId),
+		Use:   "create",
+		Short: "Allows you to create a new import job",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cfg.Aura.DefaultOrganization() == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if cfg.Aura.DefaultProject() == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if organizationId == "" {
 				organizationId = cfg.Aura.DefaultOrganization()

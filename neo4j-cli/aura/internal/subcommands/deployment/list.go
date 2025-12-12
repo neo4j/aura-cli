@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -22,11 +23,27 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   "Returns all deployments",
-		Long:    "Returns all Fleet Manager deployments for the given project.",
-		Args:    cobra.ExactArgs(0),
-		PreRunE: cfg.Aura.PreRunWithDefaultOrganizationAndProject(organizationId, projectId),
+		Use:   "list",
+		Short: "Returns all deployments",
+		Long:  "Returns all Fleet Manager deployments for the given project.",
+		Args:  cobra.ExactArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cfg.Aura.DefaultOrganization() == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if cfg.Aura.DefaultProject() == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if organizationId == "" {
 				organizationId = cfg.Aura.DefaultOrganization()

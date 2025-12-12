@@ -27,11 +27,27 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:     "create",
-		Short:   "Create a new deployment",
-		Long:    "Creates a new unmonitored Fleet Manager deployment.",
-		Args:    cobra.ExactArgs(0),
-		PreRunE: cfg.Aura.PreRunWithDefaultOrganizationAndProject(organizationId, projectId),
+		Use:   "create",
+		Short: "Create a new deployment",
+		Long:  "Creates a new unmonitored Fleet Manager deployment.",
+		Args:  cobra.ExactArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cfg.Aura.DefaultOrganization() == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if cfg.Aura.DefaultProject() == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if organizationId == "" {
 				organizationId = cfg.Aura.DefaultOrganization()
