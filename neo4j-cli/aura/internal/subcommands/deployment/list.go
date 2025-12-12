@@ -2,7 +2,6 @@ package deployment
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -23,11 +22,18 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "Returns all deployments",
-		Long:  "Returns all Fleet Manager deployments for the given project.",
-		Args:  cobra.ExactArgs(0),
+		Use:     "list",
+		Short:   "Returns all deployments",
+		Long:    "Returns all Fleet Manager deployments for the given project.",
+		Args:    cobra.ExactArgs(0),
+		PreRunE: cfg.Aura.PreRunWithDefaultOrganizationAndProject(organizationId, projectId),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if organizationId == "" {
+				organizationId = cfg.Aura.DefaultOrganization()
+			}
+			if projectId == "" {
+				projectId = cfg.Aura.DefaultProject()
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments", organizationId, projectId)
 
 			cmd.SilenceUsage = true
@@ -55,15 +61,6 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Organization ID")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
-
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	return cmd
 }

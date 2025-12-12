@@ -3,6 +3,7 @@ package clicfg
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"path/filepath"
 	"slices"
@@ -71,7 +72,7 @@ func NewConfig(fs afero.Fs, version string) *Config {
 				MaxRetries: 60,
 				Interval:   20,
 			},
-			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled"},
+			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled", "default-project", "default-organization"},
 		},
 		Credentials: credentials,
 	}
@@ -196,6 +197,14 @@ func (config *AuraConfig) DefaultTenant() string {
 	return config.viper.GetString("aura.default-tenant")
 }
 
+func (config *AuraConfig) DefaultProject() string {
+	return config.viper.GetString("aura.default-project")
+}
+
+func (config *AuraConfig) DefaultOrganization() string {
+	return config.viper.GetString("aura.default-organization")
+}
+
 func (config *AuraConfig) Fs() afero.Fs {
 	return config.fs
 }
@@ -216,4 +225,24 @@ func (config *AuraConfig) auraBaseUrlOnConfigChange(url string) string {
 		return DefaultAuraBaseUrl
 	}
 	return removePathParametersFromUrl(url)
+}
+
+func (config *AuraConfig) PreRunWithDefaultOrganizationAndProject(organizationIdFlag string, projectIdFlag string) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if config.DefaultOrganization() == "" {
+			err := cmd.MarkFlagRequired(organizationIdFlag)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		if config.DefaultProject() == "" {
+			err := cmd.MarkFlagRequired(projectIdFlag)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		return nil
+	}
 }

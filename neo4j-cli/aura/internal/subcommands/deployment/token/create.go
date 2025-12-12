@@ -25,11 +25,18 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a deployment token",
-		Long:  "Create a new auto rotating Fleet Manager deployment token with a three month rotation interval. Register the deployment with Fleet Manager using the `call fleetManagement.registerToken('$token');` database procedure.",
-		Args:  cobra.ExactArgs(0),
+		Use:     "create",
+		Short:   "Create a deployment token",
+		Long:    "Create a new auto rotating Fleet Manager deployment token with a three month rotation interval. Register the deployment with Fleet Manager using the `call fleetManagement.registerToken('$token');` database procedure.",
+		Args:    cobra.ExactArgs(0),
+		PreRunE: cfg.Aura.PreRunWithDefaultOrganizationAndProject(organizationId, projectId),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if organizationId == "" {
+				organizationId = cfg.Aura.DefaultOrganization()
+			}
+			if projectId == "" {
+				projectId = cfg.Aura.DefaultProject()
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/token", organizationId, projectId, deploymentId)
 
 			cmd.SilenceUsage = true
@@ -53,15 +60,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
 	cmd.Flags().StringVar(&deploymentId, deploymentIdFlag, "", "(required) Deployment ID")
 
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(deploymentIdFlag)
+	err := cmd.MarkFlagRequired(deploymentIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

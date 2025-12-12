@@ -24,11 +24,18 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete the deployment token",
-		Long:  "Deletes the token for the given Fleet Manager deployment. After deleting the token, users should also disable Fleet Manager from the database using `call fleetManagement.disable();`",
-		Args:  cobra.ExactArgs(0),
+		Use:     "delete",
+		Short:   "Delete the deployment token",
+		Long:    "Deletes the token for the given Fleet Manager deployment. After deleting the token, users should also disable Fleet Manager from the database using `call fleetManagement.disable();`",
+		Args:    cobra.ExactArgs(0),
+		PreRunE: cfg.Aura.PreRunWithDefaultOrganizationAndProject(organizationId, projectId),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if organizationId == "" {
+				organizationId = cfg.Aura.DefaultOrganization()
+			}
+			if projectId == "" {
+				projectId = cfg.Aura.DefaultProject()
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/token", organizationId, projectId, deploymentId)
 
 			cmd.SilenceUsage = true
@@ -51,15 +58,7 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
 	cmd.Flags().StringVar(&deploymentId, deploymentIdFlag, "", "(required) Deployment ID")
 
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(deploymentIdFlag)
+	err := cmd.MarkFlagRequired(deploymentIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
