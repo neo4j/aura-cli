@@ -67,7 +67,7 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 			panic(clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
 		}
 		if serverError.Error != "" {
-			return clierr.NewUpstreamError(serverError.Error)
+			return clierr.NewUpstreamError("%s", serverError.Error)
 		}
 
 		return formatAuthorizationError(resBody, statusCode, credential, cfg)
