@@ -2,9 +2,10 @@ package job_test
 
 import (
 	"fmt"
-	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 	"net/http"
 	"testing"
+
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 )
 
 func TestGetImportJobById(t *testing.T) {
@@ -601,6 +602,66 @@ func TestGetImportJobById(t *testing.T) {
 			helper.AssertOut(tt.expectedResponse)
 		})
 	}
+}
+
+func TestGetImportJobByIdWithOrganizationAndProjectIdFromConfig(t *testing.T) {
+	organizationId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	jobId := "87d485b4-73fc-4a7f-bb03-720f4672947e"
+
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId), http.StatusOK, `{
+    "data": {
+        "id": "87d485b4-73fc-4a7f-bb03-720f4672947e",
+        "import_type": "cloud",
+        "info": {
+            "state": "Completed",
+            "start_time": "2025-08-15T13:12:51Z",
+            "completion_time": "2025-08-15T13:15:19Z",
+            "exit_status": {
+                "state": "Cancelled",
+                "message": "Cancelled"
+            },
+            "cancellation_requested_time": "2025-08-15T13:15:19.655209Z",
+            "submitted_time": "2025-08-15T13:12:50.499797Z",
+            "last_update_time": "2025-08-18T12:25:53.469873Z",
+            "percentage_complete": 95.23
+        },
+        "data_source": {
+            "id": "177216b3-49b9-4e24-a414-a9ecbb448c53",
+            "type": "postgresql",
+            "name": "AWS_POSTGRES_FLIGHTS"
+        },
+        "aura_target": {
+            "db_id": "07e49cf5",
+            "project_id": "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+        },
+        "user_id": "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+    }}`)
+
+	helper.SetConfigValue("aura.default-organization", organizationId)
+	helper.SetConfigValue("aura.default-project", projectId)
+	helper.SetConfigValue("aura.beta-enabled", true)
+
+	helper.ExecuteCommand(fmt.Sprintf("import job get %s --output=table", jobId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodGet)
+	mockHandler.AssertCalledWithQueryParam("progress", "false")
+	helper.AssertOut(`
+┌──────────────────────────────────────┬─────────────┬────────────┬────────────────────────┬──────────────────────────┬──────────────────────┬───────────────────┐
+│ ID                                   │ IMPORT_TYPE │ INFO:STATE │ INFO:EXIT_STATUS:STATE │ INFO:PERCENTAGE_COMPLETE │ DATA_SOURCE:NAME     │ AURA_TARGET:DB_ID │
+├──────────────────────────────────────┼─────────────┼────────────┼────────────────────────┼──────────────────────────┼──────────────────────┼───────────────────┤
+│ 87d485b4-73fc-4a7f-bb03-720f4672947e │ cloud       │ Completed  │ Cancelled              │ 95.23                    │ AWS_POSTGRES_FLIGHTS │ 07e49cf5          │
+└──────────────────────────────────────┴─────────────┴────────────┴────────────────────────┴──────────────────────────┴──────────────────────┴───────────────────┘
+┌──────────────────────────┐
+│ INFO:EXIT_STATUS:MESSAGE │
+├──────────────────────────┤
+│ Cancelled                │
+└──────────────────────────┘
+	`)
 }
 
 func TestGetImportJobError(t *testing.T) {

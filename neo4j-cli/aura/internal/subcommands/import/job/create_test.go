@@ -2,9 +2,10 @@ package job_test
 
 import (
 	"fmt"
-	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 	"net/http"
 	"testing"
+
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 )
 
 func TestCreateImportJob(t *testing.T) {
@@ -20,6 +21,44 @@ func TestCreateImportJob(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 
 	helper.ExecuteCommand("import job create --organization-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee  --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --db-id=07e49cf5")
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+	mockHandler.AssertCalledWithBody(`{
+		"importModelId": "e01cdc6d-2f50-4f46-b04b-8ec8fc8de839",
+		"auraCredentials": {
+			"dbId": "07e49cf5",
+			"user": "",
+			"password": ""
+		}
+	}`)
+
+	helper.AssertErr("")
+	helper.AssertOutJson(`
+		{
+			"data": {"id": "87d485b4-73fc-4a7f-bb03-720f4672947e"}
+		}
+	`)
+}
+
+func TestCreateImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/import/jobs", organizationId, projectId), http.StatusCreated, `
+		{
+			"data": {"id": "87d485b4-73fc-4a7f-bb03-720f4672947e"}
+		}
+	`)
+
+	helper.SetConfigValue("aura.default-organization", organizationId)
+	helper.SetConfigValue("aura.default-project", projectId)
+	helper.SetConfigValue("aura.beta-enabled", true)
+
+	helper.ExecuteCommand("import job create --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --db-id=07e49cf5")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
