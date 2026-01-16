@@ -132,12 +132,16 @@ aura-cli config set default-tenant TENANT-ID
 
 # Working with subcommands that use organization ID and project ID instead of tenant ID
 
-If you have a single organization ID and/or project ID or one that you use most frequently, it is recommended that you set it as the default to avoid repetition with other Aura CLI commands.
-Do this with:
+If you want to avoid setting the organization-id and project-id flag for each command, you can save these values as a setting with the `setting` subcommand. The subcommand allows adding, removing and listing settings as well as setting one setting-value as default.
 
 ```text
-aura-cli config set default-organization ORGANIZATION-ID
-aura-cli config set default-project PROJECT-ID
+aura-cli setting add --name SETTING-NAME --organization-id ORGANIZATION-ID --project-id PROJECT-ID
+
+aura-cli setting use SETTING-NAME
+
+aura-cli setting list
+
+aura-cli setting remove SETTING-NAME
 ```
 
 # Managing AuraDB instances
@@ -591,6 +595,9 @@ Aura CLI has two commands for its own configuration:
  - `credential` - sets of client IDs and client secrets that are used to authenticate with the Aura API that the Aura CLI uses to perform its own operations.
  `config` - addtional configuration options for the Aura CLI, such as turning Beta features on or off.
 
+Aura CLI v2 beta has a third configuration command called `setting`
+- sets of organization and project IDs that are used with commands to avoid setting them as flags with every execution.
+
 ## Credential
 
 ### Add
@@ -651,6 +658,40 @@ Set the value for a chosen setting:
 
 ```text
 aura-cli config set SETTING_NAME SETTING_VALUE
+```
+
+## Setting
+
+### Add
+
+Add a set of organization and project IDs to use with v2 subcommands.
+
+```text
+aura-cli setting add --name SETTING-NAME --organization-id ORGANIZATION-ID --project-id PROJECT-ID
+```
+
+### List
+
+Show all configured settings
+
+```text
+aura-cli setting list
+```
+
+### Remove
+
+Remove a set of settings
+
+```text
+aura-cli setting remove SETTING-NAME
+```
+
+### Use
+
+Set the default settings for the Aura CLI to use:
+
+```text
+aura-cli setting use SETTING-NAME
 ```
 
 # Migrating to the new Aura CLI
