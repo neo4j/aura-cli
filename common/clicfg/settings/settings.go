@@ -18,7 +18,7 @@ type Settings struct {
 	filePath string
 }
 
-func NewCredentials(fs afero.Fs, configPrefix string) *Settings {
+func NewSettings(fs afero.Fs, configPrefix string) *Settings {
 	configPath := filepath.Join(configPrefix, "neo4j", "cli", "settings.json")
 	c := Settings{
 		fs:       fs,
@@ -32,19 +32,19 @@ func (c *Settings) load() {
 	data := fileutils.ReadFileSafe(c.fs, c.filePath)
 	fileHasData := len(data) != 0
 
-	var credentials SettingsFile = SettingsFile{
+	var settings SettingsFile = SettingsFile{
 		Aura: &AuraSettings{
 			Settings: []*AuraSetting{},
 			onUpdate: c.save,
 		},
 	}
 	if fileHasData {
-		if err := json.Unmarshal(data, &credentials); err != nil {
+		if err := json.Unmarshal(data, &settings); err != nil {
 			panic(err)
 		}
 	}
 
-	c.Aura = credentials.Aura
+	c.Aura = settings.Aura
 
 	if !fileHasData {
 		c.save()

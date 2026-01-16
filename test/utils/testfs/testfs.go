@@ -10,10 +10,10 @@ import (
 )
 
 func GetDefaultTestFs() (afero.Fs, error) {
-	return GetTestFs("{}", "{}")
+	return GetTestFs("{}", "{}", "{}")
 }
 
-func GetTestFs(config string, credentials string) (afero.Fs, error) {
+func GetTestFs(config string, credentials string, settings string) (afero.Fs, error) {
 	fs := afero.NewMemMapFs()
 
 	if config == "" {
@@ -22,6 +22,7 @@ func GetTestFs(config string, credentials string) (afero.Fs, error) {
 
 	configPath := filepath.Join(clicfg.ConfigPrefix, "neo4j", "cli", "config.json")
 	credentialsPath := filepath.Join(clicfg.ConfigPrefix, "neo4j", "cli", "credentials.json")
+	settingsPath := filepath.Join(clicfg.ConfigPrefix, "neo4j", "cli", "settings.json")
 
 	if err := fs.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
 		return nil, err
@@ -44,6 +45,16 @@ func GetTestFs(config string, credentials string) (afero.Fs, error) {
 	defer credentialsFile.Close()
 
 	if _, err = credentialsFile.Write([]byte(credentials)); err != nil {
+		return nil, err
+	}
+
+	settingsFile, err := fs.OpenFile(settingsPath, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return nil, err
+	}
+	defer settingsFile.Close()
+
+	if _, err = settingsFile.Write([]byte(settings)); err != nil {
 		return nil, err
 	}
 

@@ -64,7 +64,7 @@ func NewConfig(fs afero.Fs, version string) *Config {
 	}
 
 	credentials := credentials.NewCredentials(fs, ConfigPrefix)
-	settings := settings.NewCredentials(fs, ConfigPrefix)
+	settings := settings.NewSettings(fs, ConfigPrefix)
 
 	return &Config{
 		Version: version,
@@ -74,7 +74,7 @@ func NewConfig(fs afero.Fs, version string) *Config {
 				MaxRetries: 60,
 				Interval:   20,
 			},
-			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled", "default-project", "default-organization"},
+			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled"},
 		},
 		Credentials: credentials,
 		Settings:    settings,
@@ -198,14 +198,6 @@ func (config *AuraConfig) AuraBetaEnabled() bool {
 
 func (config *AuraConfig) DefaultTenant() string {
 	return config.viper.GetString("aura.default-tenant")
-}
-
-func (config *AuraConfig) DefaultProject() string {
-	return config.viper.GetString("aura.default-project")
-}
-
-func (config *AuraConfig) DefaultOrganization() string {
-	return config.viper.GetString("aura.default-organization")
 }
 
 func (config *AuraConfig) Fs() afero.Fs {

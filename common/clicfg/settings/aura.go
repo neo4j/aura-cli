@@ -104,6 +104,6 @@ func (c *AuraSettings) settingExists(name string) bool {
 
 type AuraSetting struct {
 	Name           string `json:"name"`
-	OrganizationId string `json:"oragnization-id"`
+	OrganizationId string `json:"organization-id"`
 	ProjectId      string `json:"project-id"`
 }
