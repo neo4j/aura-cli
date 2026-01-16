@@ -79,7 +79,7 @@ func (c *AuraSettings) SetDefault(name string) error {
 
 func (c *AuraSettings) GetDefault() (*AuraSetting, error) {
 	if c.DefaultSetting == "" {
-		return nil, clierr.NewUsageError("default setting not set, use the `setting add` subcommand to add a new setting")
+		return &AuraSetting{}, nil
 	}
 	return c.Get(c.DefaultSetting)
 }
