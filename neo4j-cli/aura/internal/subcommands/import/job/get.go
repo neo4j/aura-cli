@@ -30,14 +30,18 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Get a job by id",
 		Args:  cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if cfg.Aura.DefaultOrganization() == "" {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if defaultSetting.OrganizationId == "" {
 				err := cmd.MarkFlagRequired(organizationIdFlag)
 				if err != nil {
 					log.Fatal(err)
 				}
 			}
 
-			if cfg.Aura.DefaultProject() == "" {
+			if defaultSetting.ProjectId == "" {
 				err := cmd.MarkFlagRequired(projectIdFlag)
 				if err != nil {
 					log.Fatal(err)
@@ -47,11 +51,15 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
 			if organizationId == "" {
-				organizationId = cfg.Aura.DefaultOrganization()
+				organizationId = defaultSetting.OrganizationId
 			}
 			if projectId == "" {
-				projectId = cfg.Aura.DefaultProject()
+				projectId = defaultSetting.ProjectId
 			}
 			jobId = args[0]
 			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId)

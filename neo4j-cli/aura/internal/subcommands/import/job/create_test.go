@@ -41,7 +41,7 @@ func TestCreateImportJob(t *testing.T) {
 	`)
 }
 
-func TestCreateImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
+func TestCreateImportJobWithOrganizationAndProjectIdFromSettings(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -54,8 +54,9 @@ func TestCreateImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 		}
 	`)
 
-	helper.SetConfigValue("aura.default-organization", organizationId)
-	helper.SetConfigValue("aura.default-project", projectId)
+	helper.SetSettingsValue("aura.settings", []map[string]string{{"name": "test", "organization-id": organizationId, "project-id": projectId}})
+	helper.SetSettingsValue("aura.default-setting", "test")
+
 	helper.SetConfigValue("aura.beta-enabled", true)
 
 	helper.ExecuteCommand("import job create --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --db-id=07e49cf5")

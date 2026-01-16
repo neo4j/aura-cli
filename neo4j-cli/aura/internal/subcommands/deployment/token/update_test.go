@@ -37,7 +37,7 @@ func TestUpdateDeploymentToken(t *testing.T) {
 	}`)
 }
 
-func TestUpdateDeploymentTokenWithOrganizationAndProjectIdFromConfig(t *testing.T) {
+func TestUpdateDeploymentTokenWithOrganizationAndProjectIdFromSettings(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -51,8 +51,9 @@ func TestUpdateDeploymentTokenWithOrganizationAndProjectIdFromConfig(t *testing.
 		}
 	}`)
 
-	helper.SetConfigValue("aura.default-organization", organizationId)
-	helper.SetConfigValue("aura.default-project", projectId)
+	helper.SetSettingsValue("aura.settings", []map[string]string{{"name": "test", "organization-id": organizationId, "project-id": projectId}})
+	helper.SetSettingsValue("aura.default-setting", "test")
+
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetConfigValue("aura.output", "json")
 	helper.ExecuteCommand(fmt.Sprintf("deployment token update --deployment-id %s", deploymentId))

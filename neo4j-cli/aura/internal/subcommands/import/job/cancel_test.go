@@ -37,7 +37,7 @@ func TestCancelImportJob(t *testing.T) {
 	`, jobId))
 }
 
-func TestCancelImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
+func TestCancelImportJobWithOrganizationAndProjectIdFromSettings(t *testing.T) {
 	organizationId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
 	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
 	jobId := "87d485b4-73fc-4a7f-bb03-720f4672947e"
@@ -51,8 +51,9 @@ func TestCancelImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 		}
 	`, jobId))
 
-	helper.SetConfigValue("aura.default-organization", organizationId)
-	helper.SetConfigValue("aura.default-project", projectId)
+	helper.SetSettingsValue("aura.settings", []map[string]string{{"name": "test", "organization-id": organizationId, "project-id": projectId}})
+	helper.SetSettingsValue("aura.default-setting", "test")
+
 	helper.SetConfigValue("aura.beta-enabled", true)
 
 	helper.ExecuteCommand(fmt.Sprintf("import job cancel %s", jobId))
