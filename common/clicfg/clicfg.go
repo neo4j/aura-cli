@@ -9,6 +9,7 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg/credentials"
 	"github.com/neo4j/cli/common/clicfg/fileutils"
+	"github.com/neo4j/cli/common/clicfg/settings"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -30,6 +31,7 @@ type Config struct {
 	Version     string
 	Aura        *AuraConfig
 	Credentials *credentials.Credentials
+	Settings    *settings.Settings
 }
 
 func NewConfig(fs afero.Fs, version string) *Config {
@@ -62,6 +64,7 @@ func NewConfig(fs afero.Fs, version string) *Config {
 	}
 
 	credentials := credentials.NewCredentials(fs, ConfigPrefix)
+	settings := settings.NewCredentials(fs, ConfigPrefix)
 
 	return &Config{
 		Version: version,
@@ -74,6 +77,7 @@ func NewConfig(fs afero.Fs, version string) *Config {
 			ValidConfigKeys: []string{"auth-url", "base-url", "default-tenant", "output", "beta-enabled", "default-project", "default-organization"},
 		},
 		Credentials: credentials,
+		Settings:    settings,
 	}
 }
 
