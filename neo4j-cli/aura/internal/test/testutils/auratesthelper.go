@@ -28,6 +28,7 @@ type AuraTestHelper struct {
 	err         *bytes.Buffer
 	cfg         string
 	credentials string
+	settings    string
 	fs          afero.Fs
 	t           *testing.T
 }
@@ -40,7 +41,7 @@ func (helper *AuraTestHelper) ExecuteCommand(command string) {
 	args, err := shlex.Split(command)
 	assert.Nil(helper.t, err)
 
-	fs, err := testfs.GetTestFs(helper.cfg, helper.credentials)
+	fs, err := testfs.GetTestFs(helper.cfg, helper.credentials, helper.settings)
 	assert.Nil(helper.t, err)
 
 	helper.fs = fs
@@ -77,6 +78,12 @@ func (helper *AuraTestHelper) SetCredentialsValue(key string, value interface{})
 	credentials, err := sjson.Set(helper.credentials, key, value)
 	assert.Nil(helper.t, err)
 	helper.credentials = credentials
+}
+
+func (helper *AuraTestHelper) SetSettingsValue(key string, value any) {
+	settigns, err := sjson.Set(helper.settings, key, value)
+	assert.Nil(helper.t, err)
+	helper.settings = settigns
 }
 
 // Assets no errors were returned
@@ -186,6 +193,29 @@ func (helper *AuraTestHelper) AssertCredentialsValue(key string, expected string
 	assert.Equal(helper.t, formattedExpected, formattedActual)
 }
 
+func (helper *AuraTestHelper) AssertSettingsValue(key string, expected string) { // TODO: merge with assertConfig
+	file, err := helper.fs.Open(filepath.Join(clicfg.ConfigPrefix, "neo4j", "cli", "settings.json"))
+	assert.Nil(helper.t, err)
+	defer file.Close()
+
+	out, err := io.ReadAll(file)
+	assert.Nil(helper.t, err)
+
+	actual := gjson.Get(string(out), key)
+
+	formattedExpected, err := FormatJson(expected, "\t")
+	if err != nil {
+		formattedExpected = expected
+	}
+
+	formattedActual, err := FormatJson(actual.String(), "\t")
+	if err != nil {
+		formattedActual = actual.String()
+	}
+
+	assert.Equal(helper.t, formattedExpected, formattedActual)
+}
+
 func (helper *AuraTestHelper) NewRequestHandlerMock(path string, status int, body string) *requestHandlerMock {
 	mock := requestHandlerMock{Calls: []call{}, t: helper.t, Responses: []response{
 		{status: status, body: body},
@@ -250,6 +280,16 @@ func NewAuraTestHelper(t *testing.T) AuraTestHelper {
 					"default-credential": "test-cred"
 					}
 				}`
+	helper.settings = `{
+				"aura": {
+					"settings": [{
+						"name": "test-setting",
+						"organization-id": "test-organization",
+						"project-id": "test-project"
+					}],
+					"default-settign": "test-setting"
+				}
+	}`
 
 	helper.Server = server
 

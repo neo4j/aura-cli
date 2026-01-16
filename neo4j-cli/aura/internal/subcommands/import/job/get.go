@@ -2,12 +2,13 @@ package job
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
-	"log"
-	"net/http"
 )
 
 func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
@@ -28,7 +29,38 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Use:   "get <id>",
 		Short: "Get a job by id",
 		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if defaultSetting.OrganizationId == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if defaultSetting.ProjectId == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if organizationId == "" {
+				organizationId = defaultSetting.OrganizationId
+			}
+			if projectId == "" {
+				projectId = defaultSetting.ProjectId
+			}
 			jobId = args[0]
 			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s", organizationId, projectId, jobId)
 
@@ -61,14 +93,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Organization ID targeting for import job")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
 	cmd.Flags().BoolVar(&showProgress, showProgressFlag, false, "Show progress details")
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	return cmd
 }
 

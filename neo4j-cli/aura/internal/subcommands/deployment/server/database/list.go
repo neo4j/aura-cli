@@ -31,7 +31,38 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Returns deployment server databases.",
 		Long:  "Returns databases for the given Fleet Manager deployment server.",
 		Args:  cobra.ExactArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if defaultSetting.OrganizationId == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if defaultSetting.ProjectId == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if organizationId == "" {
+				organizationId = defaultSetting.OrganizationId
+			}
+			if projectId == "" {
+				projectId = defaultSetting.ProjectId
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/servers/%s/databases", organizationId, projectId, deploymentId, serverId)
 
 			cmd.SilenceUsage = true
@@ -65,15 +96,7 @@ func NewListCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&deploymentId, deploymentIdFlag, "d", "", "(required) Deployment ID")
 	cmd.Flags().StringVarP(&serverId, serverIdFlag, "s", "", "(required) Server ID")
 
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(deploymentIdFlag)
+	err := cmd.MarkFlagRequired(deploymentIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

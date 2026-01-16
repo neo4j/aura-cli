@@ -29,7 +29,38 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Update the deployment token incase it needs to be rotated manually.",
 		Long:  "Creates a new auto rotating Fleet Manager deployment token with a three month rotation interval. The token should be registered to the database again using `call fleetManagement.registerToken('$token');`",
 		Args:  cobra.ExactArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if defaultSetting.OrganizationId == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if defaultSetting.ProjectId == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if organizationId == "" {
+				organizationId = defaultSetting.OrganizationId
+			}
+			if projectId == "" {
+				projectId = defaultSetting.ProjectId
+			}
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s/token", organizationId, projectId, deploymentId)
 
 			cmd.SilenceUsage = true
@@ -53,15 +84,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
 	cmd.Flags().StringVar(&deploymentId, deploymentIdFlag, "", "(required) Deployment ID")
 
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(deploymentIdFlag)
+	err := cmd.MarkFlagRequired(deploymentIdFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

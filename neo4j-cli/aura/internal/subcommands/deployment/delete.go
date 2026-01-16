@@ -26,7 +26,38 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Delete the given deployment",
 		Long:  "Deletes the given Fleet Manager deployment. This will only delete the deployment from Fleet Manager without affecting the actual running database. It is advised to disable Fleet Management for the database using `call fleetManagement.disable()`",
 		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if defaultSetting.OrganizationId == "" {
+				err := cmd.MarkFlagRequired(organizationIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if defaultSetting.ProjectId == "" {
+				err := cmd.MarkFlagRequired(projectIdFlag)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defaultSetting, err := cfg.Settings.Aura.GetDefault()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if organizationId == "" {
+				organizationId = defaultSetting.OrganizationId
+			}
+			if projectId == "" {
+				projectId = defaultSetting.ProjectId
+			}
 			deploymentId := args[0]
 			path := fmt.Sprintf("/organizations/%s/projects/%s/fleet-manager/deployments/%s", organizationId, projectId, deploymentId)
 
@@ -48,15 +79,6 @@ func NewDeleteCmd(cfg *clicfg.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Organization ID")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
-
-	err := cmd.MarkFlagRequired(organizationIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = cmd.MarkFlagRequired(projectIdFlag)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	return cmd
 }
