@@ -23,6 +23,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		auraDbId       string
 		user           string
 		password       string
+		importType     string
 	)
 
 	const (
@@ -32,6 +33,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 		dbIdFlag           = "db-id"
 		userFlag           = "user"
 		passwordFlag       = "password"
+		importTypeFlag     = "import-type"
 	)
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -57,6 +59,9 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 						"user":     user,
 						"password": password,
 					},
+					"importConfig": map[string]any{
+						"importType": importType,
+					},
 				},
 			})
 			if err != nil || statusCode != 201 {
@@ -73,6 +78,7 @@ func NewCreateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&auraDbId, dbIdFlag, "", "(required) Aura database ID to import data into. Currently, it's the same as Aura instance ID. In the future, instance ID and database ID are different")
 	cmd.Flags().StringVar(&user, userFlag, "", "Username to use for authentication")
 	cmd.Flags().StringVar(&password, passwordFlag, "", "Password to use for authentication")
+	cmd.Flags().StringVar(&importType, importTypeFlag, "online", "Type of import to perform. Warning: Bulk imports are destructive.")
 
 	err := cmd.MarkFlagRequired(importModelIdFlag)
 	if err != nil {
