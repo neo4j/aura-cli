@@ -154,6 +154,12 @@ func TestCreateImportJobError(t *testing.T) {
 			expectedError:  "Error: required flag(s) \"db-id\" not set",
 			returnBody:     ``,
 		},
+		"incorrect command with invalid importType": {
+			executeCommand: fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s --db-id=%s --import-type=custom", organizationId, projectId, importModelId, auraDbId),
+			statusCode:     http.StatusNotFound,
+			expectedError:  "Error: invalid argument \"custom\" for \"--import-type\" flag: must be either \"online\" or \"bulk\"",
+			returnBody:     ``,
+		},
 	}
 
 	for name, testCase := range testCases {
