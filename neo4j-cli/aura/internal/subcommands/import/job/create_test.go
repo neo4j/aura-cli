@@ -23,7 +23,7 @@ func TestCreateImportJob(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 
-	helper.ExecuteCommand("import job create --organization-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee  --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --db-id=07e49cf5")
+	helper.ExecuteCommand("import job create --organization-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee  --project-id=f607bebe-0cc0-4166-b60c-b4eed69ee7ee --import-model-id=e01cdc6d-2f50-4f46-b04b-8ec8fc8de839 --db-id=07e49cf5 --import-type=bulk")
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
@@ -33,6 +33,9 @@ func TestCreateImportJob(t *testing.T) {
 			"dbId": "07e49cf5",
 			"user": "",
 			"password": ""
+		},
+		"importConfig": {
+			"importType": "bulk"
 		}
 	}`)
 
@@ -69,6 +72,9 @@ func TestCreateImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 			"dbId": "07e49cf5",
 			"user": "",
 			"password": ""
+		},
+		"importConfig": {
+			"importType": "online"
 		}
 	}`)
 
@@ -146,6 +152,12 @@ func TestCreateImportJobError(t *testing.T) {
 			executeCommand: fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s", organizationId, projectId, importModelId),
 			statusCode:     http.StatusNotFound,
 			expectedError:  "Error: required flag(s) \"db-id\" not set",
+			returnBody:     ``,
+		},
+		"incorrect command with invalid importType": {
+			executeCommand: fmt.Sprintf("import job create --organization-id=%s --project-id=%s --import-model-id=%s --db-id=%s --import-type=custom", organizationId, projectId, importModelId, auraDbId),
+			statusCode:     http.StatusNotFound,
+			expectedError:  "Error: invalid argument \"custom\" for \"--import-type\" flag: must be either \"online\" or \"bulk\"",
 			returnBody:     ``,
 		},
 	}
