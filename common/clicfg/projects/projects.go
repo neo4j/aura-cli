@@ -121,6 +121,10 @@ func (p *AuraConfigProjects) Default() (*AuraProject, error) {
 		return nil, err
 	}
 
+	if projects == nil {
+		return &AuraProject{}, nil
+	}
+
 	if project, ok := projects.Projects[projects.Default]; ok {
 		return project, nil
 	}
