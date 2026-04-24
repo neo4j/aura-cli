@@ -4,15 +4,11 @@
 package agent
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clierr"
-	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
-	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +40,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.AddCommand(NewListCmd(cfg))
 	cmd.AddCommand(NewCreateCmd(cfg))
 	cmd.AddCommand(NewUpdateCmd(cfg))
-	cmd.AddCommand(NewPatchCmd(cfg))
+	cmd.AddCommand(NewReplaceCmd(cfg))
 	cmd.AddCommand(NewDeleteCmd(cfg))
 	cmd.AddCommand(NewInvokeCmd(cfg))
 
@@ -53,36 +49,4 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.PersistentFlags().String("output", "", fmt.Sprintf("Format to print console output in, from a choice of [%s]", strings.Join(clicfg.ValidOutputValues[:], ", ")))
 
 	return cmd
-}
-
-// printAgentList prints a raw JSON array response from the agents API.
-// In JSON mode the raw API body is printed; in table mode selected fields are shown.
-func printAgentList(cmd *cobra.Command, cfg *clicfg.Config, resBody []byte, fields []string) {
-	if cfg.Aura.Output() == "json" {
-		var buf bytes.Buffer
-		json.Indent(&buf, resBody, "", "\t")
-		cmd.Println(buf.String())
-		return
-	}
-	var items []map[string]any
-	if err := json.Unmarshal(resBody, &items); err != nil {
-		panic(err)
-	}
-	output.PrintBodyMap(cmd, cfg, api.NewListResponseData(items), fields)
-}
-
-// printAgentItem prints a raw JSON object response from the agents API.
-// In JSON mode the raw API body is printed; in table mode selected fields are shown.
-func printAgentItem(cmd *cobra.Command, cfg *clicfg.Config, resBody []byte, fields []string) {
-	if cfg.Aura.Output() == "json" {
-		var buf bytes.Buffer
-		json.Indent(&buf, resBody, "", "\t")
-		cmd.Println(buf.String())
-		return
-	}
-	var item map[string]any
-	if err := json.Unmarshal(resBody, &item); err != nil {
-		panic(err)
-	}
-	output.PrintBodyMap(cmd, cfg, api.NewSingleValueResponseData(item), fields)
 }

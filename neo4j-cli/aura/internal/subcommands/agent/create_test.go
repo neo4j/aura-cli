@@ -11,8 +11,6 @@ import (
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 )
 
-const testTools = `[{"name":"query-tool","type":"text2cypher","description":"Converts natural language to Cypher queries","enabled":true}]`
-
 func TestCreateAgent(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
@@ -178,4 +176,40 @@ func TestCreateAgentWithInvalidToolsJSON(t *testing.T) {
 	))
 
 	helper.AssertErr("Error: invalid tools JSON: invalid character 'o' in literal null (expecting 'u')")
+}
+
+func TestCreateAgentWithTableOutput(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/agents", organizationId, projectId), http.StatusCreated, `{
+		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+		"name": "My Agent",
+		"description": "An agent that queries the database",
+		"dbid": "a1b2c3d4",
+		"is_private": false,
+		"is_mcp_enabled": false,
+		"enabled": true
+	}`)
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.SetConfigValue("aura.output", "table")
+	helper.ExecuteCommand(fmt.Sprintf(
+		`agent create --name "My Agent" --description "An agent that queries the database" --dbid a1b2c3d4 --tools '%s' --organization-id %s --project-id %s`,
+		testTools, organizationId, projectId,
+	))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+
+	helper.AssertOut(`
+┌──────────────────────────────────────┬──────────┬────────────────────────────────────┬──────────┬────────────┬────────────────┬─────────┐
+│ ID                                   │ NAME     │ DESCRIPTION                        │ DBID     │ IS_PRIVATE │ IS_MCP_ENABLED │ ENABLED │
+├──────────────────────────────────────┼──────────┼────────────────────────────────────┼──────────┼────────────┼────────────────┼─────────┤
+│ f47ac10b-58cc-4372-a567-0e02b2c3d479 │ My Agent │ An agent that queries the database │ a1b2c3d4 │ false      │ false          │ true    │
+└──────────────────────────────────────┴──────────┴────────────────────────────────────┴──────────┴────────────┴────────────────┴─────────┘
+	`)
 }

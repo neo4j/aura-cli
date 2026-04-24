@@ -6,11 +6,11 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/utils"
 	"github.com/spf13/cobra"
 )
@@ -44,8 +44,8 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: "Updates an existing agent",
-		Long:  "Updates an existing agent's configuration. All fields are replaced (PUT semantics).",
+		Short: "Partially updates an existing agent",
+		Long:  "Partially updates an existing agent's configuration. Only provided fields are updated (PATCH semantics).",
 		Args:  cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return utils.SetProjectFlagsAsRequired(cfg, cmd)
@@ -56,28 +56,43 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			var tools []any
-			if err := json.Unmarshal([]byte(toolsJSON), &tools); err != nil {
-				return fmt.Errorf("invalid tools JSON: %w", err)
+			body := map[string]any{}
+
+			if name != "" {
+				body["name"] = name
+			}
+			if description != "" {
+				body["description"] = description
+			}
+			if dbid != "" {
+				body["dbid"] = dbid
+			}
+			if systemPrompt != "" {
+				body["system_prompt"] = systemPrompt
+			}
+			if toolsJSON != "" {
+				var tools []any
+				if err := json.Unmarshal([]byte(toolsJSON), &tools); err != nil {
+					return fmt.Errorf("invalid tools JSON: %w", err)
+				}
+				body["tools"] = tools
+			}
+			if cmd.Flags().Changed(isPrivateFlag) {
+				body["is_private"] = isPrivate
+			}
+			if cmd.Flags().Changed(isMcpEnabledFlag) {
+				body["is_mcp_enabled"] = isMcpEnabled
+			}
+			if cmd.Flags().Changed(enabledFlag) {
+				body["enabled"] = enabled
 			}
 
 			agentId := args[0]
 			path := fmt.Sprintf("/organizations/%s/projects/%s/agents/%s", organizationId, projectId, agentId)
 
-			body := map[string]any{
-				"name":           name,
-				"description":    description,
-				"dbid":           dbid,
-				"is_private":     isPrivate,
-				"tools":          tools,
-				"system_prompt":  systemPrompt,
-				"is_mcp_enabled": isMcpEnabled,
-				"enabled":        enabled,
-			}
-
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
-				Method:   http.MethodPut,
+				Method:   http.MethodPatch,
 				PostBody: body,
 				Version:  api.AuraApiVersion2,
 			})
@@ -86,7 +101,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if api.IsSuccessful(statusCode) {
-				printAgentItem(cmd, cfg, resBody, []string{"id", "name", "description", "dbid", "is_private", "is_mcp_enabled", "enabled"})
+				output.PrintRawBody(cmd, cfg, resBody, []string{"id", "name", "description", "dbid", "is_private", "is_mcp_enabled", "enabled"})
 			}
 
 			return nil
@@ -95,20 +110,16 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 
 	cmd.Flags().StringVar(&organizationId, organizationIdFlag, "", "(required) Organization ID")
 	cmd.Flags().StringVar(&projectId, projectIdFlag, "", "(required) Project/tenant ID")
-	cmd.Flags().StringVar(&name, nameFlag, "", "(required) Agent name")
-	cmd.Flags().StringVar(&description, descriptionFlag, "", "(required) Agent description")
-	cmd.Flags().StringVar(&dbid, dbidFlag, "", "(required) Aura database instance ID the agent connects to")
+	cmd.Flags().StringVar(&name, nameFlag, "", "Agent name")
+	cmd.Flags().StringVar(&description, descriptionFlag, "", "Agent description")
+	cmd.Flags().StringVar(&dbid, dbidFlag, "", "Aura database instance ID the agent connects to")
 	cmd.Flags().BoolVar(&isPrivate, isPrivateFlag, false, "Whether the agent is private")
-	cmd.Flags().StringVar(&toolsJSON, toolsFlag, "", "(required) Tools configuration as a JSON array")
-	cmd.Flags().StringVar(&systemPrompt, systemPromptFlag, "", "Optional system prompt for the agent")
+	cmd.Flags().StringVar(&toolsJSON, toolsFlag, "", "Tools configuration as a JSON array")
+	cmd.Flags().StringVar(&systemPrompt, systemPromptFlag, "", "System prompt for the agent")
 	cmd.Flags().BoolVar(&isMcpEnabled, isMcpEnabledFlag, false, "Whether MCP is enabled for the agent")
 	cmd.Flags().BoolVar(&enabled, enabledFlag, true, "Whether the agent is enabled")
 
-	for _, f := range []string{nameFlag, descriptionFlag, dbidFlag, toolsFlag} {
-		if err := cmd.MarkFlagRequired(f); err != nil {
-			log.Fatal(err)
-		}
-	}
+	cmd.MarkFlagsOneRequired(nameFlag, descriptionFlag, dbidFlag, toolsFlag, systemPromptFlag, isPrivateFlag, isMcpEnabledFlag, enabledFlag)
 
 	return cmd
 }
