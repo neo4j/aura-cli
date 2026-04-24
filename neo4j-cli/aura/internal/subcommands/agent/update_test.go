@@ -11,7 +11,7 @@ import (
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/test/testutils"
 )
 
-func TestUpdateAgent(t *testing.T) {
+func TestUpdateAgentName(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -21,8 +21,8 @@ func TestUpdateAgent(t *testing.T) {
 
 	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/agents/%s", organizationId, projectId, agentId), http.StatusOK, `{
 		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-		"name": "My Updated Agent",
-		"description": "An updated description",
+		"name": "Renamed Agent",
+		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
 		"is_private": false,
 		"is_mcp_enabled": false,
@@ -32,27 +32,98 @@ func TestUpdateAgent(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetConfigValue("aura.output", "json")
 	helper.ExecuteCommand(fmt.Sprintf(
-		`agent update %s --name "My Updated Agent" --description "An updated description" --dbid a1b2c3d4 --tools '%s' --organization-id %s --project-id %s`,
+		`agent update %s --name "Renamed Agent" --organization-id %s --project-id %s`,
+		agentId, organizationId, projectId,
+	))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithBody(`{"name": "Renamed Agent"}`)
+
+	helper.AssertOutJson(`{
+		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+		"name": "Renamed Agent",
+		"description": "An agent that queries the database",
+		"dbid": "a1b2c3d4",
+		"is_private": false,
+		"is_mcp_enabled": false,
+		"enabled": true
+	}`)
+}
+
+func TestUpdateAgentBooleanFields(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+	agentId := "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/agents/%s", organizationId, projectId, agentId), http.StatusOK, `{
+		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+		"name": "My Agent",
+		"description": "An agent that queries the database",
+		"dbid": "a1b2c3d4",
+		"is_private": true,
+		"is_mcp_enabled": true,
+		"enabled": true
+	}`)
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.SetConfigValue("aura.output", "json")
+	helper.ExecuteCommand(fmt.Sprintf(
+		`agent update %s --is-private --is-mcp-enabled --organization-id %s --project-id %s`,
+		agentId, organizationId, projectId,
+	))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithBody(`{"is_mcp_enabled": true, "is_private": true}`)
+
+	helper.AssertOutJson(`{
+		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+		"name": "My Agent",
+		"description": "An agent that queries the database",
+		"dbid": "a1b2c3d4",
+		"is_private": true,
+		"is_mcp_enabled": true,
+		"enabled": true
+	}`)
+}
+
+func TestUpdateAgentTools(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+	agentId := "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/agents/%s", organizationId, projectId, agentId), http.StatusOK, `{
+		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+		"name": "My Agent",
+		"description": "An agent that queries the database",
+		"dbid": "a1b2c3d4",
+		"is_private": false,
+		"is_mcp_enabled": false,
+		"enabled": true
+	}`)
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.SetConfigValue("aura.output", "json")
+	helper.ExecuteCommand(fmt.Sprintf(
+		`agent update %s --tools '%s' --organization-id %s --project-id %s`,
 		agentId, testTools, organizationId, projectId,
 	))
 
 	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodPut)
-	mockHandler.AssertCalledWithBody(fmt.Sprintf(`{
-		"name": "My Updated Agent",
-		"description": "An updated description",
-		"dbid": "a1b2c3d4",
-		"is_private": false,
-		"is_mcp_enabled": false,
-		"enabled": true,
-		"system_prompt": "",
-		"tools": %s
-	}`, testTools))
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithBody(fmt.Sprintf(`{"tools": %s}`, testTools))
 
 	helper.AssertOutJson(`{
 		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-		"name": "My Updated Agent",
-		"description": "An updated description",
+		"name": "My Agent",
+		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
 		"is_private": false,
 		"is_mcp_enabled": false,
@@ -70,8 +141,8 @@ func TestUpdateAgentWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 
 	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/agents/%s", organizationId, projectId, agentId), http.StatusOK, `{
 		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-		"name": "My Updated Agent",
-		"description": "An updated description",
+		"name": "Renamed Agent",
+		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
 		"is_private": false,
 		"is_mcp_enabled": false,
@@ -81,23 +152,52 @@ func TestUpdateAgentWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetConfigValue("aura.output", "json")
 	helper.SetDefaultProjectInConfig(organizationId, projectId)
-	helper.ExecuteCommand(fmt.Sprintf(
-		`agent update %s --name "My Updated Agent" --description "An updated description" --dbid a1b2c3d4 --tools '%s'`,
-		agentId, testTools,
-	))
+	helper.ExecuteCommand(fmt.Sprintf(`agent update %s --name "Renamed Agent"`, agentId))
 
 	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodPut)
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
+	mockHandler.AssertCalledWithBody(`{"name": "Renamed Agent"}`)
 
 	helper.AssertOutJson(`{
 		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-		"name": "My Updated Agent",
-		"description": "An updated description",
+		"name": "Renamed Agent",
+		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
 		"is_private": false,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
+}
+
+func TestUpdateAgentWithNoFields(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+	agentId := "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.ExecuteCommand(fmt.Sprintf("agent update %s --organization-id %s --project-id %s", agentId, organizationId, projectId))
+
+	helper.AssertErr("Error: at least one of the flags in the group [name description dbid tools system-prompt is-private is-mcp-enabled enabled] is required")
+}
+
+func TestUpdateAgentWithInvalidToolsJSON(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+	agentId := "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.ExecuteCommand(fmt.Sprintf(
+		`agent update %s --tools "not-valid-json" --organization-id %s --project-id %s`,
+		agentId, organizationId, projectId,
+	))
+
+	helper.AssertErr("Error: invalid tools JSON: invalid character 'o' in literal null (expecting 'u')")
 }
 
 func TestUpdateAgentNotFound(t *testing.T) {
@@ -113,14 +213,13 @@ func TestUpdateAgentNotFound(t *testing.T) {
 	}`)
 
 	helper.SetConfigValue("aura.beta-enabled", true)
-	helper.SetConfigValue("aura.output", "json")
 	helper.ExecuteCommand(fmt.Sprintf(
-		`agent update %s --name "My Agent" --description "desc" --dbid a1b2c3d4 --tools '%s' --organization-id %s --project-id %s`,
-		agentId, testTools, organizationId, projectId,
+		`agent update %s --name "New Name" --organization-id %s --project-id %s`,
+		agentId, organizationId, projectId,
 	))
 
 	mockHandler.AssertCalledTimes(1)
-	mockHandler.AssertCalledWithMethod(http.MethodPut)
+	mockHandler.AssertCalledWithMethod(http.MethodPatch)
 
 	helper.AssertErr("Error: [Agent not found]")
 }

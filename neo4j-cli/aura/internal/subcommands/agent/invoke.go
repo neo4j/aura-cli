@@ -12,9 +12,38 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
+	"github.com/neo4j/cli/neo4j-cli/aura/internal/output"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/utils"
 	"github.com/spf13/cobra"
 )
+
+type invokeResponse struct {
+	ID      string          `json:"id"`
+	Type    string          `json:"type"`
+	Role    string          `json:"role"`
+	Content []invokeContent `json:"content"`
+	Status  string          `json:"status"`
+	EndReason string        `json:"end_reason"`
+	Usage   invokeUsage     `json:"usage"`
+	Error   *invokeError    `json:"error,omitempty"`
+}
+
+type invokeContent struct {
+	Type string `json:"type"`
+	Text string `json:"text,omitempty"`
+}
+
+type invokeUsage struct {
+	RequestTokens  int `json:"request_tokens"`
+	ResponseTokens int `json:"response_tokens"`
+	TotalTokens    int `json:"total_tokens"`
+}
+
+type invokeError struct {
+	Message    string `json:"message"`
+	Type       string `json:"type"`
+	StatusCode int    `json:"status_code"`
+}
 
 func NewInvokeCmd(cfg *clicfg.Config) *cobra.Command {
 	var (
@@ -46,9 +75,7 @@ func NewInvokeCmd(cfg *clicfg.Config) *cobra.Command {
 			agentId := args[0]
 			path := fmt.Sprintf("/organizations/%s/projects/%s/agents/%s/invoke", organizationId, projectId, agentId)
 
-			body := map[string]any{
-				"input": input,
-			}
+			body := map[string]any{"input": input}
 
 			cmd.SilenceUsage = true
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
@@ -64,19 +91,16 @@ func NewInvokeCmd(cfg *clicfg.Config) *cobra.Command {
 			}
 
 			if api.IsSuccessful(statusCode) {
-				// Check for application-level errors in the response (type: "error")
-				var result map[string]any
-				if jsonErr := json.Unmarshal(resBody, &result); jsonErr == nil {
-					if resultType, ok := result["type"].(string); ok && resultType == "error" {
-						if errObj, ok := result["error"].(map[string]any); ok {
-							if msg, ok := errObj["message"].(string); ok {
-								return fmt.Errorf("agent invocation failed: %s", msg)
-							}
-						}
-						return fmt.Errorf("agent invocation failed")
-					}
+				var result invokeResponse
+				if err := json.Unmarshal(resBody, &result); err != nil {
+					return fmt.Errorf("unexpected invoke response: %w", err)
 				}
-				printInvokeResult(cmd, cfg, resBody)
+
+				if err := invokeApplicationError(result); err != nil {
+					return err
+				}
+
+				printInvokeResult(cmd, cfg, resBody, result)
 			}
 
 			return nil
@@ -94,33 +118,32 @@ func NewInvokeCmd(cfg *clicfg.Config) *cobra.Command {
 	return cmd
 }
 
-// printInvokeResult prints the invoke response. In JSON mode the raw body is printed.
-// In table/default mode the text content is printed followed by a stats line.
-func printInvokeResult(cmd *cobra.Command, cfg *clicfg.Config, resBody []byte) {
-	if cfg.Aura.Output() == "json" {
-		printAgentItem(cmd, cfg, resBody, nil)
-		return
+// invokeApplicationError returns an error for application-level failures (type "error" with HTTP 200).
+func invokeApplicationError(r invokeResponse) error {
+	if r.Type != "error" {
+		return nil
 	}
-	var result map[string]any
-	if err := json.Unmarshal(resBody, &result); err != nil {
-		cmd.Println(string(resBody))
+	if r.Error != nil && r.Error.Message != "" {
+		return fmt.Errorf("agent invocation failed: %s", r.Error.Message)
+	}
+	return fmt.Errorf("agent invocation failed")
+}
+
+// printInvokeResult prints the invoke response: raw JSON or text answer + stats line.
+func printInvokeResult(cmd *cobra.Command, cfg *clicfg.Config, resBody []byte, result invokeResponse) {
+	if cfg.Aura.Output() == "json" {
+		output.PrintRawBody(cmd, cfg, resBody, nil)
 		return
 	}
 
-	contentBlocks, _ := result["content"].([]any)
 	var texts []string
 	toolCalls := 0
-	for _, block := range contentBlocks {
-		if m, ok := block.(map[string]any); ok {
-			blockType, _ := m["type"].(string)
-			switch {
-			case blockType == "text":
-				if text, ok := m["text"].(string); ok {
-					texts = append(texts, text)
-				}
-			case strings.HasSuffix(blockType, "tool_use"):
-				toolCalls++
-			}
+	for _, block := range result.Content {
+		switch {
+		case block.Type == "text":
+			texts = append(texts, block.Text)
+		case strings.HasSuffix(block.Type, "tool_use"):
+			toolCalls++
 		}
 	}
 
@@ -128,22 +151,12 @@ func printInvokeResult(cmd *cobra.Command, cfg *clicfg.Config, resBody []byte) {
 		cmd.Println(strings.Join(texts, "\n"))
 	}
 
-	// Stats line
-	status, _ := result["status"].(string)
-	endReason, _ := result["end_reason"].(string)
-	var reqTokens, resTokens, totalTokens int
-	if usage, ok := result["usage"].(map[string]any); ok {
-		reqTokens = int(toFloat64(usage["request_tokens"]))
-		resTokens = int(toFloat64(usage["response_tokens"]))
-		totalTokens = int(toFloat64(usage["total_tokens"]))
-	}
 	cmd.Printf("\nStatus: %s | End reason: %s | Tool calls: %d | Tokens: %d req / %d res / %d total\n",
-		status, endReason, toolCalls, reqTokens, resTokens, totalTokens)
-}
-
-func toFloat64(v any) float64 {
-	if f, ok := v.(float64); ok {
-		return f
-	}
-	return 0
+		strings.ToUpper(result.Status),
+		strings.ToUpper(strings.ReplaceAll(result.EndReason, "_", " ")),
+		toolCalls,
+		result.Usage.RequestTokens,
+		result.Usage.ResponseTokens,
+		result.Usage.TotalTokens,
+	)
 }

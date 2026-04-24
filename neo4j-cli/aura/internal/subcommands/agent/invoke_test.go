@@ -176,3 +176,38 @@ func TestInvokeAgentNotFound(t *testing.T) {
 
 	helper.AssertErr("Error: [Agent not found]")
 }
+
+func TestInvokeAgentWithTableOutput(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	organizationId := "81e4ae5c-171b-4700-b243-8d1dd34f7321"
+	projectId := "ef7faf53-fb7e-4994-8d0f-64ae56e91c42"
+	agentId := "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/agents/%s/invoke", organizationId, projectId, agentId), http.StatusOK, `{
+		"id": "inv-12345",
+		"type": "message",
+		"role": "assistant",
+		"content": [
+			{"type": "cypher_template_tool_use", "id": "tool-1"},
+			{"type": "cypher_template_tool_result", "output": {}},
+			{"type": "text", "text": "Here are the movies in the database."}
+		],
+		"end_reason": "end_turn",
+		"status": "completed",
+		"usage": {"request_tokens": 150, "response_tokens": 200, "total_tokens": 350}
+	}`)
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.SetConfigValue("aura.output", "table")
+	helper.ExecuteCommand(fmt.Sprintf(
+		`agent invoke %s --input "What movies are in the database?" --organization-id %s --project-id %s`,
+		agentId, organizationId, projectId,
+	))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+
+	helper.AssertOut("Here are the movies in the database.\n\nStatus: COMPLETED | End reason: END TURN | Tool calls: 1 | Tokens: 150 req / 200 res / 350 total")
+}
