@@ -86,6 +86,13 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `license-check` target uses `$(GOPATH)/bin/addlicense` (not bare `addlicense`) — GOPATH/bin may not be on PATH
 - `license-check` requires a Unix shell (`find` + `xargs`); won't work natively on Windows
 
+## GoReleaser Notes
+
+- GoReleaser v2 deprecates `archives.format` (string) — use `archives.formats` (list)
+- GoReleaser v2 deprecates `format_overrides.format` — use `format_overrides.formats`
+- Each `archives` entry must have a unique `id`; omitting it defaults to `"default"` and causes errors when there are multiple archive blocks
+- Use `{{ .Binary }}` in `name_template` (not `{{ .ProjectName }}`) when building multiple binaries so archives are named per binary
+
 ## golangci-lint Notes
 
 - Version installed: v2.11.4 (via Homebrew)

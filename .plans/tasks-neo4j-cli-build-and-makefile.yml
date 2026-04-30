@@ -88,7 +88,7 @@ tasks:
       version via `-ldflags "-X main.Version={{.Env.GORELEASER_CURRENT_TAG}}"`. Extend
       the `notarize.macos[].ids` list to include `neo4j-cli` so both binaries are
       code-signed and notarized on macOS.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -97,7 +97,7 @@ tasks:
       - "Both binaries report the injected version when invoked with `--version`"
       - "`notarize.macos[].ids` includes both `aura-cli` and `neo4j-cli`"
       - "The commented-out neo4j-cli build block is removed (not just uncommented)"
-    completed_at: null
+    completed_at: 2026-04-30T17:30:00Z
 
   - id: task-006
     title: "Update CI workflows to use make targets"

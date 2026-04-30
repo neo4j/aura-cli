@@ -123,3 +123,33 @@ Key Decisions:
 - `build-aura` and `build-neo4j` are separate sub-targets; `build` depends on both
 
 Next Task: task-005 (Update GoReleaser for dual-binary release with macOS signing)
+
+================================================================================
+TASK-005: Update GoReleaser for dual-binary release with macOS signing
+Date: 2026-04-30T17:30:00Z
+================================================================================
+
+Summary:
+Updated `.goreleaser.yaml` to build and release both `aura-cli` (from
+`./neo4j-cli/aura/cmd`) and `neo4j-cli` (from `./neo4j-cli`) as separate binaries.
+Each binary gets its own archive per platform. Both use
+`-X "main.Version={{.Env.GORELEASER_CURRENT_TAG}}"`. The commented-out neo4j-cli
+build block was replaced with a real build entry. Added `neo4j-cli` to the
+`notarize.macos[].ids` list. Upgraded archive config to use `formats` (array)
+instead of deprecated `format` (string), and gave each archive a unique ID to avoid
+duplicate default ID errors.
+
+Files Changed:
+- .goreleaser.yaml (modified: uncommented neo4j-cli build, added neo4j-cli archive
+  config, added neo4j-cli to notarize ids, upgraded format→formats, added archive IDs)
+
+Key Decisions:
+- GoReleaser v2 deprecates `archives.format` (string) — use `archives.formats` (array)
+- GoReleaser v2 deprecates `format_overrides.format` — use `format_overrides.formats`
+- Each archive block must have a unique `id` (otherwise defaults to "default" and
+  causes a "found 2 archives with the ID 'default'" error)
+- Used `{{ .Binary }}` in archive name_template (not `{{ .ProjectName }}`) so each
+  binary's archives are named after the binary, not the project
+- `project_name` changed from `aura-cli` to `neo4j-cli` to reflect the super-CLI
+
+Next Task: task-006 (Update CI workflows to use make targets)
