@@ -6,11 +6,11 @@ Learnings and patterns for future agents working on this project.
 
 ## Feedback Instructions
 
-TEST COMMANDS: [`go test ./...`]
-BUILD COMMANDS: [`go build -o bin/ ./...`, `go run neo4j-cli/main.go aura-cli`]
-LINT COMMANDS: [`go vet ./...`, `staticcheck ./...`]
-FORMAT COMMANDS: [`go fmt ./...`]
-LICENSE CHECK: [`addlicense -f ./addlicense -check $(find . -name "*.go" -type f -print0 | xargs -0)`]
+TEST COMMANDS: [`make test`]
+BUILD COMMANDS: [`make build`, `make run-aura`, `make run-neo4j`]
+LINT COMMANDS: [`make lint`]
+FORMAT COMMANDS: [`make fmt`]
+LICENSE CHECK: [`make license-check`]
 
 ## Project Overview
 
@@ -20,15 +20,16 @@ Neo4j Aura CLI (`aura-cli`) is a command-line tool for interacting with the [Neo
 
 ## Build System
 
-BUILD SYSTEMS: [Go toolchain, GoReleaser, changie]
+BUILD SYSTEMS: [Go toolchain, Makefile, golangci-lint, GoReleaser, changie]
 
 See [`.agents/build.md`](.agents/build.md) for full details.
 
-- Local build: `go build -o bin/ ./...`
-- Local run (no build): `go run neo4j-cli/main.go aura-cli`
+- Local build: `make build` (produces `bin/aura-cli` and `bin/neo4j-cli`)
+- Local run (no build): `make run-aura` / `make run-neo4j`
 - Multi-platform snapshot: `GORELEASER_CURRENT_TAG=dev goreleaser release --snapshot --clean`
 - All `.go` files must start with the Neo4j copyright header (enforced in CI via `addlicense`)
 - PRs require a changelog entry added via `changie new`
+- Cascade rule: `aura-cli` changes also need a `neo4j-cli` `changie new` entry
 
 ## Testing Framework
 
@@ -47,18 +48,24 @@ ARCHITECTURE PATTERN: Cobra command tree — one file per leaf command, director
 
 See [`.agents/architecture.md`](.agents/architecture.md) for full details.
 
+Two binaries are produced:
+- **`neo4j-cli`** — super-CLI entrypoint (`neo4j-cli/main.go`); wraps `aura-cli` under the `aura` subcommand
+- **`aura-cli`** — standalone Aura CLI (`neo4j-cli/aura/cmd/main.go`)
+
 ```
-neo4j-cli/aura/
-  cmd/main.go              # Binary entrypoint
-  aura.go                  # Root command, registers subcommands
-  internal/
-    api/                   # HTTP client for Neo4j Aura REST API
-    flags/                 # Custom reusable flag types
-    output/                # JSON + table rendering
-    subcommands/           # One directory per resource, one file per action
-      instance/, tenant/, credential/, config/,
-      deployment/, dataapi/graphql/, graphanalytics/,
-      import/, customermanagedkey/
+neo4j-cli/
+  main.go                  # neo4j-cli entrypoint; mounts aura subcommand as "aura"
+  aura/
+    cmd/main.go            # aura-cli standalone entrypoint
+    aura.go                # Root command, registers subcommands
+    internal/
+      api/                 # HTTP client for Neo4j Aura REST API
+      flags/               # Custom reusable flag types
+      output/              # JSON + table rendering
+      subcommands/         # One directory per resource, one file per action
+        instance/, tenant/, credential/, config/,
+        deployment/, dataapi/graphql/, graphanalytics/,
+        import/, customermanagedkey/
 common/
   clicfg/                  # Config, credentials, project state (OS-specific paths)
   clierr/                  # Shared error types

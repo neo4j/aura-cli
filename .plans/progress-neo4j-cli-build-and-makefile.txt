@@ -208,3 +208,34 @@ Key Decisions:
   neo4j-cli, so both changelogs remain accurate
 
 Next Task: task-008 (Update agent docs — AGENTS.md and .agents/ detail files)
+
+================================================================================
+TASK-008: Update agent docs (AGENTS.md and .agents/ detail files)
+Date: 2026-04-30T19:30:00Z
+================================================================================
+
+Summary:
+Updated AGENTS.md and all three relevant .agents/ detail files to reflect the
+make-based workflow, dual-binary architecture, golangci-lint setup, and cascade
+versioning policy introduced in earlier tasks.
+
+Files Changed:
+- AGENTS.md (modified: Feedback Instructions now show make targets; Build System
+  updated with Makefile and golangci-lint; Architecture section introduces neo4j-cli
+  as super-CLI entrypoint with updated directory tree)
+- .agents/build.md (rewritten: full Makefile target table, golangci-lint config
+  details, dual-binary GoReleaser setup, cascade versioning policy)
+- .agents/testing.md (modified: make test as canonical command replacing bare go test)
+- .agents/deployment.md (rewritten: dual-binary releases, cascade versioning policy,
+  both binaries listed in macOS notarize ids)
+
+Key Decisions:
+- AGENTS.md Architecture section updated to show both binaries and the neo4j-cli
+  directory structure (neo4j-cli/ wrapping aura/ subpackage)
+- .agents/build.md fully rewritten rather than patched — old content was no longer
+  accurate across multiple sections
+- .agents/deployment.md fully rewritten to lead with the dual-binary model
+- Cascade versioning policy documented in both AGENTS.md and .agents/build.md and
+  .agents/deployment.md for discoverability
+
+Next Task: task-009 (Update usage guide to document neo4j-cli)

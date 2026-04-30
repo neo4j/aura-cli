@@ -147,7 +147,7 @@ tasks:
       dual-binary GoReleaser setup, and the cascade versioning policy. Update
       `.agents/testing.md` to show `make test`. Update `.agents/deployment.md` to
       reflect dual-binary releases, separate versioning, and the cascade rule.
-    status: pending
+    status: completed
     dependencies:
       - task-004
       - task-005
@@ -157,7 +157,7 @@ tasks:
       - "`.agents/build.md` lists all Makefile targets and documents golangci-lint usage"
       - "`.agents/deployment.md` describes the dual-binary release and cascade versioning policy"
       - "`.agents/testing.md` shows `make test` as the canonical test command"
-    completed_at: null
+    completed_at: 2026-04-30T19:30:00Z
 
   - id: task-009
     title: "Update usage guide to document neo4j-cli"

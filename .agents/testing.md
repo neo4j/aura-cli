@@ -7,7 +7,10 @@ Go standard `testing` package + `testify` for assertions.
 ## Running Tests
 
 ```bash
-go test ./...
+# Canonical command (preferred)
+make test
+
+# Verbose output
 go test -v ./...
 ```
 
