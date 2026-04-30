@@ -98,3 +98,28 @@ Key Decisions:
 - Real fixes preferred for staticcheck: type inference (ST1023) and tagged switch (QF1002)
 
 Next Task: task-004 (Create Makefile with all required targets)
+
+================================================================================
+TASK-004: Create Makefile with all required targets
+Date: 2026-04-30T17:00:00Z
+================================================================================
+
+Summary:
+Created a `Makefile` at the repo root with all required targets: `build`,
+`build-aura`, `build-neo4j`, `test`, `lint`, `fmt`, `license-check`, `run-aura`,
+`run-neo4j`, and `clean`. Uses `$(shell go env GOPATH)` for tool resolution rather
+than hardcoded paths. All targets are declared `.PHONY`. The `license-check` target
+uses `$(GOPATH)/bin/addlicense` to handle the case where GOPATH/bin is not on PATH.
+
+Files Changed:
+- Makefile (created: repo root Makefile with all required targets)
+
+Key Decisions:
+- Used `$(shell go env GOPATH)` to resolve GOPATH dynamically — avoids hardcoding
+  user-specific paths and works on any Go installation
+- `license-check` uses `$(GOPATH)/bin/addlicense` rather than bare `addlicense`
+  because the binary is installed via `go install` and GOPATH/bin may not be on PATH
+- All 10 targets declared in a single `.PHONY` line at the top for clarity
+- `build-aura` and `build-neo4j` are separate sub-targets; `build` depends on both
+
+Next Task: task-005 (Update GoReleaser for dual-binary release with macOS signing)

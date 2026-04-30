@@ -81,6 +81,11 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Merging a release PR triggers GoReleaser to publish binaries for linux/windows/darwin (amd64 + arm64)
 - macOS binaries are code-signed and notarized
 
+## Makefile Notes
+
+- `license-check` target uses `$(GOPATH)/bin/addlicense` (not bare `addlicense`) — GOPATH/bin may not be on PATH
+- `license-check` requires a Unix shell (`find` + `xargs`); won't work natively on Windows
+
 ## golangci-lint Notes
 
 - Version installed: v2.11.4 (via Homebrew)

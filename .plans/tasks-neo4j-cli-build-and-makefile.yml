@@ -65,7 +65,7 @@ tasks:
       `license-check` target may assume a Unix shell (matching existing behaviour);
       add a comment noting this. All other targets must work on macOS, Linux, and
       Windows.
-    status: pending
+    status: completed
     dependencies:
       - task-002
       - task-003
@@ -77,7 +77,7 @@ tasks:
       - "`make license-check` runs the addlicense check and exits 0"
       - "`make clean` removes the `bin/` directory"
       - "All non-file targets are declared `.PHONY`"
-    completed_at: null
+    completed_at: 2026-04-30T17:00:00Z
 
   - id: task-005
     title: "Update GoReleaser for dual-binary release with macOS signing"
