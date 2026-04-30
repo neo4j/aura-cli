@@ -4,6 +4,7 @@
 package output
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -32,6 +33,21 @@ func PrintBodyMap(cmd *cobra.Command, cfg *clicfg.Config, values api.ResponseDat
 		// This is in case the value is unknown
 		cmd.Println(values)
 	}
+}
+
+// PrintRawBody prints a bare JSON response (no {"data":...} envelope).
+// Use for APIs like the agent API that return unwrapped JSON.
+func PrintRawBody(cmd *cobra.Command, cfg *clicfg.Config, body []byte, fields []string) {
+	if len(body) == 0 {
+		return
+	}
+	if cfg.Aura.Output() == "json" {
+		var buf bytes.Buffer
+		json.Indent(&buf, body, "", "\t")
+		cmd.Println(buf.String())
+		return
+	}
+	PrintBodyMap(cmd, cfg, api.ParseRawBody(body), fields)
 }
 
 // Prints the response body, taking the output configuration into account. Only the defined fields will be printed in table mode. The full output will be printed in json
