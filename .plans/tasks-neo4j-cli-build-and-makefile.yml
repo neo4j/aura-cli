@@ -12,14 +12,14 @@ tasks:
       makes the command path `neo4j-cli aura <subcommand>` instead of
       `neo4j-cli aura-cli <subcommand>`. `aura.NewCmd` itself must not be changed
       so the standalone `aura-cli` binary is unaffected.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "`neo4j-cli aura instance list` executes without error"
       - "`neo4j-cli aura-cli` does not resolve as a valid subcommand"
       - "`aura-cli instance list` (standalone binary) continues to work unchanged"
       - "`aura.NewCmd` in `neo4j-cli/aura/aura.go` is not modified"
-    completed_at: null
+    completed_at: 2026-04-30T15:30:00Z
 
   - id: task-002
     title: "Add minimal golangci-lint config"

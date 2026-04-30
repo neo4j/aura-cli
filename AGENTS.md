@@ -39,6 +39,7 @@ See [`.agents/testing.md`](.agents/testing.md) for full details.
 - Tests are colocated with source as `*_test.go` files
 - Run with `go test ./...`; CI runs on ubuntu, windows, and macos
 - Mock HTTP server and filesystem helpers live in `neo4j-cli/aura/internal/test/testutils/`
+- `neo4j-cli/` (the super-CLI package) has no test files; this is a pre-existing gap
 
 ## Architecture
 

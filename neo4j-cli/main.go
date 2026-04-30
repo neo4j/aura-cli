@@ -22,7 +22,9 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		Version: Version,
 	}
 
-	cmd.AddCommand(aura.NewCmd(cfg))
+	auraCmd := aura.NewCmd(cfg)
+	auraCmd.Use = "aura"
+	cmd.AddCommand(auraCmd)
 	return cmd
 }
 

@@ -1,0 +1,20 @@
+================================================================================
+TASK-001: Fix neo4j-cli aura subcommand Use field
+Date: 2026-04-30T15:30:00Z
+================================================================================
+
+Summary:
+Captured the return value of `aura.NewCmd(cfg)` in `neo4j-cli/main.go`, overrode
+its `Use` field to `"aura"`, then passed it to `cmd.AddCommand`. This makes
+`neo4j-cli aura <subcommand>` the canonical path while leaving `aura.NewCmd`
+itself unchanged so the standalone `aura-cli` binary is unaffected.
+
+Files Changed:
+- neo4j-cli/main.go (modified: capture auraCmd, set Use = "aura", then AddCommand)
+
+Key Decisions:
+- Override `Use` on the returned command rather than modifying `aura.NewCmd` — keeps
+  the two binaries' root command names independent
+- Change is 3 lines; no other files modified
+
+Next Task: task-002 (Add minimal golangci-lint config)
