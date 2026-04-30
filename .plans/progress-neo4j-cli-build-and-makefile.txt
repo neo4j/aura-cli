@@ -181,3 +181,30 @@ Key Decisions:
   `make license-check` needs the binary installed
 
 Next Task: task-007 (Update CONTRIBUTING.md and README.md with make-based workflow)
+
+================================================================================
+TASK-007: Update CONTRIBUTING.md and README.md with make-based workflow
+Date: 2026-04-30T19:00:00Z
+================================================================================
+
+Summary:
+Updated CONTRIBUTING.md to replace all raw `go` commands with `make` equivalents,
+added Linting and formatting section, added versioning cascade policy section
+documenting that every `aura-cli` release requires a corresponding `neo4j-cli`
+changie entry, and added `make license-check` instructions with a note about
+Unix-only shell requirement. Updated README.md to add a "Building locally" section
+using `make build`, `make run-aura`, and `make run-neo4j`.
+
+Files Changed:
+- CONTRIBUTING.md (modified: replaced go commands with make targets, added versioning
+  cascade policy, added linting/formatting section, added license-check instructions)
+- README.md (modified: added "Building locally" section with make targets)
+
+Key Decisions:
+- Kept the GoReleaser multi-platform snapshot command in CONTRIBUTING.md (not a bare
+  `go` command, so it doesn't violate the acceptance criteria)
+- Added Windows limitation note for `make license-check` to help Windows contributors
+- Versioning cascade policy clearly states: one `changie new` for aura-cli, one for
+  neo4j-cli, so both changelogs remain accurate
+
+Next Task: task-008 (Update agent docs — AGENTS.md and .agents/ detail files)

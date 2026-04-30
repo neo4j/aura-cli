@@ -11,15 +11,35 @@ If you want to contribute code, make sure to [sign the CLA](https://neo4j.com/de
 The full suite of tests can be run using the following command:
 
 ```bash
-go test ./...
+make test
 ```
 
 ### Local running
 
-The CLI can be run locally without building by running the following command:
+The CLI can be run locally without building a binary. To run the standalone `aura-cli`:
 
 ```bash
-go run neo4j-cli/main.go aura-cli
+make run-aura
+```
+
+To run the `neo4j-cli` super CLI:
+
+```bash
+make run-neo4j
+```
+
+### Linting and formatting
+
+To lint the codebase:
+
+```bash
+make lint
+```
+
+To format all Go source files:
+
+```bash
+make fmt
 ```
 
 ### Pull requests
@@ -40,6 +60,15 @@ Simply commit the file that this command produces and you're done!
 
 If changie is not available, you may need to add /go/bin to your path: `export PATH="$HOME/go/bin:$PATH"`
 
+### Versioning cascade policy
+
+`neo4j-cli` embeds `aura-cli` as a subcommand. Every `aura-cli` release therefore also affects `neo4j-cli`. When a change is made to `aura-cli` (including any `aura-cli` release):
+
+1. Run `changie new` once for `aura-cli` (as usual).
+2. Run `changie new` a **second time** to add a corresponding changelog entry for `neo4j-cli`, briefly describing what changed in the embedded `aura-cli`.
+
+This ensures both binaries have accurate, independently versioned changelogs.
+
 ### License
 
 All `.go` files must begin with the following license comment:
@@ -49,14 +78,35 @@ All `.go` files must begin with the following license comment:
 // Neo4j Sweden AB [http://neo4j.com]
 ```
 
+To check that all files comply, run:
+
+```bash
+make license-check
+```
+
+> Note: `make license-check` requires a Unix shell (`bash`/`sh`) with `find` and `xargs`. It will not work natively on Windows without WSL or Git Bash.
+
 ### Building
 
 Builds for releases are handled in GitHub Actions. If you want to create local builds, there are a couple of approaches.
 
-To create a simply binary using `go` directly, you can execute the following command:
+To build both `aura-cli` and `neo4j-cli` into the `bin/` directory:
 
 ```bash
-go build -o bin/ ./...
+make build
+```
+
+You can also build each binary individually:
+
+```bash
+make build-aura   # produces bin/aura-cli
+make build-neo4j  # produces bin/neo4j-cli
+```
+
+To remove build artifacts:
+
+```bash
+make clean
 ```
 
 If you want to build binaries for all varieties of platforms, you can do so with the following command:

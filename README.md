@@ -55,6 +55,21 @@ Help for each command is accessed by using it without any flags or options. For 
 
 Please use [GitHub issues](https://github.com/neo4j/aura-cli/issues) to provide feedback and report any issues that you have encountered.
 
+## Building locally
+
+Clone the repository and run:
+
+```bash
+make build
+```
+
+This produces `bin/aura-cli` and `bin/neo4j-cli`. To run without building:
+
+```bash
+make run-aura   # standalone aura-cli
+make run-neo4j  # neo4j-cli super CLI
+```
+
 ## Developing and contributing
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md)

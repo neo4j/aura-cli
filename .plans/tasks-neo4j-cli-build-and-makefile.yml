@@ -127,7 +127,7 @@ tasks:
       the versioning cascade policy: every `aura-cli` release requires a corresponding
       `neo4j-cli` changelog entry via `changie new`. Update `README.md` quick-start
       examples (local run, build) to use `make` targets.
-    status: pending
+    status: completed
     dependencies:
       - task-004
     acceptance_criteria:
@@ -135,7 +135,7 @@ tasks:
       - "CONTRIBUTING.md contains no bare `go build`, `go test`, `go vet`, `go fmt` command examples"
       - "CONTRIBUTING.md includes the versioning cascade policy (aura-cli change → neo4j-cli changie entry)"
       - "README.md build and local-run examples use `make` targets"
-    completed_at: null
+    completed_at: 2026-04-30T19:00:00Z
 
   - id: task-008
     title: "Update agent docs (AGENTS.md and .agents/ detail files)"
