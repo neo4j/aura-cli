@@ -18,3 +18,28 @@ Key Decisions:
 - Change is 3 lines; no other files modified
 
 Next Task: task-002 (Add minimal golangci-lint config)
+
+================================================================================
+TASK-002: Add minimal golangci-lint config
+Date: 2026-04-30T16:00:00Z
+================================================================================
+
+Summary:
+Created `.golangci.yml` at the repo root configuring golangci-lint v2 with the
+five required checks: `govet`, `errcheck`, `staticcheck`, and `unused` as linters;
+`gofmt` as a formatter (golangci-lint v2 separates linters and formatters).
+Set `max-issues-per-linter: 0` and `max-same-issues: 0` to report all issues.
+Installed golangci-lint v2.11.4 via Homebrew.
+
+Files Changed:
+- .golangci.yml (created: minimal golangci-lint v2 config at repo root)
+
+Key Decisions:
+- golangci-lint v2 uses `version: "2"` at the top and separates `linters` from
+  `formatters` — `gofmt` must go under `formatters.enable`, not `linters.enable`
+- Used `default: none` under `linters` so only the five explicitly listed checks
+  are active (disables the auto-enabled defaults like `ineffassign`)
+- Config reports 70 existing issues (68 errcheck, 2 staticcheck); fixing these
+  is deferred to task-003
+
+Next Task: task-003 (Fix all existing golangci-lint errors)

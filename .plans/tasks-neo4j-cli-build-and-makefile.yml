@@ -28,14 +28,14 @@ tasks:
       `errcheck`, `staticcheck`, `unused`, and `gofmt`. Set `max-issues-per-linter`
       and `max-same-issues` to 0 so all issues are reported. This config will be
       used by both the Makefile and CI.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "`.golangci.yml` exists at the repo root"
       - "Running `golangci-lint run ./...` locally completes without a config error"
       - "Only the five specified linters are enabled"
       - "`max-issues-per-linter: 0` and `max-same-issues: 0` are set"
-    completed_at: null
+    completed_at: 2026-04-30T16:00:00Z
 
   - id: task-003
     title: "Fix all existing golangci-lint errors"

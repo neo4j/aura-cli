@@ -81,6 +81,14 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Merging a release PR triggers GoReleaser to publish binaries for linux/windows/darwin (amd64 + arm64)
 - macOS binaries are code-signed and notarized
 
+## golangci-lint Notes
+
+- Version installed: v2.11.4 (via Homebrew)
+- golangci-lint v2 requires `version: "2"` at the top of `.golangci.yml`
+- In v2, `gofmt` is a **formatter** (not a linter); put it under `formatters.enable`, not `linters.enable`
+- Use `linters.default: none` to disable auto-enabled defaults (e.g. `ineffassign`) and run only explicitly listed linters
+- Config lives at `.golangci.yml` in repo root
+
 ---
 
 _This AGENTS.md was generated using agent-based project discovery._
