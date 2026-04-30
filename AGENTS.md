@@ -100,6 +100,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - In v2, `gofmt` is a **formatter** (not a linter); put it under `formatters.enable`, not `linters.enable`
 - Use `linters.default: none` to disable auto-enabled defaults (e.g. `ineffassign`) and run only explicitly listed linters
 - Config lives at `.golangci.yml` in repo root
+- In CI, `golangci/golangci-lint-action@v6` is used as the lint step — it installs, caches, and runs golangci-lint using `.golangci.yml`. This is equivalent to `make lint`. Renovate will pin the SHA.
 
 ---
 

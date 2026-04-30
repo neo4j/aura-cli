@@ -25,17 +25,15 @@ jobs:
                   go-version: "stable"
 
             - name: Build
-              run: go build -v ./...
+              run: make build
 
             - name: Test
-              run: go test -v ./...
+              run: make test
 
-            - name: Vet
-              run: go vet -v ./...
-
-            - name: fmt
-              run: go fmt ./...
-
-            - uses: dominikh/staticcheck-action@9716614d4101e79b4340dd97b10e54d68234e431 # v1.4.1
+            - name: Lint
+              uses: golangci/golangci-lint-action@v6
               with:
-                  install-go: false
+                  install-mode: binary
+
+            - name: Format
+              run: make fmt

@@ -108,7 +108,7 @@ tasks:
       `golangci-lint-action` (which caches the binary). Update
       `.github/workflows/license.yml` to call `make license-check`. Remove the
       `dominikh/staticcheck-action` step entirely.
-    status: pending
+    status: completed
     dependencies:
       - task-004
     acceptance_criteria:
@@ -117,7 +117,7 @@ tasks:
       - "`golangci-lint-action` is used to install golangci-lint in CI"
       - "`license.yml` calls `make license-check` instead of running addlicense directly"
       - "CI workflow passes on ubuntu, windows, and macos matrix jobs"
-    completed_at: null
+    completed_at: 2026-04-30T18:00:00Z
 
   - id: task-007
     title: "Update CONTRIBUTING.md and README.md with make-based workflow"

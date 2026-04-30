@@ -153,3 +153,31 @@ Key Decisions:
 - `project_name` changed from `aura-cli` to `neo4j-cli` to reflect the super-CLI
 
 Next Task: task-006 (Update CI workflows to use make targets)
+
+================================================================================
+TASK-006: Update CI workflows to use make targets
+Date: 2026-04-30T18:00:00Z
+================================================================================
+
+Summary:
+Updated `.github/workflows/test.yml` to replace raw `go` commands and the
+`dominikh/staticcheck-action` step with `make build`, `make test`,
+`golangci/golangci-lint-action@v6` (for linting), and `make fmt`. Updated
+`.github/workflows/license.yml` to call `make license-check` instead of
+running `addlicense` inline.
+
+Files Changed:
+- .github/workflows/test.yml (modified: replaced go commands and staticcheck-action with make targets and golangci-lint-action)
+- .github/workflows/license.yml (modified: replaced inline addlicense command with make license-check)
+
+Key Decisions:
+- Used `golangci-lint-action@v6` as the lint step directly (installs AND runs
+  golangci-lint using .golangci.yml), equivalent to `make lint` — the action
+  handles caching of the golangci-lint binary
+- `golangci-lint-action@v6` uses a tag reference (not SHA); Renovate will pin it
+- The `make build` on Windows doesn't add `.exe` suffix — pre-existing Makefile
+  limitation from task-004, out of scope for this task
+- Kept `go install github.com/google/addlicense@latest` step in license.yml since
+  `make license-check` needs the binary installed
+
+Next Task: task-007 (Update CONTRIBUTING.md and README.md with make-based workflow)
