@@ -45,7 +45,7 @@ tasks:
       public API signatures. If `errcheck` flags intentionally ignored errors (e.g.
       `cmd.Execute()`), use `//nolint:errcheck` with a comment rather than silently
       swallowing them.
-    status: pending
+    status: completed
     dependencies:
       - task-002
     acceptance_criteria:
@@ -53,7 +53,7 @@ tasks:
       - "`go test ./...` still passes after all fixes"
       - "No breaking changes to CLI command signatures or output format"
       - "Any `//nolint` directives added are narrowly scoped with a justification comment"
-    completed_at: null
+    completed_at: 2026-04-30T16:30:00Z
 
   - id: task-004
     title: "Create Makefile with all required targets"
