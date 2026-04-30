@@ -4,6 +4,58 @@ The new Neo4j Aura CLI is a powerful new tool designed to simplify and streamlin
 Whether you're provisioning new databases or scaling existing ones, the Neo4j Aura CLI empowers developers and operations teams with greater flexibility, speed, and efficiency.
 Built with ease of use in mind, this CLI bridges the gap between automation and hands-on control, enabling you to integrate Neo4j Aura seamlessly into your workflows.
 
+# The neo4j-cli super CLI
+
+In addition to the standalone `aura-cli` binary, Neo4j ships a super CLI called `neo4j-cli` that bundles Aura management alongside other Neo4j tooling in a single binary.
+
+All Aura commands are available under the `neo4j-cli aura` prefix, so every `aura-cli` command in this guide can be run with `neo4j-cli aura` instead. For example:
+
+```text
+neo4j-cli aura instance list --output table
+```
+
+is equivalent to:
+
+```text
+aura-cli instance list --output table
+```
+
+You can use whichever binary suits your workflow. The rest of this guide uses `aura-cli` for brevity, but every example works identically with `neo4j-cli aura`.
+
+## Installing neo4j-cli
+
+`neo4j-cli` is distributed alongside `aura-cli` in the same GitHub release. Both binaries are available at [https://github.com/neo4j/aura-cli/releases](https://github.com/neo4j/aura-cli/releases).
+
+1. Using your browser, navigate to [https://github.com/neo4j/aura-cli/releases](https://github.com/neo4j/aura-cli/releases).
+
+2. Download the `neo4j-cli` compressed file that matches your computer. Make a note of the folder where the file is located.
+
+3. After the file has been downloaded, extract the contents.
+
+4. Open a command prompt and move to the location where you extracted the files.
+
+5. Complete the installation by moving the `neo4j-cli` executable file into the file path.
+
+- Mac users:
+
+```text
+sudo mv neo4j-cli /usr/local/bin
+```
+
+- Windows users:
+
+```text
+move neo4j-cli.exe c:\windows\system32
+```
+
+Check the installation with:
+
+```text
+neo4j-cli --version
+```
+
+**Note**: If you are using a Mac, you may receive a warning from Apple that `neo4j-cli` could not be verified. If this happens, open **System Settings**, select **Privacy & Security** on the left, and scroll down on the right. Select **Open Anyway**. The `neo4j-cli` binary has been through the Apple certification process.
+
 # Installation
 
 The new Aura CLI is available on [GitHub](https://github.com/neo4j/aura-cli/releases).

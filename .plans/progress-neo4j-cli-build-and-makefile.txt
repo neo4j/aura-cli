@@ -239,3 +239,34 @@ Key Decisions:
   .agents/deployment.md for discoverability
 
 Next Task: task-009 (Update usage guide to document neo4j-cli)
+
+================================================================================
+TASK-009: Update usage guide to document neo4j-cli
+Date: 2026-04-30T20:00:00Z
+================================================================================
+
+Summary:
+Added a new "The neo4j-cli super CLI" section to
+`docs/usageGuide/A Guide To The New Aura CLI.md` immediately after the opening
+paragraph. The section explains what neo4j-cli is, how it relates to aura-cli,
+provides full installation steps (download, extract, move to PATH on Mac/Windows),
+a version check command, and a note about macOS signing. It also includes an
+example showing `neo4j-cli aura instance list --output table` alongside its
+`aura-cli` equivalent to make the relationship concrete. All existing aura-cli
+instructions are preserved unchanged.
+
+Files Changed:
+- docs/usageGuide/A Guide To The New Aura CLI.md (modified: added "The neo4j-cli
+  super CLI" section with intro, example, and installation subsection)
+
+Key Decisions:
+- Placed the new section before "Installation" so readers see the full picture
+  (both binaries) before the existing aura-cli-specific installation walkthrough
+- Used a concrete side-by-side example (`neo4j-cli aura instance list` vs
+  `aura-cli instance list`) to make the command equivalence immediately clear
+- Stated explicitly that the rest of the guide uses `aura-cli` for brevity but
+  every example works with `neo4j-cli aura` — avoids duplicating every command
+- Installation steps mirror the existing aura-cli installation steps for
+  consistency in style
+
+Next Task: All tasks complete

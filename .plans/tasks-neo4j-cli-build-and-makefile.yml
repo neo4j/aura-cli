@@ -167,7 +167,7 @@ tasks:
       all aura commands are accessible via `neo4j-cli aura <subcommand>` in addition
       to the standalone `aura-cli` binary. Existing aura-cli instructions should
       remain intact; neo4j-cli coverage is additive.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -175,4 +175,4 @@ tasks:
       - "Installation instructions for `neo4j-cli` are provided (download, extract, move to PATH)"
       - "At least one example shows `neo4j-cli aura <subcommand>` usage"
       - "Existing `aura-cli` instructions are preserved and accurate"
-    completed_at: null
+    completed_at: 2026-04-30T20:00:00Z
