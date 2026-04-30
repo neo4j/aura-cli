@@ -43,3 +43,4 @@ run-neo4j:
 ## clean: remove the bin/ directory
 clean:
 	rm -rf bin/
+	rm -rf dist/
