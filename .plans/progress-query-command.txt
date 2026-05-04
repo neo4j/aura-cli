@@ -345,3 +345,30 @@ Key Decisions:
   triggers the failure even when the bundle itself is clean).
 
 Next Task: task-009 (changelog entry)
+
+================================================================================
+TASK-009: Add user-facing changelog entry for neo4j-cli
+Date: 2026-05-04T14:50:14Z
+================================================================================
+
+Summary:
+Hand-authored .changes/unreleased/neo4j-cli-Minor-20260504-145014.yaml (changie
+not installed locally). Single neo4j-cli Minor entry, no aura-cli entry — query
+is super-CLI-only. Body summarizes user-visible feature mentioning Cypher +
+HTTP Query API. RFC3339 UTC time. Single-quoted body with apostrophes escaped
+via doubling per YAML single-quote rules. make test/fmt-check/build all green.
+
+Files Changed:
+- .changes/unreleased/neo4j-cli-Minor-20260504-145014.yaml (created)
+- .plans/tasks-query-command.yml (status / completed_at)
+
+Key Decisions:
+- Apostrophe-around-'query' escaped as '' inside the single-quoted YAML body
+  (YAML's only single-quote escape rule). Validates as the literal string with
+  embedded apostrophes when parsed.
+- Filename uses YYYYMMDD-HHMMSS format matching the other unreleased entries
+  (e.g. neo4j-cli-Minor-20260504-140248.yaml).
+- No aura-cli entry per AGENTS.md changie multi-project notes — query mounts
+  only on super-CLI (app.go), not on aura.NewStandaloneCmd.
+
+Next Task: task-010 (e2e verification + all CI gates)

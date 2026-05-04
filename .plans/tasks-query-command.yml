@@ -131,7 +131,7 @@ tasks:
     title: "Add user-facing changelog entry for neo4j-cli"
     description: |
       Per AGENTS.md §"Build System": `query` is user-facing, so add a changelog entry under `.changes/unreleased/` for the `neo4j-cli` project (kind `Minor`). Use `changie new --projects neo4j-cli --kind Minor --body "Add 'query' command to run Cypher against a Neo4j database via the HTTP Query API"` if changie is available locally; otherwise hand-author the YAML at `.changes/unreleased/neo4j-cli-Minor-<YYYYMMDD>-<HHMMSS>.yaml` with fields `project: neo4j-cli`, `kind: Minor`, `body: '...'`, and an RFC3339 `time:`. Do NOT add an `aura-cli` entry — `query` is mounted only on the super-CLI.
-    status: pending
+    status: completed
     dependencies:
       - task-006
       - task-007
@@ -140,7 +140,7 @@ tasks:
       - "Body summarizes the user-visible feature in one sentence and mentions Cypher + HTTP Query API"
       - "No `aura-cli` entry is created"
       - "File name follows `neo4j-cli-Minor-<YYYYMMDD>-<HHMMSS>.yaml`"
-    completed_at: null
+    completed_at: 2026-05-04T14:50:14Z
 
   - id: task-010
     title: "End-to-end verification against a real Neo4j and run all CI gates"
