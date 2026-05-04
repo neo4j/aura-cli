@@ -1,7 +1,7 @@
 GOPATH := $(shell go env GOPATH)
 GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
 
-.PHONY: build build-aura build-neo4j snapshot test lint fmt license-check run-aura run-neo4j clean changelog generate generate-check
+.PHONY: build build-aura build-neo4j snapshot test lint fmt fmt-check license-check run-aura run-neo4j clean changelog generate generate-check
 
 ## build: build both aura-cli and neo4j-cli into bin/
 build: build-aura build-neo4j
@@ -32,6 +32,16 @@ lint:
 ## fmt: format all Go source files
 fmt:
 	go fmt ./...
+
+## fmt-check: fail if any Go source file needs gofmt (catches drift without rewriting)
+fmt-check:
+	@unformatted="$$(gofmt -l .)"; \
+	if [ -n "$$unformatted" ]; then \
+		echo "ERROR: the following files need gofmt:"; \
+		echo "$$unformatted"; \
+		echo "Run 'make fmt' to fix."; \
+		exit 1; \
+	fi
 
 ## license-check: verify all .go files carry the Neo4j copyright header
 ## NOTE: this target requires a Unix shell (bash/sh) and the `find` + `xargs` utilities.

@@ -9,10 +9,10 @@ Learnings and patterns for future agents working on this project.
 TEST COMMANDS: [`make test`]
 BUILD COMMANDS: [`make build`, `make run-aura`, `make run-neo4j`]
 LINT COMMANDS: [`make lint`]
-FORMAT COMMANDS: [`make fmt`]
+FORMAT COMMANDS: [`make fmt-check`] — runs `gofmt -l .` and fails on any output. `make fmt` rewrites silently and is NOT a gate; use `make fmt-check` to verify. CI's golangci-lint v2 includes `gofmt` as a formatter and will fail the build on unformatted code.
 LICENSE CHECK: [`make license-check`]
 
-**Always run `make test` as the final gate before marking any task or plan complete.** All tests must pass — a build that compiles but has failing tests is not done.
+**Always run `make test` AND `make fmt-check` as final gates before marking any task or plan complete.** All tests must pass and no file may need gofmt — a build that compiles but has failing tests or unformatted code is not done. `make fmt-check` is the local equivalent of CI's gofmt linter, so drift fails before the push instead of after.
 
 ## Project Overview
 
