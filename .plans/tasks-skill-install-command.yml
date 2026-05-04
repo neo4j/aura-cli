@@ -343,3 +343,59 @@ tasks:
       - "Existing tests still pass; coverage of common/skill stays ≥80%"
       - "make build / make test / make generate-check all green"
     completed_at: 2026-05-04T20:30:00Z
+
+  - id: task-017
+    title: "Fix Windows CI failures (path separators + CRLF golden files)"
+    description: |
+      Two Windows-only failures surfaced on the PR #12 CI run
+      (https://github.com/neo4j-labs/neo4j-cli/actions/runs/25311172924):
+
+      1. `common/skill TestExpandPath/XDG_unset_falls_back_to_HOME/.config`
+         and `XDG_empty_string_falls_back_to_HOME/.config`. Root cause:
+         `expandPath` (common/skill/agents.go:120) does
+         `strings.ReplaceAll(path, "$XDG_CONFIG_HOME", xdg)`. The OpenCode
+         catalog entry uses forward slashes (`$XDG_CONFIG_HOME/opencode`)
+         but on Windows `xdg` resolves to a backslash path
+         (`C:\…\.config`), producing mixed separators
+         (`C:\…\.config/opencode`). Test expects all-backslash. Fix: pass
+         the post-replacement result through `filepath.FromSlash` so the
+         whole path is OS-native. Catalog entries can keep forward slashes
+         (portable convention).
+
+      2. `common/skill/render TestBundle_GoldenFiles` (3 sub-failures —
+         SKILL.md and both references). Root cause: golden `.md` files in
+         `testdata/` get LF→CRLF converted by Git autocrlf on Windows
+         checkout (default on windows-latest runners), but the renderer
+         emits LF. Byte-equal compare fails. Same risk applies to every
+         committed `internal/skill/bundle/*.md`, `additions.md`, and
+         `description.txt`. `make generate-check` on Windows would also
+         fail because regenerating writes LF while Git diff sees CRLF.
+         Fix: add a top-level `.gitattributes` pinning LF for the file
+         types byte-compared in tests or by `make generate-check`:
+
+         ```
+         common/skill/render/testdata/** text eol=lf
+         **/internal/skill/bundle/** text eol=lf
+         **/internal/skill/additions.md text eol=lf
+         **/internal/skill/description.txt text eol=lf
+         ```
+
+      Add a regression test for #1 that exercises `expandPath` with
+      mixed-slash input and asserts the result is fully OS-native (so a
+      future contributor adding a similar catalog entry won't reintroduce
+      the bug). For #2, add a small assertion (e.g. in render_test.go or
+      bundles_test.go) that no committed testdata/bundle file contains
+      `\r\n` — `.gitattributes` is the primary defence; the assertion
+      catches the case where someone removes or weakens the attribute.
+    status: pending
+    dependencies:
+      - task-016
+    acceptance_criteria:
+      - "expandPath returns OS-native separators on Windows for the OpenCode XDG_CONFIG_HOME entries (existing 2 failing TestExpandPath subtests pass on Windows)"
+      - "A new test case exercises expandPath with the OpenCode-style mixed-slash input and asserts the result is fully OS-native (so the same bug can't regress)"
+      - ".gitattributes exists at repo root pinning LF for testdata, bundle/, additions.md, description.txt under any internal/skill/ tree"
+      - "TestBundle_GoldenFiles passes on Windows CI (verified by re-running CI on PR #12 after the fix)"
+      - "make generate-check is green on Windows (no spurious CRLF/LF diffs)"
+      - "make build / make test green on the full ubuntu/windows/macos matrix in PR #12 CI"
+      - "No regression on ubuntu/macos coverage or test counts"
+    completed_at: null
