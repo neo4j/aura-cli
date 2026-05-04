@@ -63,3 +63,30 @@ Key Decisions:
 - Coverage of common/skill/ is 88.3%.
 
 Next Task: task-004
+
+================================================================================
+TASK-004: Implement common/skill/render package with golden-file tests
+Date: 2026-05-04T14:00:00Z
+================================================================================
+
+Summary:
+Added common/skill/render package: Bundle(root, opts) walks a cobra tree and emits SKILL.md (frontmatter with `version: {{VERSION}}` placeholder + overview + Global Flags table + Subcommands index linking references/<sub>.md + Gotchas) plus one references/<sub>.md per visible top-level subcommand (recursive H1+H2+... per nested cmd, sorted flag tables, examples). References >100 lines get a "## Contents" TOC injected after the H1. Hidden cmds and `help` excluded. Output byte-deterministic — sorted subcommands and flag rows, no map iteration. Golden-file tests under render/testdata/.
+
+Files Changed:
+- common/skill/render/render.go (created — Bundle + helpers)
+- common/skill/render/render_test.go (created — 10 tests, golden-file + property checks)
+- common/skill/render/testdata/SKILL.md (golden)
+- common/skill/render/testdata/references/instance.md (golden)
+- common/skill/render/testdata/references/zebra.md (golden)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- TOC inserted after the H1 of the reference, not above it — keeps the sub's heading the file's first line so `bytes.IndexByte('\n')` slicing is unambiguous.
+- Reference H1 = `<binName> <cmd path>` via `cmd.CommandPath()` — anchor slugs are GitHub-style (`r-big-leaf00`) to keep golden assertions stable.
+- `walkRender` uses `LocalFlags()` (not `Flags()`) so inherited persistent flags don't duplicate the SKILL.md "Global Flags" table.
+- Pipes in usage strings escaped (`|` → `\|`) to keep markdown tables intact.
+- Bundle returns map[string][]byte keyed with forward slashes (embed.FS convention); CopyBundle (task-003) handles OS-separator translation downstream.
+- Added `-update` test flag for golden regeneration: `go test ./common/skill/render -update`.
+- Coverage of render package: 97.1% (well above 80% gate).
+
+Next Task: task-005

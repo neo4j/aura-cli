@@ -138,6 +138,8 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `neo4j-cli/aura/aura.go` already exposes `NewCmd` (super-CLI mount) and `NewStandaloneCmd` (aura-cli binary, adds credential).
 - `common/skill/` holds shared agent-skill logic (catalog, path expansion, installer). Hermetic-friendly: `DetectAgents(afero.Fs)` takes an FS; tests use `afero.NewMemMapFs` + `t.Setenv("HOME", ...)`.
 - `common/skill/filesystem.go::CopyBundle(dst, dstDir, bundle fs.FS)` walks `bundle` (already scoped — generators do `fs.Sub(Bundle, "bundle")` upstream). Uses `filepath.FromSlash` on each entry so embed.FS forward slashes translate to OS separators on Windows.
+- `common/skill/render.Bundle(root, opts)` returns `map[string][]byte` keyed with forward-slash paths (`SKILL.md`, `references/<sub>.md`). Uses `LocalFlags()` (not `Flags()`) when rendering subcommand flag tables to avoid duplicating root persistent flags shown in SKILL.md "Global Flags". Sorts subcommands + flag rows for byte-determinism. TOC inserted only when reference body >100 lines, between the H1 and the rest of the body.
+- Render golden-file tests use a `-update` flag (`go test ./common/skill/render -update`) to regenerate `testdata/`. The gate runs without it; pass `-update` only when the renderer's output legitimately changes.
 
 ## Hermetic Test Notes
 

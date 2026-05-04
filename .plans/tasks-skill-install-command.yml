@@ -74,7 +74,7 @@ tasks:
       excluded. Frontmatter `version` is the literal `{{VERSION}}` placeholder
       (substituted later by installer). Add render_test.go with a fixture
       cobra tree and golden files under render/testdata/.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "render.Bundle returns deterministic byte-equal output for unchanged input"
@@ -84,7 +84,7 @@ tasks:
       - "Hidden commands and the implicit `help` cmd are excluded"
       - "render_test.go uses a fixture tree + testdata/ golden files; byte-equal assertion"
       - "Coverage of render package ≥80%"
-    completed_at: null
+    completed_at: 2026-05-04T14:00:00Z
 
   - id: task-005
     title: "Implement common/skill/installer.go (Install/Remove/List/Check)"
