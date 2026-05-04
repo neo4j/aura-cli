@@ -96,6 +96,8 @@ Remove the installed bundle (idempotent):
 
 The same `skill` subcommand is available on `aura-cli`, scoped to the standalone Aura surface.
 
+Beta features (commands gated by `AuraBetaEnabled`, e.g. `dataapi`, `import`, `deployment`) are not included in the generated bundle — the bundle reflects the default-config command surface.
+
 ## Feedback / Issues
 
 Please use [GitHub issues](https://github.com/neo4j-labs/neo4j-cli/issues) to provide feedback and report any issues that you have encountered.
