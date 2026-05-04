@@ -419,3 +419,55 @@ Verification:
 
 Next Task: task-010 (repo README install section + changelog entry — final task)
 
+================================================================================
+TASK-010: Update repo README install section + add changelog entry
+Date: 2026-05-04T14:05:00Z
+================================================================================
+
+Summary:
+Final task. Added an "npm (recommended)" subsection to the repo README's
+Installation section with `npm i -g @neo4j/cli` plus pnpm/yarn equivalents,
+prerelease channels, and a cross-link to distribution/npm/cli/README.md for
+the platform matrix. Demoted the existing GitHub Releases archive flow to a
+"Prebuilt archives" subsection. Hand-authored a changelog YAML at
+.changes/unreleased/neo4j-cli-Minor-20260504-140248.yaml (changie convention
+matches the existing skill-install entry) with body
+"`neo4j-cli` is now installable via `npm i -g @neo4j/cli`". No aura-cli
+entry — aura-cli is not on npm.
+
+Files Changed:
+- README.md (modified — Installation section split into npm + archives subsections)
+- .changes/unreleased/neo4j-cli-Minor-20260504-140248.yaml (created — changelog entry)
+- .plans/tasks-npm-distribution.yml (status → completed)
+- .plans/progress-npm-distribution.txt (this entry)
+
+Key Decisions:
+- Marked npm as "(recommended)" since it's the simplest install path and
+  npm covers the dominant Node-using developer demographic. Archive path
+  retained for users without npm or who want the binary as-is.
+- Did NOT touch the existing "Usage" section's `./neo4j-cli` prefix — the
+  Usage section is conceptually for users who extracted an archive; rewriting
+  it for npm-installed users (where `neo4j-cli` is on PATH) is out of scope
+  for this task's AC. Future cleanup if desired.
+- Used the same hand-authored YAML format as the existing
+  neo4j-cli-Minor-20260504-090200.yaml — single-quoted body, RFC3339 time
+  with microseconds and +02:00 offset. Filename pattern matches changie's
+  default: <project>-<Kind>-<YYYYMMDD>-<HHMMSS>.yaml.
+- Body uses backticks around `npm i -g @neo4j/cli` and `neo4j-cli` because
+  changie renders the YAML body as Markdown into the changelog; the existing
+  entry already uses backticks for code spans.
+- Cross-linked to distribution/npm/cli/README.md (the user-facing tarball
+  README) for the platform matrix rather than duplicating the table in the
+  repo-root README — keeps the matrix authoritative in one place.
+
+Verification:
+- make fmt-check passes
+- make test passes (all packages green, cached results indicate no
+  unexpected Go drift from changelog/README edits)
+- Changelog YAML format verified by visual diff against the existing
+  neo4j-cli-Minor-20260504-090200.yaml entry
+- Confirmed no aura-cli entry created (only the pre-existing
+  aura-cli-Minor-20260504-090200.yaml from skill-install-command remains)
+
+Next Task: All tasks complete
+

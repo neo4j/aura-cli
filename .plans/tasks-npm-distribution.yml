@@ -186,7 +186,7 @@ tasks:
       `npm i -g @neo4j/cli`. Run `make changelog --projects neo4j-cli --kind Minor` (or
       hand-author the YAML if changie is unavailable) with body "neo4j-cli is now installable via
       `npm i -g @neo4j/cli`". Aura-cli does NOT get a changelog entry — aura-cli is not on npm.
-    status: pending
+    status: completed
     dependencies:
       - task-006
     acceptance_criteria:
@@ -194,4 +194,4 @@ tasks:
       - "A new file under `.changes/unreleased/` exists with `project: neo4j-cli`, `kind: Minor`, body referencing the npm install"
       - "No corresponding aura-cli changelog entry is created"
       - "`make fmt-check` and `make test` still pass"
-    completed_at: null
+    completed_at: 2026-05-04T14:05:00Z
