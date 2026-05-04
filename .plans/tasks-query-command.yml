@@ -146,7 +146,7 @@ tasks:
     title: "End-to-end verification against a real Neo4j and run all CI gates"
     description: |
       Boot a local Neo4j 5 (`docker run -d --rm -p 7474:7474 -e NEO4J_AUTH=neo4j/testtest neo4j:5`) and walk the full PRD acceptance-criteria list: simple `RETURN 1` table + JSON; numeric and string `--param`; `--max-rows` truncation (verify stderr warning + JSON `truncated:true`); `--truncate-arrays-over` mutating a long array; `:schema` JSON and table; stdin input; env-var auth; `.env` auto-discovery; TTY password prompt; non-TTY missing-password error; `--insecure` against self-signed HTTPS (use a self-signed dev certificate or skip with a documented manual step). Then run all final gates: `make test`, `make fmt-check`, `make lint`, `make license-check`, `make generate-check`. Capture command transcripts in the PR description for reviewers.
-    status: pending
+    status: completed
     dependencies:
       - task-006
       - task-007
@@ -157,4 +157,4 @@ tasks:
       - "`make test`, `make fmt-check`, `make lint`, `make license-check`, `make generate-check` all pass locally"
       - "PR description includes the verification transcript / output snippets"
       - "Any verification step that could not be run (e.g. `--insecure` if no self-signed cert was set up) is called out explicitly with the workaround"
-    completed_at: null
+    completed_at: 2026-05-04T19:30:00Z

@@ -149,6 +149,30 @@ func TestSchema_HappyPath_JSON(t *testing.T) {
 	assert.Equal(t, "uq_person_name", got.Constraints[0]["name"])
 }
 
+// TestSchema_DefaultOutputIsJSON locks the contract that `:schema` defaults
+// to JSON regardless of the user's `aura.output` config (which may be the
+// `default` sentinel that means "table" for normal cypher rows). Only an
+// explicit `--output table` switches the schema renderer to tables.
+func TestSchema_DefaultOutputIsJSON(t *testing.T) {
+	srv := schemaServer(t, happyRoutes())
+
+	h := newRunHarness(t, "default")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		":schema",
+	)
+	require.NoError(t, err)
+
+	// Output should parse as the structured schemaResult JSON envelope.
+	var got schemaResult
+	require.NoError(t, json.Unmarshal(h.stdout.Bytes(), &got))
+	require.NotNil(t, got.Database)
+	assert.Equal(t, "neo4j", got.Database.Name)
+	// And NOT contain the H2 table markers.
+	assert.NotContains(t, h.stdout.String(), "## Nodes")
+}
+
 func TestSchema_HappyPath_Table(t *testing.T) {
 	srv := schemaServer(t, happyRoutes())
 

@@ -263,14 +263,16 @@ func fetchDatabaseInfo(ctx context.Context, c *conn) *databaseInfo {
 }
 
 // renderSchema prints the schemaResult in JSON or table form based on
-// cfg.Aura.Output(). JSON mode emits the full struct; table mode emits 5
-// stacked sub-tables separated by H2 markers in the canonical order.
+// cfg.Aura.Output(). For `:schema` the default (and `default`) output mode
+// is JSON — only an explicit `--output table` triggers the 5-stacked-tables
+// rendering. JSON mode emits the full struct; table mode emits 5 stacked
+// sub-tables separated by H2 markers in the canonical order.
 func renderSchema(cmd *cobra.Command, cfg *clicfg.Config, r schemaResult) {
-	if cfg.Aura.Output() == "json" {
-		printSchemaJSON(cmd, r)
+	if cfg.Aura.Output() == "table" {
+		printSchemaTables(cmd, r)
 		return
 	}
-	printSchemaTables(cmd, r)
+	printSchemaJSON(cmd, r)
 }
 
 func printSchemaJSON(cmd *cobra.Command, r schemaResult) {
