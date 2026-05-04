@@ -50,7 +50,7 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: release-meta
-          path: .
+          path: ${{ runner.temp }}/release-meta
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
@@ -61,12 +61,21 @@ jobs:
           # release-meta.json is a compact `{version, include_neo4j}` blob.
           # Surface both as step outputs so downstream gates and the publish
           # step can read them uniformly.
-          if [ ! -f release-meta.json ]; then
+          META_FILE="${{ runner.temp }}/release-meta/release-meta.json"
+          if [ ! -f "${META_FILE}" ]; then
             echo "ERROR: release-meta.json not found in artifact" >&2
             exit 1
           fi
-          VERSION=$(jq -r '.version' release-meta.json)
-          INCLUDE_NEO4J=$(jq -r '.include_neo4j' release-meta.json)
+          VERSION=$(jq -r '.version' "${META_FILE}")
+          INCLUDE_NEO4J=$(jq -r '.include_neo4j' "${META_FILE}")
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "ERROR: Invalid version in release-meta.json: ${VERSION}" >&2
+            exit 1
+          fi
+          if [[ "${INCLUDE_NEO4J}" != "true" && "${INCLUDE_NEO4J}" != "false" ]]; then
+            echo "ERROR: Invalid include_neo4j in release-meta.json: ${INCLUDE_NEO4J}" >&2
+            exit 1
+          fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "include_neo4j=${INCLUDE_NEO4J}" >> $GITHUB_OUTPUT
           echo "[publish-npm] auto path: version=${VERSION} include_neo4j=${INCLUDE_NEO4J}"
