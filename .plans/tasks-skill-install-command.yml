@@ -238,14 +238,14 @@ tasks:
       what `skill install` does, listing the supported agents, showing one
       example each for install/list/check/remove. Keep style consistent with
       existing README sections.
-    status: pending
+    status: completed
     dependencies:
       - task-009
     acceptance_criteria:
       - "README.md has a top-level 'Agent skills' section after Usage"
       - "Lists all 10 supported agents"
       - "Code blocks for install/list/check/remove with realistic examples"
-    completed_at: null
+    completed_at: 2026-05-04T19:00:00Z
 
   - id: task-013
     title: "Update docs/usageGuide with skill subcommand sections"

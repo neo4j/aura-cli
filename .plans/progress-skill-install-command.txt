@@ -384,3 +384,37 @@ Key Decisions:
   binary additions noisy without buying real safety.
 
 Next Task: task-012
+
+================================================================================
+TASK-012: Update README.md with Agent skills section
+Date: 2026-05-04T19:00:00Z
+================================================================================
+
+Summary:
+Added an "Agent skills" section to README.md immediately after the existing
+Usage section (before "Feedback / Issues"). Section explains what `skill
+install` does, lists all 10 supported agents (Claude Code, Cursor, Windsurf,
+Copilot, Gemini CLI, Cline, Codex, Pi, OpenCode, Junie) as a bulleted list
+matching the AGENTS slice in common/skill/agents.go, and provides one bash
+code block per subcommand (install, list, check, remove) using the
+existing `./neo4j-cli ...` style. install/remove blocks include both the
+no-arg and `[agent]` forms. Closing line notes the same `skill` subcommand
+is on `aura-cli` for the standalone surface.
+
+Files Changed:
+- README.md (added Agent skills section)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- Display names (e.g. "Claude Code") used in the bulleted list rather than
+  the canonical lowercase ids — README is reader-facing; canonical names
+  are only relevant when typing the [agent] argument, which the code
+  examples cover.
+- Single example per subcommand for install/remove uses the no-arg form
+  first (most common path) then a `claude-code` example showing how to
+  target one agent.
+- Did NOT add a `--output json` example — README is install/quickstart;
+  output formats are agent-/automation-flow concerns better left to
+  docs/usageGuide and `--help`.
+
+Next Task: task-013
