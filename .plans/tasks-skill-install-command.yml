@@ -181,7 +181,7 @@ tasks:
       `cmd.AddCommand(skill.NewCmd(cfg, aurabinskill.Bundle, "aura-cli"))`.
       Verify the super-CLI's nested `aura` subtree does NOT pick up a
       duplicate `skill` (aura.NewCmd stays unchanged).
-    status: pending
+    status: completed
     dependencies:
       - task-006
       - task-007
@@ -191,7 +191,7 @@ tasks:
       - "bin/neo4j-cli aura skill --help fails with unknown command (no duplicate mount)"
       - "Each binary's skill install writes its own bundle (skill name = binary name)"
       - "make build green; make test green"
-    completed_at: null
+    completed_at: 2026-05-04T17:30:00Z
 
   - id: task-010
     title: "Add Makefile generate targets and CI workflow guard"

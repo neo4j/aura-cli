@@ -146,6 +146,8 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Bootstrap order matters: `embed.go`'s `//go:embed bundle` fails to compile if `bundle/` is missing. Run `go run ./<bin>/internal/skill/gen` first to populate `bundle/`, then everything else (build, tests, `go generate`) works. Subsequent regenerations are fine because gen/ is a sibling package that compiles independently of embed.go.
 - The aura-cli generator imports `neo4j-cli/aura` and builds `NewStandaloneCmd` (NOT `NewCmd`) — `NewCmd` is the super-CLI mount point and omits `credential`. Wrong choice would mis-represent aura-cli's surface. Generator passes `clicfg.NewConfig(MemMapFs, "dev")`; the literal "dev" never surfaces because render emits `{{VERSION}}` placeholder regardless.
 - `cfg.Aura.AuraBetaEnabled()` defaults false on a fresh `MemMapFs` config, so beta-gated commands (dataapi, import, deployment) are intentionally absent from the generated aura-cli bundle. Matches the default-build user surface; users who enable beta locally get a richer `--help` but the shipped skill stays stable.
+- Skill cobra mount: top-level in `app.NewCmd` (super-CLI) and inside `aura.NewStandaloneCmd` (aura-cli binary), NEVER inside `aura.NewCmd`. Mounting in `NewCmd` would duplicate skill under the super-CLI's nested `aura` subtree (`neo4j-cli aura skill`). After mounting, re-run `go generate ./...` so each binary's bundle includes its own `references/skill.md`.
+- Cobra prints parent help (exit 0) for an unknown subcommand of a parent group with no `RunE` — so the negative test for "no duplicate skill mount" is structural (skill absent from `Available Commands:`), not exit-code-based. Don't write a test that expects non-zero exit.
 
 ## Hermetic Test Notes
 

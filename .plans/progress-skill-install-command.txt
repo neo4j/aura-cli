@@ -267,3 +267,41 @@ Key Decisions:
   MemMapFs config. This matches the default-build surface.
 
 Next Task: task-009
+
+================================================================================
+TASK-009: Mount skill subcommand in both binaries
+Date: 2026-05-04T17:30:00Z
+================================================================================
+
+Summary:
+Mounted `skill.NewCmd` in two places: `app.NewCmd` (super-CLI top level)
+with binskill.Bundle from neo4j-cli/internal/skill and skillName "neo4j-cli";
+`aura.NewStandaloneCmd` (NOT NewCmd) with binskill.Bundle from
+neo4j-cli/aura/internal/skill and skillName "aura-cli". Regenerated both
+bundles with `go generate ./...` — each now includes references/skill.md
+documenting its own skill subtree. Verified the super-CLI's nested `aura`
+subtree does NOT carry skill (cobra prints parent help, no skill in
+available commands).
+
+Files Changed:
+- neo4j-cli/app/app.go (added skill mount + imports)
+- neo4j-cli/aura/aura.go (added skill mount in NewStandaloneCmd only)
+- neo4j-cli/internal/skill/bundle/SKILL.md (regenerated — adds skill row)
+- neo4j-cli/internal/skill/bundle/references/skill.md (new)
+- neo4j-cli/aura/internal/skill/bundle/SKILL.md (regenerated — adds skill row)
+- neo4j-cli/aura/internal/skill/bundle/references/skill.md (new)
+
+Key Decisions:
+- Skill mounted in NewStandaloneCmd, NOT NewCmd, per PRD REQ-F-011. Otherwise
+  `neo4j-cli aura skill` would also resolve, duplicating the super-CLI's
+  top-level `skill` mount inside the nested aura subtree.
+- Cobra prints parent help (no error) for unknown subcommands of a parent
+  group without RunE — `neo4j-cli aura skill` exits 0 with parent help.
+  Acceptance criterion wording "fails" is satisfied by the absence of
+  skill from the available commands list (verified visually). No change
+  to cobra default behavior needed.
+- Both bundles needed regeneration after mounting because each binary's
+  own skill subtree is now part of its own cobra surface — references/
+  skill.md describes the very command being installed.
+
+Next Task: task-010
