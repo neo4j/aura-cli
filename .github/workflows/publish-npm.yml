@@ -84,8 +84,10 @@ jobs:
         if: >-
           github.event_name == 'workflow_run' &&
           steps.meta.outputs.include_neo4j != 'true'
+        env:
+          INCLUDE_NEO4J: ${{ steps.meta.outputs.include_neo4j }}
         run: |
-          echo "[publish-npm] include_neo4j=${{ steps.meta.outputs.include_neo4j }} — skipping npm publish"
+          echo "[publish-npm] include_neo4j=$INCLUDE_NEO4J — skipping npm publish"
 
       - name: Download dist artifact (auto)
         if: >-
