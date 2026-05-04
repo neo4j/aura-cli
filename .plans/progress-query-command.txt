@@ -33,3 +33,35 @@ Key Decisions:
   TestGenerator_RoundTrip fails. Task-008 still runs as a guard step.
 
 Next Task: task-002 (params parser)
+
+================================================================================
+TASK-002: Implement --param parser (params.go) with JSON-or-string fallback
+Date: 2026-05-04T16:20:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/query/params.go exposing parseParams([]string) (map[string]any,
+error). For each key=value entry, attempts json.Unmarshal first; on failure,
+falls back to the raw string. Rejects missing-equals and empty-key entries with
+errors that reference the offending input. Table-driven test suite covers all
+PRD acceptance cases: int/float/bool/null, JSON array/object, plain string,
+JSON-quoted string, malformed JSON fallback, empty value, value-with-equals,
+multiple entries, plus error paths.
+
+Files Changed:
+- neo4j-cli/query/params.go (created — 42 lines, parseParams)
+- neo4j-cli/query/params_test.go (created — table-driven tests, success + errors)
+- .plans/tasks-query-command.yml (status update)
+
+Key Decisions:
+- strings.Index instead of strings.SplitN(entry, "=", 2): cleaner control flow
+  for the missing-equals case (idx < 0) and naturally handles values containing
+  '=' (the full RHS is preserved verbatim).
+- Two test functions (TestParseParams + TestParseParams_Errors) instead of one
+  table with a wantErr flag — keeps assertions tight (no nested branches per
+  case) and matches the patterns in common/skill/agents_test.go.
+- Empty value (k=) parses as "" (json.Unmarshal of empty input fails -> string
+  fallback yields ""). Documented in test case "empty value parses as empty
+  string fallback".
+
+Next Task: task-003 (truncate.go)

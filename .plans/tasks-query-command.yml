@@ -22,7 +22,7 @@ tasks:
     title: "Implement --param parser (params.go) with JSON-or-string fallback"
     description: |
       Add `neo4j-cli/query/params.go` exposing `parseParams(raw []string) (map[string]any, error)`. For each `key=value`: try `json.Unmarshal([]byte(value), &v)`; on failure, fall back to the raw string. Reject entries missing `=` or with empty key. Add `params_test.go` covering number, bool, null, JSON array, JSON object, plain string, JSON-quoted string, malformed JSON (string fallback), missing-equals (error), empty-key (error). Use the table-driven style required by AGENTS.md §"Testing Framework".
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -31,7 +31,7 @@ tasks:
       - "`parseParams([\"xs=[1,2,3]\"])` returns the slice; `parseParams([\"obj={\\\"a\\\":1}\"])` returns the map"
       - "Missing `=` or empty key returns an error referencing the offending entry"
       - "Tests are table-driven and run under `go test ./neo4j-cli/query/...`"
-    completed_at: null
+    completed_at: 2026-05-04T16:20:00Z
 
   - id: task-003
     title: "Implement recursive array truncation (truncate.go)"
