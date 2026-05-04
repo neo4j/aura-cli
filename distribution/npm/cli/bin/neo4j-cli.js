@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Wrapper bin shim for @neo4j/cli.
+// Wrapper bin shim for @neo4j-labs/cli.
 //
-// Resolves the platform-specific package (@neo4j/cli-<os>-<arch>) at runtime via
+// Resolves the platform-specific package (@neo4j-labs/cli-<os>-<arch>) at runtime via
 // require.resolve, then execs the binary with full stdio/signal/exit-code passthrough.
-// The platform pkgs are listed in @neo4j/cli's optionalDependencies so npm only
+// The platform pkgs are listed in @neo4j-labs/cli's optionalDependencies so npm only
 // installs the one matching the current platform/arch.
 
 'use strict';
@@ -25,7 +25,7 @@ const platform = process.platform;
 const arch = process.arch;
 const key = platform + '-' + arch;
 const exeSuffix = platform === 'win32' ? '.exe' : '';
-const pkgName = '@neo4j/cli-' + key;
+const pkgName = '@neo4j-labs/cli-' + key;
 const binSpecifier = pkgName + '/bin/neo4j-cli' + exeSuffix;
 
 let binary;

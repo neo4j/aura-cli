@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# distribution/npm/publish.sh — publishes @neo4j/cli + 8 platform packages to npm.
+# distribution/npm/publish.sh — publishes @neo4j-labs/cli + 8 platform packages to npm.
 #
 # Inputs:
 #   - GORELEASER_CURRENT_TAG (env, required) — version tag, e.g. "v0.2.0" or "v0.2.0-alpha.1".
@@ -11,9 +11,9 @@
 #   - ~/.npmrc — must already be configured with a valid auth token by the caller (CI workflow).
 #
 # Ordering:
-#   The 8 platform packages are published FIRST, then the wrapper @neo4j/cli is published LAST.
+#   The 8 platform packages are published FIRST, then the wrapper @neo4j-labs/cli is published LAST.
 #   This is mandatory: the wrapper's optionalDependencies reference the platform packages, and
-#   `npm install @neo4j/cli` returns 404 for any platform pkg that doesn't yet exist on the
+#   `npm install @neo4j-labs/cli` returns 404 for any platform pkg that doesn't yet exist on the
 #   registry. Publishing the wrapper before its platform deps would break first-time installs.
 #
 # Idempotency:
@@ -30,8 +30,8 @@
 #     X.Y.Z-beta*        → --tag beta
 #     X.Y.Z-rc*          → --tag rc
 #     X.Y.Z-<other>      → --tag next  (catch-all for unrecognized prereleases)
-#   This gates `npm i @neo4j/cli` so it only ever resolves to a stable version; pre-releases
-#   are opt-in via `npm i @neo4j/cli@alpha` (etc).
+#   This gates `npm i @neo4j-labs/cli` so it only ever resolves to a stable version; pre-releases
+#   are opt-in via `npm i @neo4j-labs/cli@alpha` (etc).
 #
 # Recovery flow:
 #   1. CI publish fails partway through (e.g. transient registry 5xx after platforms 1-3).
@@ -149,7 +149,7 @@ while IFS=$'\t' read -r DIRNAME_TMPL NPM_OS NPM_CPU BIN_FILENAME; do
   # Substitute ${VERSION} in the goreleaser dirname.
   GORELEASER_DIRNAME="${DIRNAME_TMPL//\$\{VERSION\}/$VERSION}"
   SRC_BIN="${GORELEASER_DIST}/${GORELEASER_DIRNAME}/${BIN_FILENAME}"
-  PKG_NAME="@neo4j/cli-${NPM_OS}-${NPM_CPU}"
+  PKG_NAME="@neo4j-labs/cli-${NPM_OS}-${NPM_CPU}"
   PKG_DIR="${WORK_ROOT}/cli-${NPM_OS}-${NPM_CPU}"
 
   rm -rf "$PKG_DIR"
@@ -199,6 +199,6 @@ fi
 sed -e "s/__VERSION__/${VERSION}/g" \
   "${DIST_DIR}/package.json.tmpl" >"${WRAPPER_DIR}/package.json"
 
-publish_pkg "@neo4j/cli" "$WRAPPER_DIR"
+publish_pkg "@neo4j-labs/cli" "$WRAPPER_DIR"
 
 echo "[publish-npm] done."

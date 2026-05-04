@@ -1,6 +1,6 @@
 name: publish-npm
 
-# Publishes @neo4j/cli + 8 platform packages to npm.
+# Publishes @neo4j-labs/cli + 8 platform packages to npm.
 #
 # Two triggers:
 #   - workflow_run (auto): fires after `release.yml` succeeds. Reads the dist/

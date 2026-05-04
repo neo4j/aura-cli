@@ -8,7 +8,7 @@ For the why behind individual pieces, see `.agents/deployment.md` (architecture)
 
 1. Add a changelog entry on your PR (`make changelog`).
 2. Merge your PR. Nothing publishes — `changie` opens a "Release" PR collecting unreleased entries.
-3. Merge the Release PR. **This is the publish gate.** GoReleaser ships binaries to GitHub Releases; `publish-npm.yml` ships `@neo4j/cli` to npm.
+3. Merge the Release PR. **This is the publish gate.** GoReleaser ships binaries to GitHub Releases; `publish-npm.yml` ships `@neo4j-labs/cli` to npm.
 
 ## What gets released
 
@@ -16,7 +16,7 @@ For the why behind individual pieces, see `.agents/deployment.md` (architecture)
 |---|---|---|---|
 | `aura-cli` binaries | GitHub Releases | `aura-cli` changelog | GoReleaser |
 | `neo4j-cli` binaries | GitHub Releases | `neo4j-cli` changelog | GoReleaser |
-| `@neo4j/cli` (super-CLI) | npm | `neo4j-cli` changelog | `publish-npm.yml` |
+| `@neo4j-labs/cli` (super-CLI) | npm | `neo4j-cli` changelog | `publish-npm.yml` |
 
 Aura-cli is **not** published to npm. An aura-cli-only release cycle ships GitHub binaries but skips the npm workflow. See `distribution/npm/README.md` for the gate.
 
@@ -38,7 +38,7 @@ Because `neo4j-cli` bundles its children, **any user-facing change to `aura-cli`
 changie new --projects aura-cli --projects neo4j-cli --kind Patch --body "fix instance list pagination"
 ```
 
-Only changes specific to the `neo4j-cli` super-CLI wrapper itself (e.g. the `npm i -g @neo4j/cli` install path, the skill bundle for `neo4j-cli`) need a `neo4j-cli`-only entry.
+Only changes specific to the `neo4j-cli` super-CLI wrapper itself (e.g. the `npm i -g @neo4j-labs/cli` install path, the skill bundle for `neo4j-cli`) need a `neo4j-cli`-only entry.
 
 PR review and merge proceed normally. **Nothing publishes when your feature PR merges.**
 
@@ -81,13 +81,13 @@ Triggered by `workflow_run` after `release.yml` completes. The job:
 - Writes `~/.npmrc` from the `NPM_TOKEN` secret.
 - Runs `distribution/npm/publish.sh`:
   - Picks an npm dist-tag from the version: `*-alpha*` → `alpha`; `*-beta*` → `beta`; `*-rc*` → `rc`; any other prerelease → `next`; `X.Y.Z` (no suffix) → `latest`.
-  - Publishes the 8 platform packages (`@neo4j/cli-darwin-arm64`, …) first, then the wrapper `@neo4j/cli` last.
+  - Publishes the 8 platform packages (`@neo4j-labs/cli-darwin-arm64`, …) first, then the wrapper `@neo4j-labs/cli` last.
   - Skips any `name@version` already on the registry (idempotent — safe to retry).
 
 User effect:
 
-- `npm i @neo4j/cli` → always resolves to the latest stable.
-- `npm i @neo4j/cli@alpha` (or `@beta`, `@rc`) → opt-in to a prerelease channel.
+- `npm i @neo4j-labs/cli` → always resolves to the latest stable.
+- `npm i @neo4j-labs/cli@alpha` (or `@beta`, `@rc`) → opt-in to a prerelease channel.
 
 For npm specifics — package shape, dist-tag rules, dry-run flow — see [`distribution/npm/README.md`](distribution/npm/README.md).
 
@@ -102,13 +102,13 @@ If the npm publish fails partway (registry hiccup, missing token, transient 5xx)
    - Extracts each archive into the `dist/<name>/` layout `publish.sh` expects.
    - Re-runs `publish.sh` — already-published packages skip, the rest go through.
 
-This same flow handles: NPM_TOKEN was missing or expired and got rotated; `@neo4j` org permission needed adjusting; you `npm unpublish`d a bad release and want to re-publish from clean state.
+This same flow handles: NPM_TOKEN was missing or expired and got rotated; `@neo4j-labs` org permission needed adjusting; you `npm unpublish`d a bad release and want to re-publish from clean state.
 
 ## Pre-releases vs stable
 
-Today every push to `main` produces an alpha (`alpha.N+1` per project, computed in `changie.yml`). Stable releases are not yet wired into the changie workflow — when they are added, the dist-tag rules in `publish.sh` already handle the difference, and `npm i @neo4j/cli` (no qualifier) will start resolving to the new stable automatically.
+Today every push to `main` produces an alpha (`alpha.N+1` per project, computed in `changie.yml`). Stable releases are not yet wired into the changie workflow — when they are added, the dist-tag rules in `publish.sh` already handle the difference, and `npm i @neo4j-labs/cli` (no qualifier) will start resolving to the new stable automatically.
 
-To promote an existing alpha to stable later, `npm dist-tag add @neo4j/cli@<version> latest` — no republish needed.
+To promote an existing alpha to stable later, `npm dist-tag add @neo4j-labs/cli@<version> latest` — no republish needed.
 
 ## Local dry-runs
 
@@ -126,7 +126,7 @@ Configured at the repo level. The user owns these.
 | `TEAM_GRAPHQL_PERSONAL_ACCESS_TOKEN` | `changie.yml`, `release.yml` | Opening Release PRs, creating GitHub Releases |
 | `MACOS_SIGN_P12`, `MACOS_SIGN_PASSWORD` | `release.yml` | macOS code-signing |
 | `MACOS_NOTARY_ISSUER_ID`, `MACOS_NOTARY_KEY_ID`, `MACOS_NOTARY_KEY` | `release.yml` | macOS notarization |
-| `NPM_TOKEN` | `publish-npm.yml` | Publishing under `@neo4j` scope |
+| `NPM_TOKEN` | `publish-npm.yml` | Publishing under `@neo4j-labs` scope |
 
 ## See also
 

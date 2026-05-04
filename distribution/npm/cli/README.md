@@ -1,11 +1,11 @@
-# @neo4j/cli
+# @neo4j-labs/cli
 
 The Neo4j command-line tool, distributed as a prebuilt native binary via npm.
 
 ## Install
 
 ```sh
-npm i -g @neo4j/cli
+npm i -g @neo4j-labs/cli
 ```
 
 This installs a small Node wrapper plus one platform-specific package
@@ -20,7 +20,7 @@ neo4j-cli --help
 neo4j-cli aura instance list --output table
 ```
 
-`pnpm add -g @neo4j/cli` and `yarn global add @neo4j/cli` work the same way.
+`pnpm add -g @neo4j-labs/cli` and `yarn global add @neo4j-labs/cli` work the same way.
 
 ## Supported platforms
 
@@ -41,7 +41,7 @@ prebuilt binary was found, your install probably ran with `--no-optional` or
 in an `optionalDependencies` entry, so excluding optionals also excludes the
 binary.
 
-If your platform is not in the table, `npm i -g @neo4j/cli` will still
+If your platform is not in the table, `npm i -g @neo4j-labs/cli` will still
 succeed (the platform packages are optional), but invoking `neo4j-cli` will
 print a friendly error naming the detected platform and arch. Download a
 prebuilt binary directly from
@@ -51,11 +51,11 @@ or build from source.
 ## Release channels
 
 ```sh
-npm i -g @neo4j/cli           # latest stable
-npm i -g @neo4j/cli@alpha     # alpha prerelease
-npm i -g @neo4j/cli@beta      # beta prerelease
-npm i -g @neo4j/cli@rc        # release candidate
-npm i -g @neo4j/cli@next      # any other prerelease (e.g. snapshot, dev)
+npm i -g @neo4j-labs/cli           # latest stable
+npm i -g @neo4j-labs/cli@alpha     # alpha prerelease
+npm i -g @neo4j-labs/cli@beta      # beta prerelease
+npm i -g @neo4j-labs/cli@rc        # release candidate
+npm i -g @neo4j-labs/cli@next      # any other prerelease (e.g. snapshot, dev)
 ```
 
 The dist-tag is picked from the version string at publish time:

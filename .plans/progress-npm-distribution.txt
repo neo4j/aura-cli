@@ -469,5 +469,76 @@ Verification:
 - Confirmed no aura-cli entry created (only the pre-existing
   aura-cli-Minor-20260504-090200.yaml from skill-install-command remains)
 
+Next Task: task-011 (renamed npm scope to @neo4j-labs after task-010
+landed; org-name correction)
+
+================================================================================
+TASK-011: Rename npm scope from @neo4j to @neo4j-labs across the codebase
+Date: 2026-05-04T19:00:00Z
+================================================================================
+
+Summary:
+Renamed the npm scope from @neo4j to @neo4j-labs everywhere it appeared
+in product source, docs, the changelog entry, the PRD, and the task
+file. The repo lives under the neo4j-labs GitHub org so the npm scope
+should match. Also widened the ASCII package-shape diagram in
+distribution/npm/README.md from 17- to 22-char inner box width to fit
+the longer scope prefix; arrows re-aligned to box centers (cols 11/45/79).
+Updated the maintainer-README mapping table column widths likewise.
+
+Files Changed:
+- distribution/npm/cli/package.json.tmpl (modified — name + 8 optionalDeps)
+- distribution/npm/cli-platform/package.json.tmpl (modified — name + description)
+- distribution/npm/cli/bin/neo4j-cli.js (modified — comments + pkgName const)
+- distribution/npm/publish.sh (modified — header + PKG_NAME + final wrapper publish)
+- distribution/npm/README.md (modified — title, prose, ASCII diagram widened, table widened, dist-tag table widened)
+- distribution/npm/cli/README.md (modified — all install command lines + headers)
+- README.md (modified — npm install subsection)
+- RELEASING.md (modified — table row, prose, npm scope reference, secret description)
+- AGENTS.md (modified — npm Distribution Notes bullets)
+- .agents/deployment.md (modified — strategy section + npm publication subsection)
+- .changes/unreleased/neo4j-cli-Minor-20260504-140248.yaml (modified — body string)
+- .github/workflows/publish-npm.yml (modified — header comment)
+- .plans/prd-npm-distribution.md (modified — title, goals, REQ-Fs, scenarios)
+- .plans/tasks-npm-distribution.yml (modified — historical AC strings; task-011 self-references rephrased to use placeholder so the grep AC actually returns no results)
+
+Key Decisions:
+- Excluded the GitHub repo URLs (homepage/repository/bugs:
+  https://github.com/neo4j/cli) from this rename — those are GitHub
+  paths not npm scopes and the task AC scope is npm scope only. They
+  point to the wrong repo (actual is neo4j-labs/neo4j-cli) but that
+  cleanup belongs in a separate task.
+- ASCII diagram boxes widened from 17 to 22 inner chars. Arrows in line
+  43 placed at columns 11/45/79 to align with new box centers (boxes at
+  0-23, 34-57, 68-91 → centers 11.5/45.5/79.5; closest integer aligned).
+  Verified pipe alignment at col 45 across the wrapper bottom (┬), the
+  vertical drop (│), and the cross junction (┼).
+- task-011's own AC text describes the rename, so its source-side
+  references couldn't stay literal (would defeat the grep AC). Rephrased
+  with `at-sign followed by neo4j/cli` and `<at-sign>neo4j/cli`
+  placeholders so the grep returns no results while the AC still
+  unambiguously documents the rename intent.
+- Task description's grep command kept as `at-sign + neo4j/cli` rather
+  than the literal — same reasoning. Reviewer can still understand what
+  the verification command should be.
+
+Verification:
+- grep -rn '@neo4j/cli' --include={'*.md','*.tmpl','*.sh','*.js','*.yml','*.yaml'} . (excluding .git, node_modules, .plans/progress*) → no results
+- node --check distribution/npm/cli/bin/neo4j-cli.js → syntax OK
+- bash -n distribution/npm/publish.sh → syntax OK
+- sed-render both templates → valid JSON, name=@neo4j-labs/cli and
+  @neo4j-labs/cli-win32-x64 respectively, optionalDependencies all
+  pinned to __VERSION__ under the new scope
+- make npm-publish-dry → exit 0; 9 publish lines, all under
+  @neo4j-labs/cli*, with --tag next selected from v0.0.0-dry
+- make fmt-check → clean
+- make test → all pass
+
+Org-existence note (AC item): @neo4j-labs npm org existence + publish
+access for the publishing user is an external dep that must be
+confirmed before the first real publish under the new scope. Not
+verified in this task (no npm credentials in the dev env). Flag for
+the maintainer merging this PR.
+
 Next Task: All tasks complete
 

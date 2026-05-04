@@ -1,16 +1,16 @@
-# PRD: npm distribution of `neo4j-cli` as `@neo4j/cli`
+# PRD: npm distribution of `neo4j-cli` as `@neo4j-labs/cli`
 
 ## Overview
 
-Distribute the `neo4j-cli` super-CLI on npm so users can install it with `npm i -g @neo4j/cli` and get the right prebuilt binary for their OS/arch automatically. Today the CLI ships only as raw archives on GitHub Releases — users must download, unzip, and place the binary on PATH manually. This is the first non-GitHub distribution channel; the layout is designed so pip and homebrew can be added later under the same `distribution/` tree without re-architecting.
+Distribute the `neo4j-cli` super-CLI on npm so users can install it with `npm i -g @neo4j-labs/cli` and get the right prebuilt binary for their OS/arch automatically. Today the CLI ships only as raw archives on GitHub Releases — users must download, unzip, and place the binary on PATH manually. This is the first non-GitHub distribution channel; the layout is designed so pip and homebrew can be added later under the same `distribution/` tree without re-architecting.
 
 Background plan (full design detail): `/Users/oskarhane/.claude/plans/focus-only-on-npm-eager-unicorn.md`.
 
 ## Goals
 
-1. `npm i -g @neo4j/cli` installs `neo4j-cli` on PATH on macOS (arm64, x64), Linux (arm64, ia32, x64), and Windows (arm64, ia32, x64).
+1. `npm i -g @neo4j-labs/cli` installs `neo4j-cli` on PATH on macOS (arm64, x64), Linux (arm64, ia32, x64), and Windows (arm64, ia32, x64).
 2. Installation does not run any postinstall script — works under `npm i --ignore-scripts`, in pnpm/Bun strict environments, in airgapped CI behind locked-down registries.
-3. `npm i @neo4j/cli` (no qualifier) only ever resolves to a stable release; alpha/beta/rc cycles are opt-in via `npm i @neo4j/cli@alpha` (or `@beta`, `@rc`).
+3. `npm i @neo4j-labs/cli` (no qualifier) only ever resolves to a stable release; alpha/beta/rc cycles are opt-in via `npm i @neo4j-labs/cli@alpha` (or `@beta`, `@rc`).
 4. npm publishing runs automatically after each successful neo4j-cli release, AND can be re-run manually from the GitHub Actions UI for failure recovery, without needing to re-run GoReleaser or bump the version.
 5. The release pipeline tolerates partial-publish failures: a same-version retry resumes from where it left off (idempotent at the per-package level).
 6. Aura-cli-only release cycles do NOT trigger an npm publish.
@@ -32,13 +32,13 @@ Background plan (full design detail): `/Users/oskarhane/.claude/plans/focus-only
 
 **Package shape**
 
-- REQ-F-001: One wrapper npm package `@neo4j/cli` containing only a JS bin shim and `optionalDependencies` listing all 8 platform packages pinned to the same version.
-- REQ-F-002: Eight platform packages — `@neo4j/cli-{darwin-arm64, darwin-x64, linux-arm64, linux-ia32, linux-x64, win32-arm64, win32-ia32, win32-x64}` — each containing exactly one binary in `bin/neo4j-cli` (`bin/neo4j-cli.exe` on win32) and a `package.json` with `os` + `cpu` constraints matching the platform.
+- REQ-F-001: One wrapper npm package `@neo4j-labs/cli` containing only a JS bin shim and `optionalDependencies` listing all 8 platform packages pinned to the same version.
+- REQ-F-002: Eight platform packages — `@neo4j-labs/cli-{darwin-arm64, darwin-x64, linux-arm64, linux-ia32, linux-x64, win32-arm64, win32-ia32, win32-x64}` — each containing exactly one binary in `bin/neo4j-cli` (`bin/neo4j-cli.exe` on win32) and a `package.json` with `os` + `cpu` constraints matching the platform.
 - REQ-F-003: Wrapper `package.json` declares `bin: { "neo4j-cli": "bin/neo4j-cli.js" }`. Platform packages declare `bin: { "neo4j-cli": "bin/neo4j-cli[.exe]" }`. License: `Apache-2.0`. `engines.node: ">=18"`.
 
 **Wrapper bin shim (`distribution/npm/cli/bin/neo4j-cli.js`)**
 
-- REQ-F-004: Resolves the platform binary via `require.resolve('@neo4j/cli-' + process.platform + '-' + process.arch + '/bin/neo4j-cli' + (process.platform === 'win32' ? '.exe' : ''))`.
+- REQ-F-004: Resolves the platform binary via `require.resolve('@neo4j-labs/cli-' + process.platform + '-' + process.arch + '/bin/neo4j-cli' + (process.platform === 'win32' ? '.exe' : ''))`.
 - REQ-F-005: Execs the binary via `child_process.spawnSync(binary, process.argv.slice(2), { stdio: 'inherit' })` so signals (SIGINT etc.) and TTY behavior pass through cleanly.
 - REQ-F-006: Propagates the child exit code (`process.exit(result.status ?? 1)`) so shell `&&`-chains work.
 - REQ-F-007: When `require.resolve` fails (unsupported platform OR `--omit=optional` install), prints a clear error naming the platform/arch detected, the supported list, and a hint about `--no-optional` / `--omit=optional`. Exits non-zero.
@@ -83,10 +83,10 @@ Background plan (full design detail): `/Users/oskarhane/.claude/plans/focus-only
 
 - REQ-F-024: `Makefile` gains a `npm-publish-dry` target that runs `distribution/npm/publish.sh --dry-run` against the current `make snapshot` output.
 - REQ-F-025: `.gitattributes` extended with `distribution/**/*.{json,tmpl,js,sh} text eol=lf` so Windows checkouts don't introduce CRLF drift in committed templates/scripts.
-- REQ-F-026: `README.md` install section updated to include `npm i -g @neo4j/cli`.
-- REQ-F-027: Changelog entry added via `make changelog --projects neo4j-cli` (Minor, body: "neo4j-cli is now installable via `npm i -g @neo4j/cli`"). Aura-cli does NOT get a changelog entry — aura-cli is not on npm.
+- REQ-F-026: `README.md` install section updated to include `npm i -g @neo4j-labs/cli`.
+- REQ-F-027: Changelog entry added via `make changelog --projects neo4j-cli` (Minor, body: "neo4j-cli is now installable via `npm i -g @neo4j-labs/cli`"). Aura-cli does NOT get a changelog entry — aura-cli is not on npm.
 - REQ-F-028: Maintainer-facing `distribution/npm/README.md` documents: design rationale (multi-package vs postinstall), package shape diagram, install resolution flow, dist-tag channels, local dev/test flow, release flow (auto + manual), failure recovery, how to add a new platform, future channels. ~200 lines max, links to `.goreleaser.yaml` and `release.yml` rather than duplicating.
-- REQ-F-029: User-facing `distribution/npm/cli/README.md` ships inside the `@neo4j/cli` tarball — short install + usage doc.
+- REQ-F-029: User-facing `distribution/npm/cli/README.md` ships inside the `@neo4j-labs/cli` tarball — short install + usage doc.
 
 ### Non-Functional Requirements
 
@@ -138,9 +138,9 @@ No edits to npm code.
 
 **Potential challenges**
 
-- *First-publish ordering*: wrapper's `optionalDependencies` reference platform pkgs that must already exist on the registry, else `npm install @neo4j/cli` returns 404 for the first platform npm tries to resolve. The script publishes platforms first by design — must preserve that order.
+- *First-publish ordering*: wrapper's `optionalDependencies` reference platform pkgs that must already exist on the registry, else `npm install @neo4j-labs/cli` returns 404 for the first platform npm tries to resolve. The script publishes platforms first by design — must preserve that order.
 - *Scope publish permissions*: `--access public` needed for first publish of a scoped package. The `@neo4j` org may need pre-configured publish settings or pre-created package stubs. Verify before the first real release.
-- *Pre-stable install UX*: until the first stable `X.Y.Z` exists, `npm i @neo4j/cli` (no qualifier) errors with "no matching version". This is intentional — alpha users opt in via `@alpha`. Documented in user-facing README.
+- *Pre-stable install UX*: until the first stable `X.Y.Z` exists, `npm i @neo4j-labs/cli` (no qualifier) errors with "no matching version". This is intentional — alpha users opt in via `@alpha`. Documented in user-facing README.
 - *Windows runner / line endings*: `.gitattributes` LF pinning matters because `make generate-check` runs on Windows in CI; if anything under `distribution/` is consumed by a Go test in the future, CRLF would break byte-equal checks. Pin LF up front.
 - *Workflow artifact size*: 8 archives × ~10MB ≈ 80MB per release. Fine for standard quotas but should monitor.
 
@@ -164,19 +164,19 @@ No edits to npm code.
 
 **End-to-end on a real release**
 - [ ] Cut a `neo4j-cli` alpha release (e.g. `0.2.0-alpha.1`). After workflow completes:
-  - `npm view @neo4j/cli dist-tags` shows `alpha: 0.2.0-alpha.1` and NO `latest` pointer at it.
-  - `npm i @neo4j/cli` (no qualifier) does NOT install the alpha.
-  - `npm i @neo4j/cli@alpha` installs `0.2.0-alpha.1`.
-  - `npm view @neo4j/cli-darwin-arm64 versions` (and the other 7 platform pkgs) shows the new version.
-- [ ] On macOS, Linux (e.g. `docker run -it node:20`), and Windows (PowerShell): `npm i -g @neo4j/cli@alpha` followed by `neo4j-cli --version` returns the right version on each.
-- [ ] `npm i --omit=optional @neo4j/cli@alpha` followed by `neo4j-cli` produces the friendly "no prebuilt binary" error from the bin shim, exits non-zero, no stack trace.
-- [ ] After cutting a stable release later, `npm view @neo4j/cli dist-tags` shows `latest: X.Y.Z` AND the alpha tag still points at the original alpha (independent channels).
+  - `npm view @neo4j-labs/cli dist-tags` shows `alpha: 0.2.0-alpha.1` and NO `latest` pointer at it.
+  - `npm i @neo4j-labs/cli` (no qualifier) does NOT install the alpha.
+  - `npm i @neo4j-labs/cli@alpha` installs `0.2.0-alpha.1`.
+  - `npm view @neo4j-labs/cli-darwin-arm64 versions` (and the other 7 platform pkgs) shows the new version.
+- [ ] On macOS, Linux (e.g. `docker run -it node:20`), and Windows (PowerShell): `npm i -g @neo4j-labs/cli@alpha` followed by `neo4j-cli --version` returns the right version on each.
+- [ ] `npm i --omit=optional @neo4j-labs/cli@alpha` followed by `neo4j-cli` produces the friendly "no prebuilt binary" error from the bin shim, exits non-zero, no stack trace.
+- [ ] After cutting a stable release later, `npm view @neo4j-labs/cli dist-tags` shows `latest: X.Y.Z` AND the alpha tag still points at the original alpha (independent channels).
 - [ ] Manual recovery drill: re-run `publish-npm.yml` via `workflow_dispatch` against a fully-published version → all 9 packages skip, workflow exits 0.
 
 **Documentation**
 - [ ] `distribution/npm/README.md` exists and covers all 10 outlined sections.
 - [ ] `distribution/npm/cli/README.md` ships in the published tarball and shows install + usage.
-- [ ] Repo-root `README.md` install section mentions `npm i -g @neo4j/cli`.
+- [ ] Repo-root `README.md` install section mentions `npm i -g @neo4j-labs/cli`.
 - [ ] Changelog entry exists in `.changes/unreleased/` for `neo4j-cli` only (not aura-cli).
 
 ## Out of Scope
@@ -194,7 +194,7 @@ No edits to npm code.
 ## Open Questions
 
 1. Does the `@neo4j` npm scope already permit publishing public packages, or must the maintainer pre-create stubs / configure scope-level publish settings before the first release?
-2. Should the maintainer-facing `distribution/npm/README.md` link directly to the npm package URLs (`https://www.npmjs.com/package/@neo4j/cli`), or stay registry-agnostic until the scope is confirmed live?
+2. Should the maintainer-facing `distribution/npm/README.md` link directly to the npm package URLs (`https://www.npmjs.com/package/@neo4j-labs/cli`), or stay registry-agnostic until the scope is confirmed live?
 3. Is the `next` catch-all dist-tag (for non-alpha/beta/rc prereleases) actually needed, or should the script reject any unrecognized prerelease format outright? (Defensive default vs strict validation.)
 4. Should the user-facing `distribution/npm/cli/README.md` document the alpha/beta channels, or keep the surface minimal until a stable ships?
 5. Retention policy for the `dist/` workflow artifact — default 7 days, or shorter to save quota?

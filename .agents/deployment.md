@@ -4,7 +4,7 @@ For the end-to-end contributor-facing release lifecycle, see [`RELEASING.md`](..
 
 ## Strategy: GitHub Releases via GoReleaser, plus npm via `publish-npm.yml`
 
-Releases are triggered automatically when a push to `main` modifies `CHANGELOG-neo4j.md` or `CHANGELOG-aura.md`. `release.yml` runs GoReleaser and publishes binaries to a GitHub Release. For neo4j-cli releases, `publish-npm.yml` then auto-fires (via `workflow_run`) and publishes `@neo4j/cli` to npm.
+Releases are triggered automatically when a push to `main` modifies `CHANGELOG-neo4j.md` or `CHANGELOG-aura.md`. `release.yml` runs GoReleaser and publishes binaries to a GitHub Release. For neo4j-cli releases, `publish-npm.yml` then auto-fires (via `workflow_run`) and publishes `@neo4j-labs/cli` to npm.
 
 ## Dual-Binary Releases
 
@@ -74,4 +74,4 @@ GoReleaser's auto-changelog generation is disabled (`changelog: disable: true` i
 
 ## npm Publication (`publish-npm.yml`)
 
-After `release.yml` succeeds, `.github/workflows/publish-npm.yml` fires via `workflow_run`. It downloads the `dist/` artifact + `release-meta.json` uploaded by `release.yml`, gates on `include_neo4j == 'true'` (aura-cli-only releases skip), and runs `distribution/npm/publish.sh` which publishes 8 platform packages then the `@neo4j/cli` wrapper. Same workflow has a `workflow_dispatch` trigger for manual recovery — pulls binaries from the existing GitHub Release rather than re-running GoReleaser. See `distribution/npm/README.md` for npm specifics.
+After `release.yml` succeeds, `.github/workflows/publish-npm.yml` fires via `workflow_run`. It downloads the `dist/` artifact + `release-meta.json` uploaded by `release.yml`, gates on `include_neo4j == 'true'` (aura-cli-only releases skip), and runs `distribution/npm/publish.sh` which publishes 8 platform packages then the `@neo4j-labs/cli` wrapper. Same workflow has a `workflow_dispatch` trigger for manual recovery — pulls binaries from the existing GitHub Release rather than re-running GoReleaser. See `distribution/npm/README.md` for npm specifics.

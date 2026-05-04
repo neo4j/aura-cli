@@ -1,4 +1,4 @@
-# `distribution/npm/` — `@neo4j/cli` on npm
+# `distribution/npm/` — `@neo4j-labs/cli` on npm
 
 Maintainer-facing design + rationale. Not shipped to npm. The user-facing
 README that ships in the published tarball is at [`cli/README.md`](./cli/README.md).
@@ -7,8 +7,8 @@ For the end-to-end release lifecycle (changelog → Release PR → GitHub Releas
 
 ## What this directory does
 
-Publishes the `neo4j-cli` super-CLI to npm as `@neo4j/cli`, so users can run
-`npm i -g @neo4j/cli` and get the right prebuilt binary on PATH for their
+Publishes the `neo4j-cli` super-CLI to npm as `@neo4j-labs/cli`, so users can run
+`npm i -g @neo4j-labs/cli` and get the right prebuilt binary on PATH for their
 OS/arch. No postinstall script, no source build, no runtime Node toolchain
 beyond the bin shim.
 
@@ -33,35 +33,35 @@ One wrapper + 8 platform packages. Wrapper depends on all 8 via
 `process.arch`.
 
 ```
-                       ┌─────────────────────────────┐
-                       │ @neo4j/cli (wrapper)        │
-                       │  bin/neo4j-cli.js           │
-                       │  optionalDependencies: 8    │
-                       └──────────────┬──────────────┘
-                                      │ require.resolve at runtime
-        ┌─────────────────────────────┼─────────────────────────────┐
-        ▼                             ▼                             ▼
-┌─────────────────┐         ┌─────────────────┐           ┌─────────────────┐
-│ @neo4j/cli-     │   ...   │ @neo4j/cli-     │    ...    │ @neo4j/cli-     │
-│   darwin-arm64  │         │   linux-x64     │           │   win32-x64     │
-│ os: [darwin]    │         │ os: [linux]     │           │ os: [win32]     │
-│ cpu: [arm64]    │         │ cpu: [x64]      │           │ cpu: [x64]      │
-└─────────────────┘         └─────────────────┘           └─────────────────┘
+                              ┌─────────────────────────────┐
+                              │ @neo4j-labs/cli (wrapper)   │
+                              │  bin/neo4j-cli.js           │
+                              │  optionalDependencies: 8    │
+                              └──────────────┬──────────────┘
+                                             │ require.resolve at runtime
+           ┌─────────────────────────────────┼─────────────────────────────────┐
+           ▼                                 ▼                                 ▼
+┌──────────────────────┐          ┌──────────────────────┐          ┌──────────────────────┐
+│ @neo4j-labs/cli-     │   ...    │ @neo4j-labs/cli-     │   ...    │ @neo4j-labs/cli-     │
+│   darwin-arm64       │          │   linux-x64          │          │   win32-x64          │
+│ os: [darwin]         │          │ os: [linux]          │          │ os: [win32]          │
+│ cpu: [arm64]         │          │ cpu: [x64]           │          │ cpu: [x64]           │
+└──────────────────────┘          └──────────────────────┘          └──────────────────────┘
 ```
 
 Matrix lives in [`../platforms.tsv`](../platforms.tsv) — single source of truth
 for `publish.sh` and any future `distribution/pypi/` consumer.
 
-| `process.platform` | `process.arch` | npm package                | binary          |
-| ------------------ | -------------- | -------------------------- | --------------- |
-| `darwin`           | `arm64`        | `@neo4j/cli-darwin-arm64`  | `neo4j-cli`     |
-| `darwin`           | `x64`          | `@neo4j/cli-darwin-x64`    | `neo4j-cli`     |
-| `linux`            | `arm64`        | `@neo4j/cli-linux-arm64`   | `neo4j-cli`     |
-| `linux`            | `ia32`         | `@neo4j/cli-linux-ia32`    | `neo4j-cli`     |
-| `linux`            | `x64`          | `@neo4j/cli-linux-x64`     | `neo4j-cli`     |
-| `win32`            | `arm64`        | `@neo4j/cli-win32-arm64`   | `neo4j-cli.exe` |
-| `win32`            | `ia32`         | `@neo4j/cli-win32-ia32`    | `neo4j-cli.exe` |
-| `win32`            | `x64`          | `@neo4j/cli-win32-x64`     | `neo4j-cli.exe` |
+| `process.platform` | `process.arch` | npm package                       | binary          |
+| ------------------ | -------------- | --------------------------------- | --------------- |
+| `darwin`           | `arm64`        | `@neo4j-labs/cli-darwin-arm64`    | `neo4j-cli`     |
+| `darwin`           | `x64`          | `@neo4j-labs/cli-darwin-x64`      | `neo4j-cli`     |
+| `linux`            | `arm64`        | `@neo4j-labs/cli-linux-arm64`     | `neo4j-cli`     |
+| `linux`            | `ia32`         | `@neo4j-labs/cli-linux-ia32`      | `neo4j-cli`     |
+| `linux`            | `x64`          | `@neo4j-labs/cli-linux-x64`       | `neo4j-cli`     |
+| `win32`            | `arm64`        | `@neo4j-labs/cli-win32-arm64`     | `neo4j-cli.exe` |
+| `win32`            | `ia32`         | `@neo4j-labs/cli-win32-ia32`      | `neo4j-cli.exe` |
+| `win32`            | `x64`          | `@neo4j-labs/cli-win32-x64`       | `neo4j-cli.exe` |
 
 ## Why multi-package, not postinstall?
 
@@ -74,12 +74,12 @@ release. The publish script handles that.
 
 ## Install resolution flow
 
-1. `npm i -g @neo4j/cli` reads the wrapper's 8 `optionalDependencies`.
+1. `npm i -g @neo4j-labs/cli` reads the wrapper's 8 `optionalDependencies`.
 2. For each, npm checks `os` + `cpu` constraints in the platform package's
    `package.json`. Only the matching one installs; others are skipped silently.
 3. npm symlinks `bin/neo4j-cli.js` into the user's PATH.
 4. On invocation, the shim does
-   `require.resolve('@neo4j/cli-' + platform + '-' + arch + '/bin/neo4j-cli' + (win32 ? '.exe' : ''))`,
+   `require.resolve('@neo4j-labs/cli-' + platform + '-' + arch + '/bin/neo4j-cli' + (win32 ? '.exe' : ''))`,
    then `spawnSync(binary, argv.slice(2), { stdio: 'inherit' })`, then
    `process.exit(result.status ?? 1)`.
 5. If the platform package is missing (unsupported arch or `--omit=optional`
@@ -90,15 +90,15 @@ release. The publish script handles that.
 
 The publish script picks the npm `dist-tag` from the version string:
 
-| version pattern         | `--tag`                   | install command              |
-| ----------------------- | ------------------------- | ---------------------------- |
-| `X.Y.Z`                 | (omit → default `latest`) | `npm i -g @neo4j/cli`        |
-| `X.Y.Z-alpha*`          | `alpha`                   | `npm i -g @neo4j/cli@alpha`  |
-| `X.Y.Z-beta*`           | `beta`                    | `npm i -g @neo4j/cli@beta`   |
-| `X.Y.Z-rc*`             | `rc`                      | `npm i -g @neo4j/cli@rc`     |
-| anything else with `-`  | `next`                    | `npm i -g @neo4j/cli@next`   |
+| version pattern         | `--tag`                   | install command                    |
+| ----------------------- | ------------------------- | ---------------------------------- |
+| `X.Y.Z`                 | (omit → default `latest`) | `npm i -g @neo4j-labs/cli`         |
+| `X.Y.Z-alpha*`          | `alpha`                   | `npm i -g @neo4j-labs/cli@alpha`   |
+| `X.Y.Z-beta*`           | `beta`                    | `npm i -g @neo4j-labs/cli@beta`    |
+| `X.Y.Z-rc*`             | `rc`                      | `npm i -g @neo4j-labs/cli@rc`      |
+| anything else with `-`  | `next`                    | `npm i -g @neo4j-labs/cli@next`    |
 
-`npm i @neo4j/cli` (no qualifier) only resolves to a `latest` version. Until
+`npm i @neo4j-labs/cli` (no qualifier) only resolves to a `latest` version. Until
 the first stable `X.Y.Z` exists, the unqualified install errors with "no
 matching version" — alpha users opt in via `@alpha`. Promoting a prerelease to
 stable is a manual `npm dist-tag add` call, not part of this automation.
