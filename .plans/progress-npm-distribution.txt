@@ -20,3 +20,32 @@ Key Decisions:
 - Verified TSV parses cleanly with both awk -F'\t' and shell while-read IFS=$'\t' loops
 
 Next Task: task-002 (wrapper bin shim distribution/npm/cli/bin/neo4j-cli.js)
+
+================================================================================
+TASK-002: Implement wrapper bin shim distribution/npm/cli/bin/neo4j-cli.js
+Date: 2026-05-04T13:35:00Z
+================================================================================
+
+Summary:
+Created Node bin shim that resolves the platform-specific package via
+require.resolve and execs the binary with stdio/signal/exit-code passthrough.
+On resolve failure (unsupported platform or --omit=optional install), prints a
+friendly multi-line error naming the detected platform, the supported matrix,
+and the omit-optional hint, then exits non-zero. No runtime npm dependencies.
+
+Files Changed:
+- distribution/npm/cli/bin/neo4j-cli.js (created — ~60 lines, Node stdlib only)
+
+Key Decisions:
+- spawnSync (not execFileSync) with stdio: 'inherit' for clean SIGINT/TTY passthrough
+- result.status ?? 1 — matches AC literally; nullish coalescing covers both null (signal-killed) and undefined (spawn error)
+- Hard-coded SUPPORTED list of 8 platforms in the shim itself rather than reading platforms.tsv at runtime — shim ships standalone in @neo4j/cli tarball, no extra runtime files; the list is short and rarely changes (adding a platform = update SUPPORTED + add platforms.tsv row + GoReleaser build entry, all caught by reviewers together)
+- Use `'use strict'` and CommonJS require — no ESM transpile, runs on Node >=18 without flags
+- Result.error branch handles spawn-time failure (missing exe perms, etc.) distinctly from non-zero exit
+
+Verification:
+- node --check passes
+- Live exec on darwin-arm64 host (no platform pkg installed) → friendly error path, exit 1
+- Simulated platform pkg with chmod +x stub script → args pass through, exit 42 propagates correctly
+
+Next Task: task-003 (package.json templates for wrapper and platform pkgs)

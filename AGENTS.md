@@ -193,6 +193,13 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Test expected values that hard-code separators bake in OS assumptions. Build expected values with `filepath.Join` / `filepath.FromSlash` rather than literals when asserting cross-OS path output. MemMapFs marker paths in detection tests must also be built OS-natively so they match what the (post-fix) helper looks up.
 - Committed `.md` / golden / bundle files MUST be pinned to LF via `.gitattributes` — Windows runners have `core.autocrlf=true` by default and will rewrite to CRLF on checkout. The renderer (`common/skill/render`) and `make generate-check` both assume LF; a CRLF checkout breaks byte-equal golden tests AND `git diff --exit-code`. The repo-root `.gitattributes` covers `common/skill/render/testdata/**`, `**/internal/skill/bundle/**`, `**/internal/skill/additions.md`, `**/internal/skill/description.txt`. `common/skill/bundles_test.go::TestCommittedBundlesAndTestdataAreLF` is the assertion that catches a weakened/removed attribute.
 
+## npm Distribution Notes
+
+- `distribution/npm/cli/bin/neo4j-cli.js` is the wrapper-package bin shim — Node stdlib only, no runtime npm deps. Resolves `@neo4j/cli-<platform>-<arch>` via `require.resolve` and execs via `spawnSync(..., { stdio: 'inherit' })` so SIGINT and TTY pass through. Use `result.status ?? 1` for exit code (covers null from signal-kill AND undefined from spawn error).
+- The SUPPORTED platform list is hard-coded in the shim itself (not read from `distribution/platforms.tsv`) because the shim ships standalone inside the `@neo4j/cli` tarball — no extra runtime files. Adding a platform = update the shim's SUPPORTED array + add a `platforms.tsv` row + add a GoReleaser build entry (reviewers should catch all three together).
+- `result.error` branch is distinct from non-zero exit — handles spawn-time failures (missing exe perms, ENOENT) before reaching the exit-code propagation path.
+- `.gitignore` ignores `bin/` globally for Go build output. The `distribution/**/bin/` paths (npm wrapper shim, future platform-pkg bin layouts) need an explicit `!distribution/**/bin/` un-ignore — without it, `git status` silently hides committed-intent files and `git add` errors with "ignored by .gitignore". Verify with `git check-ignore -v <path>`.
+
 ## golangci-lint Notes
 
 - Version installed: v2.11.4 (via Homebrew)

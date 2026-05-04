@@ -29,7 +29,7 @@ tasks:
       REQ-F-007: uses `spawnSync` (not `execFileSync`) with `stdio: 'inherit'`, propagates exit code,
       handles win32 `.exe` suffix, and prints a friendly error naming detected platform/arch when
       the platform pkg is missing (unsupported arch or `--omit=optional` install).
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "Resolves binary via `require.resolve('@neo4j/cli-' + process.platform + '-' + process.arch + '/bin/neo4j-cli' + (win32 ? '.exe' : ''))`"
@@ -37,7 +37,7 @@ tasks:
       - "Exits with `result.status ?? 1` to propagate child exit codes through `&&`-chains"
       - "On `require.resolve` failure, prints message naming detected platform/arch, the supported list, and a hint about `--no-optional` / `--omit=optional`, then exits non-zero"
       - "First line is `#!/usr/bin/env node` shebang"
-    completed_at: null
+    completed_at: 2026-05-04T13:35:00Z
 
   - id: task-003
     title: "Create package.json templates for wrapper and platform packages"
