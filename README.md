@@ -51,6 +51,53 @@ Help for each command is accessed by using it without any flags or options. For 
 ./neo4j-cli aura instance create
 ```
 
+## Agent skills
+
+`neo4j-cli` ships an embedded skill bundle (`SKILL.md` + per-subcommand references) that teaches AI coding agents how to drive the CLI. `skill install` drops that bundle into the supported agents' skill directories so the agent picks it up on next run.
+
+Supported agents:
+
+-   Claude Code
+-   Cursor
+-   Windsurf
+-   Copilot
+-   Gemini CLI
+-   Cline
+-   Codex
+-   Pi
+-   OpenCode
+-   Junie
+
+Install into every detected agent (or pass an agent name to target one):
+
+```bash
+./neo4j-cli skill install
+./neo4j-cli skill install claude-code
+```
+
+List supported agents and per-agent install state:
+
+```bash
+./neo4j-cli skill list
+```
+
+Check installed bundles for version drift against the running binary:
+
+```bash
+./neo4j-cli skill check
+```
+
+Remove the installed bundle (idempotent):
+
+```bash
+./neo4j-cli skill remove
+./neo4j-cli skill remove claude-code
+```
+
+The same `skill` subcommand is available on `aura-cli`, scoped to the standalone Aura surface.
+
+Beta features (commands gated by `AuraBetaEnabled`, e.g. `dataapi`, `import`, `deployment`) are not included in the generated bundle — the bundle reflects the default-config command surface.
+
 ## Feedback / Issues
 
 Please use [GitHub issues](https://github.com/neo4j-labs/neo4j-cli/issues) to provide feedback and report any issues that you have encountered.

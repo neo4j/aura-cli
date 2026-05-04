@@ -9,10 +9,23 @@ Learnings and patterns for future agents working on this project.
 TEST COMMANDS: [`make test`]
 BUILD COMMANDS: [`make build`, `make run-aura`, `make run-neo4j`]
 LINT COMMANDS: [`make lint`]
-FORMAT COMMANDS: [`make fmt`]
+FORMAT COMMANDS: [`make fmt-check`] — runs `gofmt -l .` and fails on any output. `make fmt` rewrites silently and is NOT a gate; use `make fmt-check` to verify. CI's golangci-lint v2 includes `gofmt` as a formatter and will fail the build on unformatted code.
 LICENSE CHECK: [`make license-check`]
 
-**Always run `make test` as the final gate before marking any task or plan complete.** All tests must pass — a build that compiles but has failing tests is not done.
+**Always run `make test` AND `make fmt-check` as final gates before marking any task or plan complete.** All tests must pass and no file may need gofmt — a build that compiles but has failing tests or unformatted code is not done. `make fmt-check` is the local equivalent of CI's gofmt linter, so drift fails before the push instead of after.
+
+## Cobra Command Layout
+
+The repo follows a strict one-file-per-leaf cobra layout. Every command tree under `neo4j-cli/aura/internal/subcommands/<resource>/` and `common/skill/` follows it. Mirror it for any new command tree:
+
+- **Parent file `<resource>.go`** — defines `NewCmd(cfg, ...) *cobra.Command`, registers persistent flags, calls `cmd.AddCommand(newXxxCmd(cfg, ...))` for each leaf. Keep it small (≤80 lines).
+- **One file per leaf action `<action>.go`** — defines a private constructor like `newInstallCmd(cfg, ...) *cobra.Command` containing the leaf's flags + `RunE`. No leaf bodies inlined into the parent.
+- **Colocated tests `<action>_test.go`** — tests for each leaf live next to its source.
+- **Shared test helpers** in `<resource>_helpers_test.go` (or similar) when needed.
+
+Examples: `neo4j-cli/aura/internal/subcommands/instance/{instance.go, list.go, list_test.go, get.go, delete.go, ...}` and `common/skill/{skill.go, install.go, remove.go, list.go, check.go, helpers.go}`.
+
+Don't inline multiple leaves in the parent. Don't name the parent `command.go` — name it after the resource so `grep <resource>.go` finds it. Adding a new leaf = new `<action>.go` + `<action>_test.go`, plus one `cmd.AddCommand(...)` line in the parent.
 
 ## Project Overview
 
@@ -56,7 +69,9 @@ Two binaries are produced:
 
 ```
 neo4j-cli/
-  main.go                  # neo4j-cli entrypoint; mounts aura subcommand as "aura"
+  app/app.go               # neo4j-cli cobra tree builder (NewCmd, Version) — importable
+  main.go                  # thin entrypoint; mounts aura subcommand as "aura"
+  internal/skill/          # per-binary skill template (bundle, description.txt, additions.md, gen/)
   aura/
     cmd/main.go            # aura-cli standalone entrypoint
     aura.go                # Root command, registers subcommands
@@ -64,6 +79,7 @@ neo4j-cli/
       api/                 # HTTP client for Neo4j Aura REST API
       flags/               # Custom reusable flag types
       output/              # JSON + table rendering
+      skill/               # per-binary skill template (mirrors neo4j-cli/internal/skill)
       subcommands/         # One directory per resource, one file per action
         instance/, tenant/, credential/, config/,
         deployment/, dataapi/graphql/, graphanalytics/,
@@ -71,7 +87,10 @@ neo4j-cli/
 common/
   clicfg/                  # Config, credentials, project state (OS-specific paths)
   clierr/                  # Shared error types
+  skill/                   # Shared agent-skill logic (catalog, render, installer, cobra wrapper)
 ```
+
+Agent-skill subsystem: `common/skill/` holds the binary-agnostic logic (agent catalog, path expansion, bundle render, install/remove/list/check, cobra wrapper). Each binary has its own `<bin>/internal/skill/` template (`embed.go` + `description.txt` + `additions.md` + `gen/main.go` + committed `bundle/`). Adding a new standalone CLI = copy the template, edit `description.txt`/`additions.md`/`gen/main.go` import, mount `skill.NewCmd(cfg, binskill.Bundle, "<newcli>")`, run `go generate`. No edits to `common/skill/`. See `CONTRIBUTING.md` "Generated content" for the full workflow.
 
 Key CLI conventions (see `CONTRIBUTING.md`):
 - Singular nouns for commands (`instance`, not `instances`)
@@ -97,6 +116,8 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 
 - `license-check` target uses `$(GOPATH)/bin/addlicense` (not bare `addlicense`) — GOPATH/bin may not be on PATH
 - `license-check` requires a Unix shell (`find` + `xargs`); won't work natively on Windows
+- `make generate` runs `go generate ./...`; `make generate-check` runs generate then `git diff --exit-code` (CI gate). Wired in `.github/workflows/test.yml` between Build and Lint, runs on full OS matrix.
+- Drift sim: editing a bundle file directly to test generate-check is futile — `go generate` overwrites it. Mutate a real cobra-tree input (e.g. a Short string in `app.go`) to simulate stale-bundle detection.
 
 ## Changie Multi-Project Notes
 
@@ -108,6 +129,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `changie merge` (no flags) automatically iterates all `projects:` in config and writes each to its own `changelog:` path — confirmed from source (`cmd/merge.go`). Calling `changie merge --project` is not supported by changie's CLI.
 - `changie new --projects <a> --projects <b>` creates entries for multiple projects in one call; the interactive prompt (`make changelog`) also supports multi-select
 - This repo uses kind labels `Major`, `Minor`, `Patch` (not `added`/`feat`) — check `.changie.yaml` `kinds:` before using `--kind`
+- If changie isn't installed locally, hand-author YAML files under `.changes/unreleased/` named `<project>-<Kind>-<YYYYMMDD>-<HHMMSS>.yaml` with fields `project / kind / body / time` (single-quoted body, RFC3339 time). Write one file per project for dual-project entries.
 
 ## Changie Workflow Notes
 
@@ -130,6 +152,46 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - GoReleaser v2 deprecates `format_overrides.format` — use `format_overrides.formats`
 - Each `archives` entry must have a unique `id`; omitting it defaults to `"default"` and causes errors when there are multiple archive blocks
 - Use `{{ .Binary }}` in `name_template` (not `{{ .ProjectName }}`) when building multiple binaries so archives are named per binary
+- `-X "<importpath>.Version=..."` ldflag must match the actual package path of the Version var. If you move Version from `package main` to e.g. `neo4j-cli/app`, update the ldflag to `-X "github.com/neo4j/cli/neo4j-cli/app.Version=..."` — a stale path silently no-ops and ships `dev`.
+
+## Repo Doc Notes
+
+- `CLAUDE.md` is a symlink to `AGENTS.md` (`ls -la` confirms). Edit `AGENTS.md` once — both surfaces update. Don't write to `CLAUDE.md` directly.
+- Contributor-facing workflows (e.g. `make generate` / add-new-CLI procedure) live in `CONTRIBUTING.md` "Development" subsections. AGENTS.md Architecture orients readers and links to CONTRIBUTING.md for the procedure rather than duplicating it.
+
+## Repo Layout Notes
+
+- `neo4j-cli/app/app.go` builds the neo4j-cli cobra tree and exports `Version`. `neo4j-cli/main.go` is a thin entrypoint. Generators (e.g. skill bundle) import `app` to walk the tree without main-side effects.
+- `neo4j-cli/aura/aura.go` already exposes `NewCmd` (super-CLI mount) and `NewStandaloneCmd` (aura-cli binary, adds credential).
+- `common/skill/` holds shared agent-skill logic (catalog, path expansion, installer). Hermetic-friendly: `DetectAgents(afero.Fs)` takes an FS; tests use `afero.NewMemMapFs` + `t.Setenv("HOME", ...)`.
+- `common/skill/filesystem.go::CopyBundle(dst, dstDir, bundle fs.FS)` walks `bundle` (already scoped — generators do `fs.Sub(Bundle, "bundle")` upstream). Uses `filepath.FromSlash` on each entry so embed.FS forward slashes translate to OS separators on Windows.
+- `common/skill/render.Bundle(root, opts)` returns `map[string][]byte` keyed with forward-slash paths (`SKILL.md`, `references/<sub>.md`). Uses `LocalFlags()` (not `Flags()`) when rendering subcommand flag tables to avoid duplicating root persistent flags shown in SKILL.md "Global Flags". Sorts subcommands + flag rows for byte-determinism. TOC inserted only when reference body >100 lines, between the H1 and the rest of the body.
+- Render golden-file tests use a `-update` flag (`go test ./common/skill/render -update`) to regenerate `testdata/`. The gate runs without it; pass `-update` only when the renderer's output legitimately changes.
+- `common/skill/installer.go` Install/Remove/List/Check: typed sentinel errors (`ErrNoAgentsDetected`, `ErrUnknownAgent`, `ErrAgentNotDetected`) for command-layer assertions. `{{VERSION}}` substituted in SKILL.md only — references stay verbatim. Install RemoveDir's the dst before copy so reinstall doesn't leave stale references. Check returns rows only for installed agents; drift=true also fires on `unknown-version` (frontmatter missing/unparseable). Frontmatter parsed via `regexp` — no YAML dep.
+- `common/skill/skill.go::NewCmd(cfg, bundle, skillName)` parent `skill` cobra command. Persistent `--output` flag at the parent (mirrors `tenant.NewCmd`), validated + bound in `PersistentPreRunE` via `cfg.Aura.BindOutput`. Installer sentinel errors are wrapped via `clierr.NewUsageError` with the valid-agent list before returning to cobra. Drift on `check` renders the table/JSON THEN returns a non-nil RunE error so the user still sees the rows. JSON output is a plain array (matches `output.PrintBodyMap` posture — serialize the data directly, no envelope wrapper).
+- `common/skill/` follows the dominant `<resource>.go` parent + `<action>.go` per-leaf file convention (matches `aura/internal/subcommands/instance/`, `credential/`, etc.). `skill.go` holds only `NewCmd` + persistent-flag wiring; each leaf (install/remove/list/check) lives in its own `<leaf>.go` + `<leaf>_test.go`. Cross-leaf helpers (`formatAgentErr`, `agentNames`, `printJSON`) live in `helpers.go`. Shared test fixture lives in `cmd_helpers_test.go`. New leaves go in their own file.
+- Per-binary skill template lives at `<bin>/internal/skill/`: `embed.go` (`//go:generate go run ./gen` + `//go:embed bundle` into unexported `rawBundle` + `var Bundle fs.FS = mustSub(rawBundle, "bundle")`), `description.txt` (single-line third-person frontmatter description), `additions.md` (gotchas, leading HTML comment), `gen/main.go` (package main, resolves pkg dir via `runtime.Caller(0)` so it's CWD-independent, removes bundle/ before regenerating to evict stale refs), `gen/main_test.go` (round-trip into `t.TempDir`, byte-equal vs committed bundle — local guard that complements `make generate-check`). Adding a new standalone CLI = copy this template + edit description.txt/additions.md + import update in gen/main.go.
+- Bootstrap order matters: `embed.go`'s `//go:embed bundle` fails to compile if `bundle/` is missing. Run `go run ./<bin>/internal/skill/gen` first to populate `bundle/`, then everything else (build, tests, `go generate`) works. Subsequent regenerations are fine because gen/ is a sibling package that compiles independently of embed.go.
+- `//go:embed bundle` exposes an fs.FS rooted ABOVE the `bundle/` dir — `fs.WalkDir(rawEmbed, ".")` yields `bundle/SKILL.md`, not `SKILL.md`. The installer assumes the flat layout produced by `render.Bundle`, so `Bundle` MUST be sub-rooted: `var Bundle fs.FS = mustSub(rawBundle, "bundle")`. Naïvely exporting `var Bundle embed.FS` writes installs to `<skillsDir>/<skillName>/bundle/SKILL.md` and skips `{{VERSION}}` substitution. Fixture-based unit tests (`fstest.MapFS{"SKILL.md": ...}`) are already flat and miss this — lock the contract per-binary with an `install_e2e_test.go` that drives the REAL exported `Bundle` through `commonskill.Install` against `afero.NewMemMapFs` + `t.Setenv("HOME", t.TempDir())` and asserts (a) `<skillsDir>/<skillName>/SKILL.md` exists, (b) `{{VERSION}}` is substituted, (c) at least one references/*.md is written, plus a `TestBundleWalkAtRoot` contract test that walks `Bundle` and asserts `SKILL.md` appears at the root.
+- The aura-cli generator imports `neo4j-cli/aura` and builds `NewStandaloneCmd` (NOT `NewCmd`) — `NewCmd` is the super-CLI mount point and omits `credential`. Wrong choice would mis-represent aura-cli's surface. Generator passes `clicfg.NewConfig(MemMapFs, "dev")`; the literal "dev" never surfaces because render emits `{{VERSION}}` placeholder regardless.
+- `cfg.Aura.AuraBetaEnabled()` defaults false on a fresh `MemMapFs` config, so beta-gated commands (dataapi, import, deployment) are intentionally absent from the generated aura-cli bundle. Matches the default-build user surface; users who enable beta locally get a richer `--help` but the shipped skill stays stable.
+- Skill cobra mount: top-level in `app.NewCmd` (super-CLI) and inside `aura.NewStandaloneCmd` (aura-cli binary), NEVER inside `aura.NewCmd`. Mounting in `NewCmd` would duplicate skill under the super-CLI's nested `aura` subtree (`neo4j-cli aura skill`). After mounting, re-run `go generate ./...` so each binary's bundle includes its own `references/skill.md`.
+- Cobra prints parent help (exit 0) for an unknown subcommand of a parent group with no `RunE` — so the negative test for "no duplicate skill mount" is structural (skill absent from `Available Commands:`), not exit-code-based. Don't write a test that expects non-zero exit.
+- Usage guide heading conventions diverge: `docs/usageGuide/Neo4j CLI.md` uses one h1 title + h2/h3 sections; `docs/usageGuide/A Guide To The New Aura CLI.md` uses h1-per-top-level-area + h2 leaves. Match per-file when adding sections; mismatch breaks the file's TOC shape.
+
+## Hermetic Test Notes
+
+- For path-expansion tests using `~` / `$XDG_CONFIG_HOME`, use `t.Setenv("HOME", "...")` and `t.Setenv("XDG_CONFIG_HOME", "")` — Go's `os.Getenv` returns "" for both unset and set-to-empty, and `t.Setenv` auto-restores after the test.
+- Use `afero.DirExists` (not `Exists`) for "is the agent installed?" checks — files at the marker path shouldn't count as detected.
+- `go-pretty/v6/table` upper-cases header text by default — assertions on table output should compare against `strings.ToLower(...)` for header columns, exact case for body cells.
+- Lightweight cobra command tests can wire `clicfg.NewConfig(testfs.GetTestFs(...), version)` directly without the heavier `testutils.NewAuraTestHelper` — the latter pulls in API mocking and credential setup that `skill` doesn't need.
+- For repo-wide gate tests that must auto-discover content (e.g. `common/skill/bundles_test.go` walking every `<bin>/internal/skill/bundle/SKILL.md`), resolve repo root via `runtime.Caller(0)` then `filepath.Walk` from there. Suffix-match paths after `filepath.ToSlash` so Windows runs match. Prune `.git`, `node_modules`, `bin`, `.changes` to keep the walk fast.
+
+## Windows CI Gotchas
+
+- Path-separator bugs in `expandPath`-style helpers are Windows-only. Catalog entries keep forward slashes (portable convention); helpers MUST wrap any post-substitution path through `filepath.FromSlash` (or build via `filepath.Join`) so the whole path is OS-native. A `ReplaceAll(path, "$XDG_CONFIG_HOME", xdg)` where `xdg` came from `os.Getenv` produces mixed separators on Windows (`C:\…\.config/opencode`) — fix at the helper, not the catalog.
+- Test expected values that hard-code separators bake in OS assumptions. Build expected values with `filepath.Join` / `filepath.FromSlash` rather than literals when asserting cross-OS path output. MemMapFs marker paths in detection tests must also be built OS-natively so they match what the (post-fix) helper looks up.
+- Committed `.md` / golden / bundle files MUST be pinned to LF via `.gitattributes` — Windows runners have `core.autocrlf=true` by default and will rewrite to CRLF on checkout. The renderer (`common/skill/render`) and `make generate-check` both assume LF; a CRLF checkout breaks byte-equal golden tests AND `git diff --exit-code`. The repo-root `.gitattributes` covers `common/skill/render/testdata/**`, `**/internal/skill/bundle/**`, `**/internal/skill/additions.md`, `**/internal/skill/description.txt`. `common/skill/bundles_test.go::TestCommittedBundlesAndTestdataAreLF` is the assertion that catches a weakened/removed attribute.
 
 ## golangci-lint Notes
 

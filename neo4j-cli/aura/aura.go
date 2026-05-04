@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/skill"
+	binskill "github.com/neo4j/cli/neo4j-cli/aura/internal/skill"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/config"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/credential"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/customermanagedkey"
@@ -42,5 +44,6 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 func NewStandaloneCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := NewCmd(cfg)
 	cmd.AddCommand(credential.NewCmd(cfg))
+	cmd.AddCommand(skill.NewCmd(cfg, binskill.Bundle, "aura-cli"))
 	return cmd
 }
