@@ -148,6 +148,10 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Job-level `outputs:` block surfaces step outputs to downstream `workflow_run` consumers. To expose a step output, the step needs an `id:` and must `echo "key=val" >> $GITHUB_OUTPUT` — then reference as `${{ steps.<id>.outputs.<key> }}` in the job `outputs:` block. Output is always populated (downstream gates on the value, not whether it was set).
 - All actions in `.github/workflows/` are SHA-pinned with a `# v<major>` trailing comment (e.g. `actions/upload-artifact@ea165f8d... # v4`) — match this convention for any new action; Renovate handles bumps.
 - `release.yml`'s `include_neo4j` / `include_aura` are computed by diffing `git diff HEAD~1 --name-only` against changelog filenames — split into its own step (id: `changed`) so the job's `outputs:` block can wire it cleanly to downstream `workflow_run` workflows like `publish-npm.yml`.
+- `workflow_run.workflows: ["<name>"]` matches by the upstream workflow's `name:` field, NOT the filename. `release.yml` declares `name: release` (lowercase) so the watcher uses `["release"]`. Mismatching never errors — it just silently never triggers.
+- Cross-workflow artifact download with `actions/download-artifact@v4` requires both `github-token: ${{ secrets.GITHUB_TOKEN }}` AND `run-id: ${{ github.event.workflow_run.id }}`. Without `run-id` it looks at the current run only and 404s.
+- `workflow_run` events do NOT have `inputs.*` populated; `workflow_dispatch` events do not have `github.event.workflow_run.*`. To pick a value cleanly across both triggers use the ternary pattern `${{ github.event_name == 'workflow_dispatch' && inputs.x || steps.<auto>.outputs.x }}` — short-circuit makes the unset side empty and `||` falls back.
+- A `workflow_run`-triggered workflow's job-level `if:` cannot read artifact contents (artifacts haven't been downloaded yet). Gate the JOB on `github.event.workflow_run.conclusion == 'success'`, then download the meta artifact, parse with `jq`, and apply per-step `if:` gates on the parsed value.
 
 ## GoReleaser Notes
 

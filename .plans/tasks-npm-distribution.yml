@@ -108,7 +108,7 @@ tasks:
       `gh release download v${VERSION} --pattern 'neo4j-cli_*'` then extracts each archive into a
       `dist/<archive_basename>/` layout matching what `publish.sh` expects. Both paths configure
       `~/.npmrc` from `secrets.NPM_TOKEN` and run `distribution/npm/publish.sh`.
-    status: pending
+    status: completed
     dependencies:
       - task-004
       - task-005
@@ -119,7 +119,7 @@ tasks:
       - "`workflow_dispatch` path: runs `gh release download v${VERSION} --pattern 'neo4j-cli_*' --dir dist-archives/` then extracts each `.tar.gz`/`.zip` into `dist/<archive_basename>/`"
       - "Both paths write `~/.npmrc` from `secrets.NPM_TOKEN`, then run `GORELEASER_CURRENT_TAG=v${VERSION} distribution/npm/publish.sh`"
       - "Aura-cli-only release path is verified to skip via the include_neo4j gate"
-    completed_at: null
+    completed_at: 2026-05-04T16:30:00Z
 
   - id: task-007
     title: "Add Makefile target npm-publish-dry"

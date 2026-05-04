@@ -206,3 +206,59 @@ Verification:
 - make fmt-check → clean (no Go drift)
 
 Next Task: task-006 (publish-npm.yml workflow — depends on 004 and 005)
+
+================================================================================
+TASK-006: Create .github/workflows/publish-npm.yml with auto + manual triggers
+Date: 2026-05-04T16:30:00Z
+================================================================================
+
+Summary:
+Created new workflow with two triggers. workflow_run fires after release.yml
+succeeds, downloads dist/ + release-meta.json artifacts, parses include_neo4j
+from JSON, and gates publish on include_neo4j == 'true' (aura-cli-only runs
+skip silently). workflow_dispatch takes a required version input, downloads
+existing GH release archives via `gh release download`, and re-extracts each
+.tar.gz/.zip into dist/<archive_basename>/ to recreate the GoReleaser layout
+the publish script expects. Both paths write ~/.npmrc from NPM_TOKEN and run
+distribution/npm/publish.sh with GORELEASER_CURRENT_TAG=v${VERSION}.
+
+Files Changed:
+- .github/workflows/publish-npm.yml (created — ~165 lines incl. comments)
+
+Key Decisions:
+- workflow_run.workflows: ["release"] — workflow_run matches by the upstream
+  workflow's `name:` field (release.yml declares `name: release`), not
+  filename. AC text said `[Release]` but the actual name is lowercase.
+- Job-level `if:` only gates on `workflow_run.conclusion == 'success'`. The
+  include_neo4j gate happens per-step after the meta artifact is downloaded
+  and parsed — can't read artifact contents in a job-level if expression.
+- Per-step gates use `steps.meta.outputs.include_neo4j == 'true'` rather than
+  setting a job output, because the meta step itself only runs on the auto
+  path (gated on event_name == 'workflow_run').
+- GORELEASER_CURRENT_TAG built via ternary `event_name == 'workflow_dispatch'
+  && inputs.version || steps.meta.outputs.version` — short-circuit means
+  unset side evaluates to empty and the || picks the right one. Prepended
+  literal "v" since publish.sh strips it (and AC requires v-prefix in env).
+- actions/download-artifact@v4 with `run-id` + `github-token` for
+  cross-workflow download (the auto path reads artifacts from a different
+  run). SHA d3f86a106a0bac45b974a628896c90dbdf5c8093 verified via gh api.
+- Manual extraction loop handles .tar.gz (Linux/Darwin) AND .zip (Windows)
+  separately. shopt -s nullglob so empty matches don't trip set -e.
+- Skip step on include_neo4j != 'true' is informational-only (echo only) —
+  GitHub Actions has no native "exit job successfully" so we just log and
+  let the conditionally-gated downstream steps no-op.
+- permissions: contents: read, actions: read — minimum needed for
+  download-artifact across workflows + checkout. NPM_TOKEN is the only
+  secret with publish power; not exposed except in the auth-config step.
+- chmod 600 on ~/.npmrc — defensive, even though runners are ephemeral.
+
+Verification:
+- python3 yaml.safe_load → valid YAML
+- Folded scalar with embedded ${{ }} expression collapses to single-line
+  string in env value — verified via parse + print
+- AC mapping checked one-by-one against REQ-F-017 through REQ-F-021 +
+  task acceptance_criteria; all 6 covered.
+- make test → pass (no Go changes, cached)
+- make fmt-check → clean
+
+Next Task: task-007 (Makefile npm-publish-dry target — depends on 004 only)
