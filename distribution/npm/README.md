@@ -3,6 +3,8 @@
 Maintainer-facing design + rationale. Not shipped to npm. The user-facing
 README that ships in the published tarball is at [`cli/README.md`](./cli/README.md).
 
+For the end-to-end release lifecycle (changelog → Release PR → GitHub Release → npm publish), see [`RELEASING.md`](../../RELEASING.md). This document covers npm specifics only.
+
 ## What this directory does
 
 Publishes the `neo4j-cli` super-CLI to npm as `@neo4j/cli`, so users can run
