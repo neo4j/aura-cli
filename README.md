@@ -59,6 +59,44 @@ Help for each command is accessed by using it without any flags or options. For 
 ./neo4j-cli aura instance create
 ```
 
+## Querying Neo4j
+
+`neo4j-cli query` runs Cypher against any Neo4j database via the HTTP Query API. Cypher comes from the positional argument or piped stdin.
+
+```bash
+./neo4j-cli query 'RETURN 1 AS n'
+echo 'MATCH (n) RETURN count(n)' | ./neo4j-cli query
+```
+
+Connection settings are resolved with this precedence (highest first): flag → env var → `.env` file (auto-discovered by walking up from cwd) → built-in default.
+
+| Setting  | Flag         | Env var          | Default                 |
+| -------- | ------------ | ---------------- | ----------------------- |
+| URI      | `--uri`      | `NEO4J_URI`      | `http://localhost:7474` |
+| Username | `--username` | `NEO4J_USERNAME` | `neo4j`                 |
+| Password | `--password` | `NEO4J_PASSWORD` | prompted on TTY         |
+| Database | `--database` | `NEO4J_DATABASE` | `neo4j`                 |
+
+Bolt-family URIs (`bolt://`, `neo4j://`, `neo4j+s://`, …) are auto-rewritten to `http(s)://` and Aura hosts (`*.neo4j.io`) are forced to `https://<host>:443`.
+
+Pass parameters with `--param key=value` (repeatable). Values that parse as JSON are typed; everything else is a string:
+
+```bash
+./neo4j-cli query 'MATCH (p:Person {name:$name}) RETURN p' --param name=Alice
+./neo4j-cli query 'RETURN $ids' --param 'ids=[1,2,3]'
+echo 'MATCH (p:Person {name:$name}) RETURN p' | ./neo4j-cli query --param name=Alice
+```
+
+Output is a table by default; pass `--output json` for a stable envelope (`columns`, `rows`, `truncated`, `arrays_truncated`). Large results are capped at 100 rows and arrays inside cells at 100 items — tune with `--max-rows` / `--truncate-arrays-over` (0 = unlimited).
+
+Schema introspection:
+
+```bash
+./neo4j-cli query :schema
+```
+
+Use `--insecure` to skip TLS verification for self-signed dev setups.
+
 ## Agent skills
 
 `neo4j-cli` ships an embedded skill bundle (`SKILL.md` + per-subcommand references) that teaches AI coding agents how to drive the CLI. `skill install` drops that bundle into the supported agents' skill directories so the agent picks it up on next run.
