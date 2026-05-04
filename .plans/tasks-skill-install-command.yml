@@ -399,3 +399,54 @@ tasks:
       - "make build / make test green on the full ubuntu/windows/macos matrix in PR #12 CI"
       - "No regression on ubuntu/macos coverage or test counts"
     completed_at: 2026-05-04T21:15:00Z
+
+  - id: task-018
+    title: "Restructure common/skill cobra files to match one-file-per-leaf convention"
+    description: |
+      Audit (post-PR-#12) found two cobra-layout deviations from the
+      dominant codebase pattern. The dominant style — used by
+      `aura/internal/subcommands/instance/`, `tenant/`, `credential/`,
+      `config/`, etc. — is: parent file named after the resource, one
+      file per leaf, tests colocated. Skill currently has all four leaves
+      (install/remove/list/check) inline in a single 311-line
+      `common/skill/command.go`, with a generic filename. A separate PR
+      is in flight that addresses the package-location concern (the "B"
+      option from the audit); this task only fixes the file-granularity
+      issue ("A" option) and stays within `common/skill/`.
+
+      Refactor:
+      - Rename `common/skill/command.go` → `common/skill/skill.go`. Keep
+        ONLY the parent `NewCmd(cfg, bundle, skillName)` factory and any
+        small persistent-flag wiring there.
+      - Extract each leaf into its own file:
+          common/skill/install.go      newInstallCmd(cfg, bundle, skillName)
+          common/skill/remove.go       newRemoveCmd(cfg, skillName)
+          common/skill/list.go         newListCmd(cfg, skillName)
+          common/skill/check.go        newCheckCmd(cfg, skillName, version)
+      - Split `command_test.go` into `install_test.go`, `remove_test.go`,
+        `list_test.go`, `check_test.go`, colocated with their leaves.
+        Existing test cases all stay; just move them. If shared test
+        helpers exist, lift them into a small unexported helper file
+        (e.g. `cmd_helpers_test.go`) at package level.
+      - Keep all exported names stable. NewCmd signature unchanged. No
+        behaviour changes — pure code reorganisation.
+      - Verify the cobra command tree is byte-identical before and
+        after by exec'ing `<bin> skill --help` and per-leaf `--help` and
+        diff'ing — useful sanity check during development.
+
+      Rationale: matches the dominant in-repo pattern; makes
+      `grep skill.go` discover the parent; lets future contributors
+      copy the `instance/<action>.go` template when adding a new leaf
+      (e.g. `skill update`).
+    status: pending
+    dependencies:
+      - task-006
+    acceptance_criteria:
+      - "common/skill/skill.go contains ONLY the NewCmd parent factory and persistent-flag wiring; ≤80 lines"
+      - "Each of install / remove / list / check has its own .go and _test.go file at common/skill/ with the leaf cobra factory + tests; existing test cases preserved (no test deletions)"
+      - "command.go and command_test.go no longer exist"
+      - "<bin> skill --help and each <bin> skill <leaf> --help output is byte-identical to the pre-refactor branch (manual diff or scripted)"
+      - "make test green; coverage of common/skill stays ≥80%; no behaviour change"
+      - "make fmt-check, make lint, make license-check, make generate-check all green"
+      - "Public API of common/skill is unchanged (verified: only NewCmd, Install, Remove, List, Check, AGENTS, FindAgent, etc. remain exported with same signatures)"
+    completed_at: null
