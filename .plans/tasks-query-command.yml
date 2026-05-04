@@ -158,3 +158,30 @@ tasks:
       - "PR description includes the verification transcript / output snippets"
       - "Any verification step that could not be run (e.g. `--insecure` if no self-signed cert was set up) is called out explicitly with the workaround"
     completed_at: 2026-05-04T19:30:00Z
+
+  - id: task-011
+    title: "Change array truncation to empty array; add reliable end-to-end tests"
+    description: |
+      `--truncate-arrays-over` currently replaces an over-limit array with a single-element placeholder slice `[]any{"<truncated: K items>"}`. Change this to an EMPTY slice `[]any{}` — when an array exceeds the limit, drop its contents entirely. Motivation: the placeholder string pollutes JSON output (e.g. `"xs": ["<truncated: 10 items>"]` is unreadable to downstream tools and misrepresents the value's type to consumers). An empty array is a clean, type-safe signal that data was elided.
+
+      Update `neo4j-cli/query/truncate.go::truncate` so the over-limit branch returns `[]any{}` instead of the formatted placeholder. Drop the now-unused `fmt` import.
+
+      Update tests:
+      - Rewrite `neo4j-cli/query/truncate_test.go` cases that asserted the placeholder string. Each long-array case must now assert exactly `[]any{}` (length 0). Keep the table-driven structure.
+      - Add an end-to-end test that drives the full CLI pipeline (via `httptest.NewServer` + the existing test seam pattern in `run_test.go`) and asserts the JSON output literally contains `"xs": []` for a 10-item server response with `--truncate-arrays-over 3`. This is the reliability gap the bug exposed: the unit test verified the in-memory shape but no test verified what actually appears in `--output json`. Same shape of test should also exercise nested arrays (array inside a map value) and `--output table` (cell renders as `[]`).
+
+      Update `.plans/prd-query-command.md` REQ-F-009 wording to drop the placeholder language and document the empty-array behavior.
+
+      No new changelog entry needed — this feature has not shipped yet (still on a feature branch with one unreleased changie YAML).
+    status: pending
+    dependencies:
+      - task-010
+    acceptance_criteria:
+      - "`truncateArrays` returns `[]any{}` (length 0) for any input array whose length exceeds `max`; nested arrays follow the same rule recursively"
+      - "All existing `truncate_test.go` table cases that asserted the placeholder string are updated to assert empty-slice equality; tests still run via `go test ./neo4j-cli/query/...`"
+      - "A new end-to-end test in `run_test.go` (or a sibling `*_test.go`) drives `runQuery` against an `httptest.NewServer` returning a 10-item array, runs with `--truncate-arrays-over 3` and `--output json`, and asserts the rendered JSON contains `\"xs\": []` (no placeholder string anywhere in the output buffer)"
+      - "A second end-to-end case covers a nested array (array inside a map value) and asserts the same empty-array behavior end-to-end"
+      - "A third end-to-end case covers `--output table` and asserts the cell content is `[]` (not the placeholder)"
+      - "PRD REQ-F-009 wording is updated to describe the empty-array behavior; no other PRD section references the placeholder string"
+      - "`fmt` import is removed from `truncate.go` (no longer needed); `make test` and `make fmt-check` pass"
+    completed_at: null
