@@ -186,6 +186,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Skill cobra mount: top-level in `app.NewCmd` (super-CLI) and inside `aura.NewStandaloneCmd` (aura-cli binary), NEVER inside `aura.NewCmd`. Mounting in `NewCmd` would duplicate skill under the super-CLI's nested `aura` subtree (`neo4j-cli aura skill`). After mounting, re-run `go generate ./...` so each binary's bundle includes its own `references/skill.md`.
 - Cobra prints parent help (exit 0) for an unknown subcommand of a parent group with no `RunE` — so the negative test for "no duplicate skill mount" is structural (skill absent from `Available Commands:`), not exit-code-based. Don't write a test that expects non-zero exit.
 - Usage guide heading conventions diverge: `docs/usageGuide/Neo4j CLI.md` uses one h1 title + h2/h3 sections; `docs/usageGuide/A Guide To The New Aura CLI.md` uses h1-per-top-level-area + h2 leaves. Match per-file when adding sections; mismatch breaks the file's TOC shape.
+- Adding a top-level command to `app.NewCmd` (e.g. `query`) invalidates the committed neo4j-cli skill bundle — `TestGenerator_RoundTrip` in `neo4j-cli/internal/skill/gen` fails until you run `make generate`. Even if your task only "scaffolds" the command, regen the bundle in the same task or `make test` won't be green. Same applies to any new top-level mount on `aura.NewStandaloneCmd` (aura-cli bundle).
 
 ## Hermetic Test Notes
 

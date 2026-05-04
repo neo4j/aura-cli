@@ -13,6 +13,7 @@ import (
 	"github.com/neo4j/cli/common/skill"
 	"github.com/neo4j/cli/neo4j-cli/aura"
 	binskill "github.com/neo4j/cli/neo4j-cli/internal/skill"
+	"github.com/neo4j/cli/neo4j-cli/query"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +33,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	auraCmd.Use = "aura"
 	cmd.AddCommand(auraCmd)
 	cmd.AddCommand(aura.NewCredentialCmd(cfg))
+	cmd.AddCommand(query.NewCmd(cfg))
 	cmd.AddCommand(skill.NewCmd(cfg, binskill.Bundle, "neo4j-cli"))
 	return cmd
 }

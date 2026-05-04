@@ -14,6 +14,7 @@ Allows you to manage Neo4j resources
 |---------|-------------|
 | [`aura`](references/aura.md) | Allows you to programmatically provision and manage your Aura resources |
 | [`credential`](references/credential.md) | Manage and view credential values |
+| [`query`](references/query.md) | Run Cypher against a Neo4j database via the HTTP Query API |
 | [`skill`](references/skill.md) | Install agent skills for this CLI into supported AI agents |
 
 ## Gotchas

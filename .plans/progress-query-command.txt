@@ -1,0 +1,35 @@
+================================================================================
+TASK-001: Scaffold neo4j-cli/query package, mount in app.go, register persistent flags
+Date: 2026-05-04T14:12:44Z
+================================================================================
+
+Summary:
+Created neo4j-cli/query/ with parent query.go exposing NewCmd(cfg). All 10
+persistent flags registered (--uri, -u/--username, -p/--password, -d/--database,
+--env, --output, --param, --max-rows, --truncate-arrays-over, --insecure).
+PersistentPreRunE validates --output against clicfg.ValidOutputValues and binds
+via cfg.Aura.BindOutput (mirrors instance/instance.go). RunE stubs "not yet
+implemented". Mounted in app.go alongside aura/credential/skill. Bundle
+regenerated via make generate so the SKILL.md row + references/query.md exist
+(otherwise TestGenerator_RoundTrip fails — task-008 explicitly handles this but
+it must run now to keep make test green).
+
+Files Changed:
+- neo4j-cli/query/query.go (created — parent cobra command, 65 lines)
+- neo4j-cli/app/app.go (modified — import + AddCommand)
+- neo4j-cli/internal/skill/bundle/SKILL.md (regenerated — query row added)
+- neo4j-cli/internal/skill/bundle/references/query.md (regenerated — new ref)
+- .plans/tasks-query-command.yml (status update)
+
+Key Decisions:
+- Parent has both RunE (default Cypher execution) and AddCommand for :schema —
+  cobra supports parent-with-RunE alongside subcommands.
+- StringArray (not StringSlice) for --param: avoids comma-splitting which would
+  break params with commas in JSON values.
+- Env-var hints baked into flag usage strings ("[env: NEO4J_URI]") since
+  cobra/pflag has no native env-hint convention; mirrors --insecure dev-only
+  warning style.
+- Bundle regen done in task-001 (not deferred to task-008): without it,
+  TestGenerator_RoundTrip fails. Task-008 still runs as a guard step.
+
+Next Task: task-002 (params parser)
