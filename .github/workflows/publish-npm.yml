@@ -15,9 +15,15 @@ name: publish-npm
 # distribution/npm/publish.sh, which is idempotent at the per-package level.
 
 on:
-  workflow_run:
-    workflows: ["release"]
-    types: [completed]
+  # AUTO TRIGGER DISABLED until the `@neo4j-labs` npm org is provisioned and
+  # NPM_TOKEN with publish access on that scope is added as a repo secret.
+  # Once available, uncomment the workflow_run block below — no other code
+  # changes needed; the auto path is fully implemented and tested.
+  # See PR #14 / task-011 for the scope-rename context.
+  #
+  # workflow_run:
+  #   workflows: ["release"]
+  #   types: [completed]
   workflow_dispatch:
     inputs:
       version:
