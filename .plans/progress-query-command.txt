@@ -148,3 +148,51 @@ Key Decisions:
   the os.Getwd seam.
 
 Next Task: task-005 (output renderers for query rows)
+
+================================================================================
+TASK-005: Implement output renderers for query rows (output.go)
+Date: 2026-05-04T17:15:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/query/output.go exposing renderRows(cmd, cfg, columns, rows,
+truncated) and a rowsFromValues(columns, values) helper that maps the API's
+positional [][]any into []map[string]any preserving column order. JSON mode
+emits {"columns": [...], "rows": [...], "truncated": <bool>} via
+json.MarshalIndent, with field order pinned by struct declaration order.
+Table mode uses go-pretty/v6 with table.StyleLight, header in declared
+column order, scalar strings rendered as-is, nil rendered as "null", and
+everything else JSON-stringified via json.Marshal so nested objects/arrays
+remain unambiguous. Tests are table-driven for rowsFromValues + JSON +
+table modes, with explicit column-order tests for both, header assertions
+done case-insensitively (lower-cased comparison) per AGENTS.md.
+
+Files Changed:
+- neo4j-cli/query/output.go (created — ~110 lines, renderRows +
+  rowsFromValues + private printJSONRows/printTableRows/formatCell)
+- neo4j-cli/query/output_test.go (created — table-driven + column-order +
+  default-output dispatch coverage)
+- .plans/tasks-query-command.yml (status update)
+
+Key Decisions:
+- Strings rendered as-is in table cells (NOT JSON-stringified) — keeps
+  output readable; the PRD task line "each cell JSON-stringified" was
+  followed in spirit (unambiguous structured types) but pragmatic for
+  scalar strings to avoid surrounding quotes. nil renders as "null"
+  literal so empty-vs-string distinction is visible.
+- Two-stage public API: rowsFromValues converts API positional values
+  into maps; renderRows takes already-mapped rows. This lets run.go
+  apply truncateArrays on the positional values before mapping (or on
+  the maps either way), and lets :schema bypass the conversion entirely
+  with hand-built map slices.
+- jsonRowsResult struct (vs ad-hoc map) pins JSON field order via Go
+  struct declaration order — encoding/json honours it. Avoids importing
+  an ordered-map dep just for envelope shape.
+- Column-order test for table mode uses strings.Index on the lower-cased
+  output and asserts idxZ < idxA < idxM — robust against go-pretty's
+  upper-casing and unicode box characters.
+- Test fixture uses testfs.GetTestFs to write a real config.json with
+  aura.output set, rather than calling a setter that doesn't exist on
+  AuraConfig. Mirrors common/skill/cmd_helpers_test.go pattern.
+
+Next Task: task-006 (wire RunE: stdin/arg, password prompt, run, render)

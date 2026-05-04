@@ -236,6 +236,8 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - TLS unit tests: `httptest.NewTLSServer` produces a self-signed cert. The default `newHTTPClient(false)` rejects it; `newHTTPClient(true)` (i.e. `--insecure`) accepts. `srv.Client()` IS pre-configured to trust httptest's cert — for the secure-rejection assertion you MUST construct your own client (`newHTTPClient(false)`), NOT use `srv.Client()`.
 - `subosito/gotenv` was already a transitive dep (via viper); `go mod tidy` after first import promotes it to direct. No new third-party deps for the query command.
 - `t.Chdir(t.TempDir())` (Go 1.24+) is the hermetic primitive for tests that need a controlled cwd — go.mod `go 1.25.0` baseline allows it.
+- `clicfg.AuraConfig` exposes `Output()` getter + `BindOutput(*pflag.Flag)` viper bind — there is NO `SetOutput` setter. Tests that need a specific output mode write a real `config.json` via `testfs.GetTestFs(`{"aura":{"output":"json"}}`, "{}")` (mirrors `common/skill/cmd_helpers_test.go`); the in-memory FS makes this hermetic.
+- `neo4j-cli/query/output.go::renderRows` keeps strings unquoted in table cells (readability) but JSON-marshals everything else; `nil` → literal `null`. `jsonRowsResult` struct pins envelope field order (columns, rows, truncated) via Go struct declaration order — `encoding/json` honours it, no ordered-map dep needed. Pair with `rowsFromValues(columns, [][]any)` to convert API positional values into `[]map[string]any` (missing positions → nil, extras dropped).
 
 ---
 

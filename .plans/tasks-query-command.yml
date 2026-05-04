@@ -67,7 +67,7 @@ tasks:
     title: "Implement output renderers for query rows (output.go)"
     description: |
       Add `neo4j-cli/query/output.go` exposing `renderRows(cmd, cfg, columns []string, rows []map[string]any, truncated bool)`. Branch on `cfg.Aura.Output()`. JSON: emit `{"columns": [...], "rows": [...], "truncated": <bool>}` via `json.MarshalIndent` and `cmd.Println`. Table: use `github.com/jedib0t/go-pretty/v6/table` with header in result order, each cell JSON-stringified, style `table.StyleLight`. Convert API positional `data.values` arrays into `{col: val}` maps before rendering (helper in this file). Add `output_test.go` table-driven cases for both modes; assert table header matches `strings.ToLower(...)` for `go-pretty` headers per AGENTS.md hermetic-test note.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -76,7 +76,7 @@ tasks:
       - "Header assertions in tests use lower-cased comparison; tests pass on Windows (no path-separator literals)"
       - "Output renderer is pure (takes `cmd`, structured input, no I/O beyond `cmd.Println`)"
       - "`renderRows` does NOT print the stderr warning — that lives in run.go (task-006)"
-    completed_at: null
+    completed_at: 2026-05-04T17:15:00Z
 
   - id: task-006
     title: "Wire query parent RunE: stdin/arg input, password prompt, run, truncate, render"
