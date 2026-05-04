@@ -262,3 +262,58 @@ tasks:
       - "AGENTS.md has a one-line pointer to the script + the env-gated Go wrapper"
       - "`make test`, `make fmt-check`, and `make build` continue to pass; `make generate-check` is unaffected"
     completed_at: 2026-05-04T21:00:00Z
+
+  - id: task-014
+    title: "Auto-rewrite bolt/neo4j URIs to HTTP(S) with stderr notice; document in --help and skill"
+    description: |
+      The `query` command speaks the Neo4j HTTP Query API on ports 7473 (HTTPS) / 7474 (HTTP) — or 443 for Aura. Users coming from drivers or `cypher-shell` will reflexively pass `--uri neo4j://host:7687`, `neo4j+s://abc.databases.neo4j.io`, or `bolt://host:7687`. Currently this fails with a confusing transport error. Detect bolt-family URIs and auto-rewrite them, with a one-line stderr notice so the user learns the right form, and expose the behavior in `--help` and the skill bundle.
+
+      **Rewrite rules** (apply in `connect.go` after URI resolution, before HTTP client construction):
+
+      | Input scheme | Rewrite to | Notes |
+      |---|---|---|
+      | `bolt://` | `http://` | Plain bolt is unencrypted; HTTP equivalent is :7474 |
+      | `bolt+s://`, `bolt+ssc://` | `https://` | TLS bolt → HTTPS |
+      | `neo4j://` | `https://` | Neutral routing scheme; default to HTTPS (Aura users commonly drop the `+s` suffix) |
+      | `neo4j+s://`, `neo4j+ssc://` | `https://` | TLS routing → HTTPS (Aura standard) |
+      | `http://`, `https://` | _passthrough_ | Already correct |
+      | anything else | _passthrough + warn?_ | Don't try to be clever; let HTTP client surface the error |
+
+      **Port mapping**:
+      - Source port `7687` → if rewriting to `https://`, use `7473`; if rewriting to `http://`, use `7474`.
+      - No port specified (Aura case `neo4j+s://abc.databases.neo4j.io`) → no port in output (URL library defaults to 443 / 80).
+      - Custom port (e.g. `bolt://host:9999`) → preserve port; user clearly meant it.
+
+      **Notice**: emit exactly one stderr line per rewrite — `info: rewrote URI '<orig>' to '<new>' (the query command uses Neo4j's HTTP Query API; pass --uri https://... to silence)`. Print before any other output. Never print the user's password (the URI we received here doesn't carry credentials, but be defensive: scrub `userinfo` from `<orig>` before printing if present).
+
+      **Skill / help / docs**:
+      - Update the `--uri` flag help string to mention the auto-rewrite: e.g. `Neo4j HTTP Query API base URI [env: NEO4J_URI] (default "http://localhost:7474"). Bolt URIs (bolt://, neo4j://, neo4j+s://) are auto-rewritten to http(s)://.`
+      - Add a gotcha bullet to `neo4j-cli/internal/skill/additions.md` (the per-binary skill template's hand-written notes) so it appears in the regenerated SKILL.md gotchas section. One line: `If you pass a bolt-style URI (e.g. neo4j+s://...:7687) it is auto-rewritten to https://...:7473; this command speaks the HTTP Query API, not bolt.`
+      - Run `make generate` to regenerate the skill bundle. The updated `--uri` help text propagates into `references/query.md` automatically.
+
+      **Tests**:
+      - Unit test `connect_test.go::TestNormalizeURI` (or a new `uri_test.go` if the helper is split out) — table-driven covering: every scheme in the rewrite table; port `7687` → `7473`/`7474`; no-port Aura form preserved; custom port preserved; passthrough for `http(s)`; URLs with paths/query strings round-trip correctly; `userinfo` scrubbed from the notice but preserved in the rewritten URI if the user supplied it.
+      - End-to-end test in `run_test.go` (or a sibling) — wire `--uri neo4j://localhost:7687` against an `httptest.NewServer` whose URL is also passed (after the rewrite the request must hit the test server). Easiest: parameterize the test server URL via the test, override the rewrite to map `7687`→`<test-server-port>`, and assert the rewrite notice appears on stderr.
+        - Actually a cleaner approach: add a minimal e2e that bypasses the port-rewrite by using `http://...:7687`-ish setup. OR: test the normalizer in isolation and trust the integration. Pick whichever is simpler at implementation time — aim for one e2e that asserts the stderr notice fires through `runQuery`, even if the actual rewrite is `bolt+s://localhost:9999` → `https://localhost:9999` (custom port preserved) so we don't need to remap to a live test-server port.
+      - PRD update: add a new REQ-F-017 documenting the auto-rewrite behavior. Update REQ-F-004 to cross-reference REQ-F-017.
+
+      **No changelog entry** — feature unreleased on a feature branch.
+    status: pending
+    dependencies:
+      - task-013
+    acceptance_criteria:
+      - "Passing `--uri neo4j://host:7687` rewrites to `https://host:7473` before the HTTP request is built"
+      - "Passing `--uri bolt://host:7687` rewrites to `http://host:7474`"
+      - "Passing `--uri neo4j+s://abc.databases.neo4j.io` rewrites to `https://abc.databases.neo4j.io` (no explicit port; defaults to 443)"
+      - "Passing `--uri https://x:7473` (already-correct form) passes through unchanged with NO stderr notice"
+      - "Custom non-7687 port on a bolt-family URI is preserved (e.g. `bolt://host:9999` → `http://host:9999`)"
+      - "URLs with a path or query string round-trip correctly through the rewrite"
+      - "On rewrite, exactly one stderr line is printed: `info: rewrote URI '<orig>' to '<new>' (the query command uses Neo4j's HTTP Query API; pass --uri https://... to silence)`"
+      - "`userinfo` (if any) is scrubbed from the notice's `<orig>` but preserved in the rewritten URI used for the request"
+      - "Unit test `TestNormalizeURI` is table-driven and covers every row of the rewrite table plus port-mapping and userinfo scrubbing"
+      - "One e2e test asserts the stderr notice fires through `runQuery` against an `httptest.NewServer`"
+      - "`--uri` help string mentions the auto-rewrite; `bin/neo4j-cli query --help` shows the updated text"
+      - "`neo4j-cli/internal/skill/additions.md` gains a one-line gotcha about bolt URI auto-rewrite; `make generate` regenerates the skill bundle and `make generate-check` is clean"
+      - "PRD gets a new REQ-F-017 documenting the auto-rewrite"
+      - "`make test`, `make fmt-check`, `make build`, `make license-check`, `make generate-check` all pass"
+    completed_at: null
