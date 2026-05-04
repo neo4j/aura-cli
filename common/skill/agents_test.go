@@ -73,10 +73,10 @@ func TestExpandPath(t *testing.T) {
 			wantOk: false,
 		},
 		{
-			name:   "XDG set substitutes verbatim",
-			path:   "$XDG_CONFIG_HOME/opencode",
-			home:   "/home/alice",
-			xdg:    "/home/alice/xdg",
+			name: "XDG set substitutes verbatim",
+			path: "$XDG_CONFIG_HOME/opencode",
+			home: "/home/alice",
+			xdg:  "/home/alice/xdg",
 			// Result is OS-native: forward slashes on Unix, backslashes on
 			// Windows. expandPath runs the substitution through
 			// filepath.FromSlash so the catalog's portable forward-slash
