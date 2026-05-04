@@ -453,3 +453,38 @@ Key Decisions:
   links to discover the parallel surface.
 
 Next Task: task-014
+
+================================================================================
+TASK-014: Update CONTRIBUTING.md and CLAUDE.md for generator workflow
+Date: 2026-05-04T19:50:00Z
+================================================================================
+
+Summary:
+Added a "Generated content" subsection to CONTRIBUTING.md under Development
+covering `make generate`, `make generate-check`, the `additions.md` /
+`description.txt` edit workflow, and a 4-step "Adding a new standalone CLI"
+procedure. Updated AGENTS.md (CLAUDE.md is a symlink to it) Architecture
+section: refreshed the layout block to reflect `app/app.go`, per-binary
+`internal/skill/`, and `common/skill/`, plus a paragraph naming the shared
+skill subsystem and pointing readers at the CONTRIBUTING.md workflow for
+adding a new CLI. Docs-only change; make test still green.
+
+Files Changed:
+- CONTRIBUTING.md (added "Generated content" subsection + 4-step add-new-CLI)
+- AGENTS.md (refreshed Architecture layout block + skill subsystem paragraph)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- CLAUDE.md is a symlink to AGENTS.md in this repo (verified) — editing
+  AGENTS.md updates both surfaces. No need for parallel writes.
+- Placed the add-new-CLI procedure in CONTRIBUTING.md (not AGENTS.md) — PRD
+  acceptance criterion was "in one of the two docs", and CONTRIBUTING.md is
+  the natural home for contributor workflows. AGENTS.md only links to it.
+- 4-step procedure mirrors PRD REQ-F-012 verbatim (a/b/c renumbered + run
+  step added) so future contributors don't drift from the design intent.
+- Layout block in AGENTS.md now shows app/, internal/skill/, common/skill/
+  alongside the existing nodes — keeps the architecture discoverable at a
+  glance without expanding the Repo Layout Notes section that already covers
+  each path in detail.
+
+Next Task: task-015

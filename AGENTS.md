@@ -56,7 +56,9 @@ Two binaries are produced:
 
 ```
 neo4j-cli/
-  main.go                  # neo4j-cli entrypoint; mounts aura subcommand as "aura"
+  app/app.go               # neo4j-cli cobra tree builder (NewCmd, Version) — importable
+  main.go                  # thin entrypoint; mounts aura subcommand as "aura"
+  internal/skill/          # per-binary skill template (bundle, description.txt, additions.md, gen/)
   aura/
     cmd/main.go            # aura-cli standalone entrypoint
     aura.go                # Root command, registers subcommands
@@ -64,6 +66,7 @@ neo4j-cli/
       api/                 # HTTP client for Neo4j Aura REST API
       flags/               # Custom reusable flag types
       output/              # JSON + table rendering
+      skill/               # per-binary skill template (mirrors neo4j-cli/internal/skill)
       subcommands/         # One directory per resource, one file per action
         instance/, tenant/, credential/, config/,
         deployment/, dataapi/graphql/, graphanalytics/,
@@ -71,7 +74,10 @@ neo4j-cli/
 common/
   clicfg/                  # Config, credentials, project state (OS-specific paths)
   clierr/                  # Shared error types
+  skill/                   # Shared agent-skill logic (catalog, render, installer, cobra wrapper)
 ```
+
+Agent-skill subsystem: `common/skill/` holds the binary-agnostic logic (agent catalog, path expansion, bundle render, install/remove/list/check, cobra wrapper). Each binary has its own `<bin>/internal/skill/` template (`embed.go` + `description.txt` + `additions.md` + `gen/main.go` + committed `bundle/`). Adding a new standalone CLI = copy the template, edit `description.txt`/`additions.md`/`gen/main.go` import, mount `skill.NewCmd(cfg, binskill.Bundle, "<newcli>")`, run `go generate`. No edits to `common/skill/`. See `CONTRIBUTING.md` "Generated content" for the full workflow.
 
 Key CLI conventions (see `CONTRIBUTING.md`):
 - Singular nouns for commands (`instance`, not `instances`)
@@ -133,6 +139,11 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Each `archives` entry must have a unique `id`; omitting it defaults to `"default"` and causes errors when there are multiple archive blocks
 - Use `{{ .Binary }}` in `name_template` (not `{{ .ProjectName }}`) when building multiple binaries so archives are named per binary
 - `-X "<importpath>.Version=..."` ldflag must match the actual package path of the Version var. If you move Version from `package main` to e.g. `neo4j-cli/app`, update the ldflag to `-X "github.com/neo4j/cli/neo4j-cli/app.Version=..."` — a stale path silently no-ops and ships `dev`.
+
+## Repo Doc Notes
+
+- `CLAUDE.md` is a symlink to `AGENTS.md` (`ls -la` confirms). Edit `AGENTS.md` once — both surfaces update. Don't write to `CLAUDE.md` directly.
+- Contributor-facing workflows (e.g. `make generate` / add-new-CLI procedure) live in `CONTRIBUTING.md` "Development" subsections. AGENTS.md Architecture orients readers and links to CONTRIBUTING.md for the procedure rather than duplicating it.
 
 ## Repo Layout Notes
 

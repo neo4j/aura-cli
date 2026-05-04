@@ -273,14 +273,14 @@ tasks:
       `additions.md` per binary. Add a short note in `CLAUDE.md` Architecture
       section pointing at `common/skill/` and per-binary `internal/skill/`
       template, plus the rule for adding new standalone CLIs.
-    status: pending
+    status: completed
     dependencies:
       - task-010
     acceptance_criteria:
       - "CONTRIBUTING.md documents go generate, make generate-check, additions.md"
       - "CLAUDE.md Architecture references common/skill/ and the per-binary template"
       - "Add-a-new-CLI procedure explained in one of the two docs"
-    completed_at: null
+    completed_at: 2026-05-04T19:50:00Z
 
   - id: task-015
     title: "Add dual-project changelog entries"
