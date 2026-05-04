@@ -96,9 +96,19 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: dist
-          path: dist
+          path: ${{ runner.temp }}/downloaded-dist
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Prepare dist from downloaded artifact (auto)
+        if: >-
+          github.event_name == 'workflow_run' &&
+          steps.meta.outputs.include_neo4j == 'true'
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          test -d "${{ runner.temp }}/downloaded-dist"
+          cp -a "${{ runner.temp }}/downloaded-dist"/. dist/
 
       # ----- workflow_dispatch path: rebuild dist/ from existing GH release -----
 
@@ -112,13 +122,13 @@ jobs:
           # archives, no GoReleaser re-invocation needed. The publish script
           # expects dist/<archive_basename>/<binary>; archive_basename matches
           # the .tar.gz / .zip filename without the extension.
-          mkdir -p dist-archives dist
+          mkdir -p "${{ runner.temp }}/dist-archives" "${{ runner.temp }}/dist-extracted" dist
           gh release download "v${VERSION}" \
             --repo "${GITHUB_REPOSITORY}" \
             --pattern 'neo4j-cli_*' \
-            --dir dist-archives/
+            --dir "${{ runner.temp }}/dist-archives/"
           echo "[publish-npm] downloaded archives:"
-          ls -la dist-archives/
+          ls -la "${{ runner.temp }}/dist-archives/"
 
       - name: Extract release archives (manual)
         if: github.event_name == 'workflow_dispatch'
