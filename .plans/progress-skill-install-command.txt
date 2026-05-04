@@ -418,3 +418,38 @@ Key Decisions:
   docs/usageGuide and `--help`.
 
 Next Task: task-013
+
+================================================================================
+TASK-013: Update docs/usageGuide with skill subcommand sections
+Date: 2026-05-04T19:30:00Z
+================================================================================
+
+Summary:
+Added a "Skill" section to both usage guides. In docs/usageGuide/Neo4j CLI.md,
+the section is `## Skill` (h2) appended after "### Aura subcommand", matching
+the existing prose-plus-`text`-code-block style. In docs/usageGuide/A Guide
+To The New Aura CLI.md, the section is `# Skill` (h1) inserted before
+"# Migrating to the new Aura CLI" — matches the file's h1-per-top-level-area
+convention. Each guide's examples reference its own binary (neo4j-cli vs
+aura-cli); both guides note the cross-binary equivalence and the per-binary
+bundle scope.
+
+Files Changed:
+- docs/usageGuide/Neo4j CLI.md (added ## Skill section + 4 subsections)
+- docs/usageGuide/A Guide To The New Aura CLI.md (added # Skill section + 4 subsections)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- Heading levels picked per file: neo4j-cli guide uses h2/h3 throughout
+  (single h1 title), so Skill = h2 with h3 leaves; aura guide alternates
+  h1 per top-level area (e.g. "# Configuration of Aura CLI"), so Skill = h1
+  with h2 leaves. Mismatching either would break the file's existing TOC
+  shape.
+- `--output json` example included only on `list` (the most common
+  scripting target) — keeps the section terse and matches existing guide
+  style which doesn't show every flag combination.
+- One-paragraph cross-binary note in each guide so a reader of one guide
+  knows the other binary also has it; avoids forcing readers to chase
+  links to discover the parallel surface.
+
+Next Task: task-014

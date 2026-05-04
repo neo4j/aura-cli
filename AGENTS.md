@@ -150,6 +150,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `cfg.Aura.AuraBetaEnabled()` defaults false on a fresh `MemMapFs` config, so beta-gated commands (dataapi, import, deployment) are intentionally absent from the generated aura-cli bundle. Matches the default-build user surface; users who enable beta locally get a richer `--help` but the shipped skill stays stable.
 - Skill cobra mount: top-level in `app.NewCmd` (super-CLI) and inside `aura.NewStandaloneCmd` (aura-cli binary), NEVER inside `aura.NewCmd`. Mounting in `NewCmd` would duplicate skill under the super-CLI's nested `aura` subtree (`neo4j-cli aura skill`). After mounting, re-run `go generate ./...` so each binary's bundle includes its own `references/skill.md`.
 - Cobra prints parent help (exit 0) for an unknown subcommand of a parent group with no `RunE` — so the negative test for "no duplicate skill mount" is structural (skill absent from `Available Commands:`), not exit-code-based. Don't write a test that expects non-zero exit.
+- Usage guide heading conventions diverge: `docs/usageGuide/Neo4j CLI.md` uses one h1 title + h2/h3 sections; `docs/usageGuide/A Guide To The New Aura CLI.md` uses h1-per-top-level-area + h2 leaves. Match per-file when adding sections; mismatch breaks the file's TOC shape.
 
 ## Hermetic Test Notes
 

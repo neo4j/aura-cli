@@ -255,14 +255,14 @@ tasks:
       subcommands. Match each guide's existing prose + code-block style.
       Aura guide describes aura-cli surface; super-CLI guide covers
       neo4j-cli surface.
-    status: pending
+    status: completed
     dependencies:
       - task-009
     acceptance_criteria:
       - "Both usage guides have a Skill section"
       - "Examples reference the correct binary (neo4j-cli vs aura-cli)"
       - "Doc style matches surrounding sections"
-    completed_at: null
+    completed_at: 2026-05-04T19:30:00Z
 
   - id: task-014
     title: "Update CONTRIBUTING.md and CLAUDE.md for generator workflow"
