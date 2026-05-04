@@ -646,4 +646,62 @@ Key Decisions:
   golangci-lint only — no shellcheck integration in this repo, so the
   script will be lint-checked by reviewers.
 
+Next Task: task-014 (auto-rewrite bolt/neo4j URIs)
+
+================================================================================
+TASK-014: Auto-rewrite bolt/neo4j URIs to HTTP(S) with stderr notice; document in --help and skill
+Date: 2026-05-04T22:00:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/query/uri.go with a pure normalizeURI(raw) → (rewritten,
+didRewrite, displayOrig) helper. Maps bolt-family schemes to http(s)://
+(bolt→http, bolt+s/bolt+ssc/neo4j/neo4j+s/neo4j+ssc→https), rewrites canonical
+port 7687→7473/7474 based on target scheme, preserves custom ports + paths +
+query strings + userinfo. Passwords masked in the stderr notice via
+(*url.URL).Redacted() (xxxxx). Wired into resolveConn AFTER defaults are
+applied so the default http://localhost:7474 passes through silently. Stderr
+notice format matches spec exactly. Updated --uri flag help to mention the
+rewrite. Added one-line gotcha to additions.md; bundle regenerated. Tests:
+table-driven TestNormalizeURI covers every row of the rewrite table + port
+mapping + userinfo scrubbing + passthrough + gibberish; two new e2e tests in
+run_test.go assert the stderr notice fires through runQuery against an
+httptest.NewServer (custom-port preserved → request still lands on the test
+server) and that http(s) URIs pass through silently. PRD gets REQ-F-017.
+All gates green.
+
+Files Changed:
+- neo4j-cli/query/uri.go (created — normalizeURI helper, ~50 lines)
+- neo4j-cli/query/uri_test.go (created — table-driven, 13 cases)
+- neo4j-cli/query/connect.go (modified — call normalizeURI in resolveConn,
+  emit stderr notice on rewrite)
+- neo4j-cli/query/query.go (modified — --uri help string updated)
+- neo4j-cli/query/run_test.go (modified — 2 new e2e tests:
+  TestRunQuery_URIRewriteEmitsStderrNotice + URIPassthroughEmitsNoNotice)
+- neo4j-cli/internal/skill/additions.md (modified — one-line gotcha)
+- neo4j-cli/internal/skill/bundle/SKILL.md (regenerated — gotcha line added)
+- neo4j-cli/internal/skill/bundle/references/query.md (regenerated —
+  --uri row reflects new help text)
+- .plans/prd-query-command.md (REQ-F-017 added; REQ-F-004 cross-refs)
+- .plans/tasks-query-command.yml (status / completed_at)
+- .plans/progress-query-command.txt (this entry)
+
+Key Decisions:
+- (*url.URL).Redacted() does the userinfo scrubbing for free — no custom
+  string manipulation needed; produces "user:xxxxx@host" for input
+  "user:pass@host". Capturing displayOrig BEFORE mutating u.Scheme keeps
+  the notice showing the form the user actually typed.
+- Rewrite happens AFTER defaults applied, NOT before. The defaultURI
+  (http://localhost:7474) passes through silently because http:// is in
+  the passthrough branch — no spurious "rewrote URI" notice on every
+  default-config invocation.
+- url.Parse never errors on "gibberish-not-a-url" (it returns an empty
+  scheme + empty host, no error) so the empty-scheme path naturally falls
+  through the switch's default case → passthrough. No extra check needed.
+- E2E test exploits the custom-port-preserved branch: bolt://127.0.0.1:<test-server-port>
+  rewrites to http://127.0.0.1:<test-server-port> (port not 7687 → preserved),
+  so the request still hits the test server. No port-remap shim needed.
+- Passthrough explicitly silent — assertion in the second e2e test pins
+  this so future code can't accidentally chatter on every invocation.
+
 Next Task: All tasks complete

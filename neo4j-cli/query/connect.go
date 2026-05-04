@@ -129,6 +129,13 @@ func resolveConn(cmd *cobra.Command, cfg *clicfg.Config) (*conn, error) {
 		database = defaultDatabase
 	}
 
+	if rewritten, didRewrite, displayOrig := normalizeURI(uri); didRewrite {
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(),
+			"info: rewrote URI '%s' to '%s' (the query command uses Neo4j's HTTP Query API; pass --uri https://... to silence)\n",
+			displayOrig, rewritten)
+		uri = rewritten
+	}
+
 	return &conn{
 		uri:      uri,
 		username: username,

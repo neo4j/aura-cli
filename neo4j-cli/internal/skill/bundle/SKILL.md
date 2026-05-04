@@ -26,3 +26,4 @@ Allows you to manage Neo4j resources
 - All read commands accept `--output json|table`. Write commands print confirmation text only; pipe-friendly output requires explicit `--output json` where supported.
 - Async resource operations (instance create/resize/destroy) accept `--await` to block until the resource reaches a terminal state.
 - The `version:` line in an installed SKILL.md reflects the binary that wrote it. Run `neo4j-cli skill check` after upgrading to detect drift; v1 reports drift only — re-run `skill install` to refresh.
+- If you pass a bolt-style URI (e.g. `neo4j+s://...:7687`) to `query` it is auto-rewritten to `https://...:7473`; this command speaks the HTTP Query API, not bolt.

@@ -298,7 +298,7 @@ tasks:
       - PRD update: add a new REQ-F-017 documenting the auto-rewrite behavior. Update REQ-F-004 to cross-reference REQ-F-017.
 
       **No changelog entry** — feature unreleased on a feature branch.
-    status: pending
+    status: completed
     dependencies:
       - task-013
     acceptance_criteria:
@@ -316,4 +316,4 @@ tasks:
       - "`neo4j-cli/internal/skill/additions.md` gains a one-line gotcha about bolt URI auto-rewrite; `make generate` regenerates the skill bundle and `make generate-check` is clean"
       - "PRD gets a new REQ-F-017 documenting the auto-rewrite"
       - "`make test`, `make fmt-check`, `make build`, `make license-check`, `make generate-check` all pass"
-    completed_at: null
+    completed_at: 2026-05-04T22:00:00Z

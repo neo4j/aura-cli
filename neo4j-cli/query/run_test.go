@@ -547,6 +547,58 @@ func TestRunQuery_TruncateArrays_NoTruncation_NoWarningAndZeroField(t *testing.T
 	assert.Equal(t, 0, got.ArraysTruncated, "arrays_truncated must be 0 when nothing was elided")
 }
 
+// TestRunQuery_URIRewriteEmitsStderrNotice verifies the auto-rewrite path:
+// passing a bolt:// URI rewrites to http:// before the HTTP request fires,
+// the request reaches the test server (custom port preserved), and exactly
+// one info-line is emitted to stderr.
+func TestRunQuery_URIRewriteEmitsStderrNotice(t *testing.T) {
+	srv := startServer(t, 0, []byte(`{"data":{"fields":["n"],"values":[[1]]}}`))
+
+	// httptest.NewServer URL is `http://127.0.0.1:<port>`. Strip the scheme
+	// and feed it back as `bolt://127.0.0.1:<port>`. The custom port (not
+	// 7687) is preserved by the rewriter, so the request still lands on the
+	// test server after the scheme rewrite to http://.
+	hostPort := strings.TrimPrefix(srv.URL, "http://")
+	boltURI := "bolt://" + hostPort
+
+	h := newRunHarness(t, "json")
+	err := h.execute(t,
+		"--uri="+boltURI,
+		"--password=pw",
+		"RETURN 1",
+	)
+	require.NoError(t, err)
+
+	stderr := h.stderr.String()
+	assert.Contains(t, stderr, "info: rewrote URI '"+boltURI+"' to 'http://"+hostPort+"'",
+		"stderr must contain the rewrite notice with the original and rewritten URIs")
+	assert.Contains(t, stderr,
+		"the query command uses Neo4j's HTTP Query API; pass --uri https://... to silence",
+		"stderr notice must include the explanation suffix")
+
+	// The request must have actually hit the test server (response parsed OK).
+	var got jsonRowsResult
+	require.NoError(t, json.Unmarshal(h.stdout.Bytes(), &got))
+	assert.Equal(t, []string{"n"}, got.Columns)
+}
+
+// TestRunQuery_URIPassthroughEmitsNoNotice verifies that already-correct
+// http(s) URIs do NOT trigger the rewrite notice.
+func TestRunQuery_URIPassthroughEmitsNoNotice(t *testing.T) {
+	srv := startServer(t, 0, []byte(`{"data":{"fields":["n"],"values":[[1]]}}`))
+
+	h := newRunHarness(t, "json")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		"RETURN 1",
+	)
+	require.NoError(t, err)
+
+	assert.NotContains(t, h.stderr.String(), "rewrote URI",
+		"http(s) URIs must pass through without a rewrite notice")
+}
+
 func TestPromptPassword_NonTTYReturnsUsageError(t *testing.T) {
 	origTTY := stdinIsTTY
 	t.Cleanup(func() { stdinIsTTY = origTTY })
