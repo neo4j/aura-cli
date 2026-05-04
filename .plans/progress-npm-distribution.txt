@@ -49,3 +49,46 @@ Verification:
 - Simulated platform pkg with chmod +x stub script → args pass through, exit 42 propagates correctly
 
 Next Task: task-003 (package.json templates for wrapper and platform pkgs)
+
+================================================================================
+TASK-003: Create package.json templates for wrapper and platform packages
+Date: 2026-05-04T14:10:00Z
+================================================================================
+
+Summary:
+Created two npm package.json templates with __TOKEN__ placeholders for sed
+substitution at publish time. Wrapper at distribution/npm/cli/package.json.tmpl
+declares @neo4j/cli with all 8 platform pkgs in optionalDependencies pinned
+exactly to __VERSION__ (no caret). Platform template at
+distribution/npm/cli-platform/package.json.tmpl declares
+@neo4j/cli-__OS__-__CPU__ with os/cpu constraints, bin pointing at
+bin/__BIN_NAME__, and files: ["bin/__BIN_NAME__"].
+
+Files Changed:
+- distribution/npm/cli/package.json.tmpl (created — wrapper, 34 lines, valid JSON)
+- distribution/npm/cli-platform/package.json.tmpl (created — per-platform, 29 lines, valid JSON)
+
+Key Decisions:
+- Used __TOKEN__ (double underscores) over {{TOKEN}} or ${TOKEN} so sed sed-replaces
+  cleanly without quoting concerns and templates parse as valid JSON pre-substitution
+- Wrapper files: ["bin/neo4j-cli.js", "README.md"] — README.md slot reserved for
+  task-009's user-facing README ship
+- Wrapper enumerates all 8 optionalDependencies inline (vs generating from
+  platforms.tsv) — keeps the template a single static artifact, future agent
+  reading the file can see the full surface without sourcing TSV; adding a
+  platform = update three places (TSV, wrapper template, bin shim SUPPORTED)
+  caught by reviewer
+- Platform template includes engines.node: >=18 — not strictly required (the
+  platform pkg has no JS) but consistent with the wrapper and sets the same
+  Node baseline if anyone npm-installs the platform pkg directly
+- Added description / homepage / repository / bugs fields beyond strict AC —
+  standard npm hygiene that prevents npm-publish warnings; not gold-plating
+
+Verification:
+- sed -e 's/__VERSION__/1.2.3/g' wrapper.tmpl | jq . → valid JSON, 8 pinned deps
+- Loop over platforms.tsv → all 8 platform substitutions produce valid JSON with
+  correct os/cpu/bin (.exe suffix only on win32)
+- make test passes (no new Go code, but gate confirmed clean)
+- make fmt-check passes (no Go file drift)
+
+Next Task: task-004 (publish.sh — depends on tasks 001/002/003 all done)

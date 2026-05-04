@@ -199,6 +199,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - The SUPPORTED platform list is hard-coded in the shim itself (not read from `distribution/platforms.tsv`) because the shim ships standalone inside the `@neo4j/cli` tarball — no extra runtime files. Adding a platform = update the shim's SUPPORTED array + add a `platforms.tsv` row + add a GoReleaser build entry (reviewers should catch all three together).
 - `result.error` branch is distinct from non-zero exit — handles spawn-time failures (missing exe perms, ENOENT) before reaching the exit-code propagation path.
 - `.gitignore` ignores `bin/` globally for Go build output. The `distribution/**/bin/` paths (npm wrapper shim, future platform-pkg bin layouts) need an explicit `!distribution/**/bin/` un-ignore — without it, `git status` silently hides committed-intent files and `git add` errors with "ignored by .gitignore". Verify with `git check-ignore -v <path>`.
+- `package.json.tmpl` files use `__TOKEN__` placeholders (double underscores), NOT `{{TOKEN}}` or `${TOKEN}` — the former survives shell/sed metachar quoting cleanly and the templates parse as valid JSON pre-substitution (so editors lint them). Wrapper template enumerates all 8 platform pkgs in `optionalDependencies` inline, pinned EXACTLY to `__VERSION__` (no `^`) — caret would let npm pick a newer platform pkg from a different release. Verify any template change with `sed ... | jq .` to catch trailing-comma / quoting drift before commit.
 
 ## golangci-lint Notes
 

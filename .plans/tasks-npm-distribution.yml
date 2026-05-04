@@ -48,14 +48,14 @@ tasks:
       in publish.sh — no Node toolchain at publish time. Wrapper template lists all 8 platform
       pkgs in `optionalDependencies` pinned to `__VERSION__` (never `^`). Platform template
       declares `os`, `cpu`, `bin`, `files`, `license: Apache-2.0`.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "Wrapper template at `distribution/npm/cli/package.json.tmpl` declares `name: @neo4j/cli`, `bin.neo4j-cli: bin/neo4j-cli.js`, all 8 optionalDependencies pinned to `__VERSION__`, `engines.node: >=18`, `license: Apache-2.0`"
       - "Platform template at `distribution/npm/cli-platform/package.json.tmpl` declares `name: @neo4j/cli-__OS__-__CPU__`, `os: [\"__OS__\"]`, `cpu: [\"__CPU__\"]`, `bin.neo4j-cli: bin/__BIN_NAME__`, `files: [\"bin/__BIN_NAME__\"]`, `license: Apache-2.0`"
       - "Both templates use `__TOKEN__` placeholders (not `{{TOKEN}}` or `${TOKEN}`) to avoid clashes with shell/sed metachars"
       - "Templates are valid JSON after a trivial sed substitution — verify with `sed ... | jq .`"
-    completed_at: null
+    completed_at: 2026-05-04T14:10:00Z
 
   - id: task-004
     title: "Implement distribution/npm/publish.sh with idempotency and dist-tag selection"
