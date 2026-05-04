@@ -311,3 +311,58 @@ Verification:
 - make fmt-check + make test — both clean
 
 Next Task: task-008 (maintainer-facing distribution/npm/README.md)
+
+================================================================================
+TASK-008: Write maintainer-facing distribution/npm/README.md
+Date: 2026-05-04T18:00:00Z
+================================================================================
+
+Summary:
+Created distribution/npm/README.md (196 lines, under the ≤200 cap) covering
+all 10 PRD REQ-F-028 sections: directory purpose, package shape (ASCII
+diagram + os/cpu mapping table), multi-package vs postinstall rationale,
+install resolution flow, dist-tag channels (table with example install
+commands), local dev/test flow, two-trigger release flow with ASCII pipeline
+diagram, failure recovery, adding a new platform (3-edit checklist), future
+channels (pip/brew). Cross-links to .goreleaser.yaml and release.yml /
+publish-npm.yml rather than duplicating their content.
+
+Files Changed:
+- distribution/npm/README.md (created — 196 lines, all 10 PRD sections)
+
+Key Decisions:
+- Two diagrams: package-shape ASCII (wrapper + 3 sample platform boxes with
+  os/cpu) AND release-flow ASCII (release.yml → publish-npm.yml two paths).
+  Both add navigational value; mapping table doubles as the canonical 8-row
+  reference even though platforms.tsv is the source of truth.
+- Initial draft was 235 lines; trimmed to 196 by collapsing verbose multi-line
+  bullet points into single-paragraph form and merging the "future follow-ups"
+  subsection into one paragraph at the end. No content lost — kept all 10
+  sections intact.
+- Linked to platforms.tsv as "single source of truth" but did NOT rebuild the
+  table from it programmatically — README is hand-maintained; reviewer
+  catches drift between TSV/wrapper template/shim SUPPORTED list/this README.
+- Cross-link style: relative paths from distribution/npm/README.md
+  (e.g. ../../.goreleaser.yaml) rather than absolute repo URLs; matches the
+  rest of the repo's intra-doc linking convention and works on the npm
+  package's GitHub view.
+- Did NOT add this README to .gitattributes LF pinning — .md files in the
+  repo aren't generally LF-pinned (only embedded skill bundle .md files
+  are, for byte-equal generate-check). This README has no byte-equal
+  consumer; standard text handling is fine.
+- Sections ordered to match the reading flow a maintainer needs: what →
+  shape → why → how it installs → channels → local test → release flow →
+  recovery → extending → future. Not strictly the PRD bullet order; the
+  PRD listed sections without prescribing sequence.
+
+Verification:
+- wc -l → 196 (≤200 cap met)
+- All 10 PRD sections cross-checked one-by-one
+- ASCII diagrams render correctly in fixed-width view
+- Cross-links resolve: ../platforms.tsv, ../../.goreleaser.yaml,
+  ../../.github/workflows/release.yml, ../../.github/workflows/publish-npm.yml,
+  ./cli/README.md, ./cli/package.json.tmpl, ./cli/bin/neo4j-cli.js
+- make fmt-check + make test — both clean (no Go changes)
+
+Next Task: task-009 (user-facing distribution/npm/cli/README.md, depends on
+task-002 and task-003)

@@ -147,7 +147,7 @@ tasks:
       local dev/test flow, two-trigger release flow, failure recovery, adding a new platform,
       future channels (pip/brew). Cross-links to `.goreleaser.yaml` and `release.yml` instead
       of duplicating their content. NOT shipped to npm — this is repo-internal documentation.
-    status: pending
+    status: completed
     dependencies:
       - task-004
       - task-006
@@ -158,7 +158,7 @@ tasks:
       - "Cross-links to `.goreleaser.yaml` and `.github/workflows/release.yml` rather than duplicating"
       - "Documents that adding a new platform = one row in `distribution/platforms.tsv` + matching GoReleaser output, no script edits"
       - "≤200 lines"
-    completed_at: null
+    completed_at: 2026-05-04T18:00:00Z
 
   - id: task-009
     title: "Write user-facing distribution/npm/cli/README.md (ships in tarball)"
