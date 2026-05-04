@@ -1,7 +1,7 @@
 GOPATH := $(shell go env GOPATH)
 GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
 
-.PHONY: build build-aura build-neo4j snapshot test lint fmt license-check run-aura run-neo4j clean changelog
+.PHONY: build build-aura build-neo4j snapshot test lint fmt license-check run-aura run-neo4j clean changelog generate generate-check
 
 ## build: build both aura-cli and neo4j-cli into bin/
 build: build-aura build-neo4j
@@ -55,3 +55,15 @@ clean:
 ## changelog: add a new changelog entry
 changelog:
 	changie new
+
+## generate: run all `go generate` directives (regenerates per-binary skill bundles)
+generate:
+	go generate ./...
+
+## generate-check: regenerate and fail if the working tree drifts (CI gate)
+generate-check: generate
+	@if ! git diff --exit-code; then \
+		echo ""; \
+		echo "ERROR: generated files are stale. Run 'make generate' and commit the result."; \
+		exit 1; \
+	fi

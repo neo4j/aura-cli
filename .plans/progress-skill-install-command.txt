@@ -305,3 +305,42 @@ Key Decisions:
   skill.md describes the very command being installed.
 
 Next Task: task-010
+
+================================================================================
+TASK-010: Add Makefile generate targets and CI workflow guard
+Date: 2026-05-04T18:00:00Z
+================================================================================
+
+Summary:
+Added `generate` and `generate-check` Makefile targets and wired
+`make generate-check` into the existing test.yml PR workflow as a new
+step between Build and Lint. `generate-check` runs `go generate ./...`
+then `git diff --exit-code`; on drift it prints a pointer to run
+`make generate` and exits non-zero. Confirmed clean-tree pass and
+stale-bundle fail by simulating a cobra-tree change in app.go's Short
+description without regenerating, then running generate-check (exit 2,
+diff shown, error message present).
+
+Files Changed:
+- Makefile (added generate + generate-check targets, updated .PHONY)
+- .github/workflows/test.yml (added Generate-check step in matrix)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- generate-check depends on generate (Makefile target ordering) — single
+  invocation runs both, no duplicate `go generate` call.
+- Used `git diff --exit-code` (not `--quiet`) so the failing CI log
+  shows exactly which generated files are stale; supplemented with a
+  human-readable trailing error message pointing to `make generate`.
+- New CI step has no `if:` guard — runs on all three matrix OSes
+  (ubuntu/windows/macos). Bourne-shell `if` and `git diff --exit-code`
+  both work under the GitHub Actions Windows runner (git-bash default).
+- Did NOT introduce a separate `generate-check` job — existing test job
+  already checks out, sets up Go, and runs build; running generate-check
+  there reuses the env and avoids cache duplication.
+- Drift verified by mutating Short string in app.go (real code change),
+  not by manually editing a bundle file — bundle edits are erased by
+  go generate, so they don't simulate the actual scenario the gate
+  guards against.
+
+Next Task: task-011

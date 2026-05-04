@@ -201,7 +201,7 @@ tasks:
       Wire `make generate-check` into the existing PR workflow under
       `.github/workflows/`. Document on a deliberately-skipped-generate
       branch that CI fails as expected.
-    status: pending
+    status: completed
     dependencies:
       - task-007
       - task-008
@@ -209,7 +209,7 @@ tasks:
       - "make generate regenerates both binaries' bundles"
       - "make generate-check passes on a clean tree, fails when bundle is stale"
       - "CI workflow runs make generate-check on PRs across the existing OS matrix"
-    completed_at: null
+    completed_at: 2026-05-04T18:00:00Z
 
   - id: task-011
     title: "Frontmatter, line-count, and coverage gate tests"

@@ -97,6 +97,8 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 
 - `license-check` target uses `$(GOPATH)/bin/addlicense` (not bare `addlicense`) — GOPATH/bin may not be on PATH
 - `license-check` requires a Unix shell (`find` + `xargs`); won't work natively on Windows
+- `make generate` runs `go generate ./...`; `make generate-check` runs generate then `git diff --exit-code` (CI gate). Wired in `.github/workflows/test.yml` between Build and Lint, runs on full OS matrix.
+- Drift sim: editing a bundle file directly to test generate-check is futile — `go generate` overwrites it. Mutate a real cobra-tree input (e.g. a Short string in `app.go`) to simulate stale-bundle detection.
 
 ## Changie Multi-Project Notes
 
