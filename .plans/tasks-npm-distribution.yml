@@ -89,14 +89,14 @@ tasks:
       block. Second, add an upload-artifact step at the end of the job that uploads `dist/` and a
       small `release-meta.json` (`{ version, include_neo4j }`) for the new `publish-npm.yml`
       workflow's `workflow_run` consumer to read.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "Release job's `outputs:` block exposes `include_neo4j` and `version` (the neo4j-cli version) for downstream workflow_run consumers"
       - "End of release job uploads `dist/` directory as a workflow artifact (e.g. via actions/upload-artifact)"
       - "End of release job also uploads `release-meta.json` containing `{ version: \"X.Y.Z\", include_neo4j: true|false }`"
       - "Existing release behavior unchanged — same trigger, same goreleaser invocation, same gh release creation; only outputs and artifact uploads added"
-    completed_at: null
+    completed_at: 2026-05-04T15:45:00Z
 
   - id: task-006
     title: "Create .github/workflows/publish-npm.yml with auto + manual triggers"

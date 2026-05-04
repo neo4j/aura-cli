@@ -155,3 +155,54 @@ Verification:
 - make test + make fmt-check both pass (no Go changes)
 
 Next Task: task-005 (release.yml outputs + dist artifact upload — independent of 004)
+
+================================================================================
+TASK-005: Modify release.yml to surface include_neo4j and upload dist artifacts
+Date: 2026-05-04T15:45:00Z
+================================================================================
+
+Summary:
+Surgical edit to .github/workflows/release.yml. Split the inline INCLUDE_NEO4J/
+INCLUDE_AURA detection out of the "Generate release notes" step into its own
+"Detect changed changelogs" step (id: changed) so its outputs can be wired to
+the job's new outputs: block (version + include_neo4j). Added three new gated
+steps at the end of the job: write release-meta.json (printf-built, valid JSON),
+upload dist/ artifact, upload release-meta artifact. All three gate on
+steps.changed.outputs.include_neo4j == 'true' so aura-cli-only release runs
+don't waste storage on artifacts that publish-npm.yml would skip anyway.
+
+Files Changed:
+- .github/workflows/release.yml (modified — added job outputs block, split
+  changelog-detection into its own step with id, added 3 trailing steps:
+  release-meta.json writer + 2 upload-artifact calls)
+
+Key Decisions:
+- Split detection into its own step rather than tacking GITHUB_OUTPUT writes
+  onto the existing release-notes step — keeps the step's purpose single and
+  the id (`changed`) short and clear. Release-notes step now reads back via
+  ${{ steps.changed.outputs.include_neo4j }} instead of recomputing.
+- Also surfaced include_aura as a step output (not a job output yet) — costs
+  nothing and lets a future aura-cli npm path reuse the same plumbing without
+  re-splitting again.
+- printf-based release-meta.json (not heredoc, not jq) — version and bool are
+  trivial values, jq install would be the only new dep, printf is in coreutils.
+  Verified output parses with `jq .`.
+- Pinned actions/upload-artifact to SHA ea165f8d65b6e75b540449e92b4886f43607fa02
+  (current v4 tip) with `# v4` comment to match repo's existing SHA-pin
+  convention (every other action in workflows/ is SHA-pinned).
+- if-no-files-found: error on both uploads — fail loud if dist/ is missing or
+  release-meta.json wasn't written; silent skip would only surface the bug
+  when publish-npm.yml runs and can't find the artifact.
+- retention-days: 7 — aligns with PRD REQ-NF-003 ("Retention: 7 days
+  (default fine)"). Also documents intent vs relying on org default.
+- Three steps gated on include_neo4j == 'true' — the job output itself stays
+  populated (false on aura-cli-only runs), so publish-npm.yml's workflow_run
+  consumer can still read it via the outputs block and skip its publish step.
+
+Verification:
+- python3 -c "yaml.safe_load(...)" → valid YAML
+- printf-built JSON parses with jq → valid
+- make test → all pass (cached, no Go changes)
+- make fmt-check → clean (no Go drift)
+
+Next Task: task-006 (publish-npm.yml workflow — depends on 004 and 005)
