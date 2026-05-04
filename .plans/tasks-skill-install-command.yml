@@ -221,7 +221,7 @@ tasks:
       install time, not generation), and `wc -l` ≤500. Runs across both
       committed binaries automatically. Gate makes sure new binaries can't
       land an oversize SKILL.md.
-    status: pending
+    status: completed
     dependencies:
       - task-007
       - task-008
@@ -229,7 +229,7 @@ tasks:
       - "Test iterates all committed bundles via filepath.Walk and asserts the rules"
       - "Failing assertions identify the offending binary and rule"
       - "Test runs on ubuntu, windows, macos in CI"
-    completed_at: null
+    completed_at: 2026-05-04T18:30:00Z
 
   - id: task-012
     title: "Update README.md with Agent skills section"

@@ -344,3 +344,43 @@ Key Decisions:
   guards against.
 
 Next Task: task-011
+
+================================================================================
+TASK-011: Frontmatter, line-count, and coverage gate tests
+Date: 2026-05-04T18:30:00Z
+================================================================================
+
+Summary:
+Added common/skill/bundles_test.go that walks the repo from runtime.Caller(0),
+discovers every <bin>/internal/skill/bundle/SKILL.md, and asserts the four
+Anthropic skill rules per the PRD: name ≤64 chars + [a-z0-9-]+ charset,
+description non-empty + ≤1024 chars, on-disk version line equals literal
+{{VERSION}} (substitution at install time, not generation), and SKILL.md body
+≤500 lines. Each bundle runs as a sub-test (t.Run(rel,...)) so failure messages
+identify the offending bundle path and rule. Walk-based discovery means new
+binaries get covered without test edits. Verified the failure path by injecting
+a stale `version: 1.0.0` into one bundle — failure output named the file and
+the rule clearly.
+
+Files Changed:
+- common/skill/bundles_test.go (created — package skill_test, license header)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- Filed in common/skill/ as a black-box `package skill_test` — the test only
+  reads file contents, no need to share unexported helpers with the package.
+- Walk prunes .git/node_modules/bin/.changes for speed; the suffix match is
+  done after filepath.ToSlash so Windows runs match the same way.
+- Wrote a tiny inline frontmatter parser (single-line `key: value` between
+  --- fences) instead of pulling in a YAML lib. Matches the generator's
+  output shape exactly and keeps the test stdlib-only.
+- Line-count rule includes a trailing line without terminator (rare but
+  possible) so the assertion is strict-ceiling correct.
+- The `name` regex is the literal Anthropic rule `^[a-z0-9-]+$` (no leading
+  hyphen restriction beyond charset). PRD wording leaves length=0 implicit;
+  added an explicit NotEmpty assert to catch a degenerate generator bug.
+- Did NOT add a `name` length floor or a description charset — PRD only
+  specifies the listed constraints. Over-asserting would make future
+  binary additions noisy without buying real safety.
+
+Next Task: task-012
