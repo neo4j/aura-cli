@@ -131,3 +131,47 @@ Key Decisions:
 - Coverage of common/skill: 88.6% (above 80% gate).
 
 Next Task: task-006
+
+================================================================================
+TASK-006: Implement common/skill/command.go cobra wrapper + tests
+Date: 2026-05-04T15:30:00Z
+================================================================================
+
+Summary:
+Added `skill.NewCmd(cfg, bundle, skillName)` returning a parent cobra
+command with install/remove/list/check leaves. Each leaf delegates to the
+installer (task-005) and renders results as a go-pretty table by default
+or JSON when `--output json` is passed. `--output` is wired as a
+persistent flag and validated in PersistentPreRunE against
+`clicfg.ValidOutputValues`, matching the pattern in
+neo4j-cli/aura/internal/subcommands/tenant/tenant.go. Sentinel errors
+from the installer (`ErrUnknownAgent`, `ErrAgentNotDetected`,
+`ErrNoAgentsDetected`) are translated to user-facing usage errors that
+include the catalog of valid agent names. Tests use a small fixture
+helper that spins up clicfg.NewConfig over an afero.MemMapFs and pre-
+populates agent detect dirs; assertions cover both table and JSON paths
+for every subcommand plus error paths.
+
+Files Changed:
+- common/skill/command.go (created)
+- common/skill/command_test.go (created)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- Persistent `--output` flag at the `skill` parent (same pattern as
+  tenant/dataapi groups) instead of per-leaf — keeps a single bind point.
+- Reused `clierr.NewUsageError` for friendly error wrapping; matches what
+  tenant.NewCmd does when an invalid output value is supplied.
+- Drift on `check` returns a non-nil RunE error so cobra exits non-zero,
+  but the table/JSON is still rendered first (the user sees both the
+  rows and the failure).
+- Renderers emit a JSON array (not envelope-with-status) — matches the
+  existing aura output package which serializes `ResponseData` directly.
+- Helper `agentNames()` and `formatAgentErr()` keep error formatting in
+  one place; tests assert "valid agents:" appears in the unknown-agent
+  message.
+- go-pretty upper-cases header text — tests check `strings.ToLower(out)`
+  for header presence.
+- Coverage of common/skill: 90.1% (above 80% gate).
+
+Next Task: task-007

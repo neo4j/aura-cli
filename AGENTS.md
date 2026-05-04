@@ -141,11 +141,14 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `common/skill/render.Bundle(root, opts)` returns `map[string][]byte` keyed with forward-slash paths (`SKILL.md`, `references/<sub>.md`). Uses `LocalFlags()` (not `Flags()`) when rendering subcommand flag tables to avoid duplicating root persistent flags shown in SKILL.md "Global Flags". Sorts subcommands + flag rows for byte-determinism. TOC inserted only when reference body >100 lines, between the H1 and the rest of the body.
 - Render golden-file tests use a `-update` flag (`go test ./common/skill/render -update`) to regenerate `testdata/`. The gate runs without it; pass `-update` only when the renderer's output legitimately changes.
 - `common/skill/installer.go` Install/Remove/List/Check: typed sentinel errors (`ErrNoAgentsDetected`, `ErrUnknownAgent`, `ErrAgentNotDetected`) for command-layer assertions. `{{VERSION}}` substituted in SKILL.md only — references stay verbatim. Install RemoveDir's the dst before copy so reinstall doesn't leave stale references. Check returns rows only for installed agents; drift=true also fires on `unknown-version` (frontmatter missing/unparseable). Frontmatter parsed via `regexp` — no YAML dep.
+- `common/skill/command.go::NewCmd(cfg, bundle, skillName)` parent `skill` cobra command. Persistent `--output` flag at the parent (mirrors `tenant.NewCmd`), validated + bound in `PersistentPreRunE` via `cfg.Aura.BindOutput`. Installer sentinel errors are wrapped via `clierr.NewUsageError` with the valid-agent list before returning to cobra. Drift on `check` renders the table/JSON THEN returns a non-nil RunE error so the user still sees the rows. JSON output is a plain array (matches `output.PrintBodyMap` posture — serialize the data directly, no envelope wrapper).
 
 ## Hermetic Test Notes
 
 - For path-expansion tests using `~` / `$XDG_CONFIG_HOME`, use `t.Setenv("HOME", "...")` and `t.Setenv("XDG_CONFIG_HOME", "")` — Go's `os.Getenv` returns "" for both unset and set-to-empty, and `t.Setenv` auto-restores after the test.
 - Use `afero.DirExists` (not `Exists`) for "is the agent installed?" checks — files at the marker path shouldn't count as detected.
+- `go-pretty/v6/table` upper-cases header text by default — assertions on table output should compare against `strings.ToLower(...)` for header columns, exact case for body cells.
+- Lightweight cobra command tests can wire `clicfg.NewConfig(testfs.GetTestFs(...), version)` directly without the heavier `testutils.NewAuraTestHelper` — the latter pulls in API mocking and credential setup that `skill` doesn't need.
 
 ## golangci-lint Notes
 
