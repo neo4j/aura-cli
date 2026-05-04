@@ -317,3 +317,68 @@ tasks:
       - "PRD gets a new REQ-F-017 documenting the auto-rewrite"
       - "`make test`, `make fmt-check`, `make build`, `make license-check`, `make generate-check` all pass"
     completed_at: 2026-05-04T22:00:00Z
+
+  - id: task-015
+    title: "Rewrite *.neo4j.io (Aura) hosts to https://host (no port, defaults to 443)"
+    description: |
+      Refines task-014's `normalizeURI`. Aura URLs always end in `.neo4j.io` and always serve HTTPS on port 443. Today the rewrite mishandles a few Aura-shaped inputs (e.g. `bolt://abc.databases.neo4j.io:7687` → `http://abc.databases.neo4j.io:7474`, which fails). The fix: detect the Aura host suffix BEFORE the generic scheme/port mapping and force `https://<host>` with NO port.
+
+      **Rule** (apply in `neo4j-cli/query/uri.go::normalizeURI` after the bolt-family scheme check, before the generic port mapping):
+
+      - If the parsed URL's host (without port) ends in `.neo4j.io` (case-insensitive), AND the scheme is in the bolt family (`bolt`, `bolt+s`, `bolt+ssc`, `neo4j`, `neo4j+s`, `neo4j+ssc`):
+        - Set scheme to `https`.
+        - Drop the port (so `url.URL.Host` becomes just the hostname; `String()` will omit it and downstream HTTP defaults to 443).
+        - Preserve path, query, userinfo, fragment.
+        - `didRewrite = true` (the notice still fires).
+
+      - Apex `neo4j.io` (no subdomain) is unlikely in practice but should match too — use a suffix test like `host == "neo4j.io" || strings.HasSuffix(host, ".neo4j.io")`. Case-insensitive (Aura URLs are lowercase but defensive lowercasing costs nothing).
+
+      - Already-`https://` Aura URLs (`https://abc.databases.neo4j.io`) still pass through untouched (they don't enter the bolt-family branch). No change needed there.
+
+      **Cases to verify** (extend `TestNormalizeURI`):
+
+      | Input | Expected rewrite |
+      |---|---|
+      | `bolt://abc.databases.neo4j.io` | `https://abc.databases.neo4j.io` (force https, no port) |
+      | `bolt://abc.databases.neo4j.io:7687` | `https://abc.databases.neo4j.io` (force https, drop bolt port) |
+      | `neo4j://abc.databases.neo4j.io` | `https://abc.databases.neo4j.io` (no port) |
+      | `neo4j://abc.databases.neo4j.io:7687` | `https://abc.databases.neo4j.io` (drop bolt port) |
+      | `neo4j+s://abc.databases.neo4j.io` | `https://abc.databases.neo4j.io` (no port) — already passes today, keep it green |
+      | `neo4j+s://abc.databases.neo4j.io:7687` | `https://abc.databases.neo4j.io` (drop bolt port) |
+      | `bolt+s://abc.databases.neo4j.io:7687` | `https://abc.databases.neo4j.io` |
+      | `bolt+ssc://abc.databases.neo4j.io:7687` | `https://abc.databases.neo4j.io` |
+      | `https://abc.databases.neo4j.io` | passthrough, no notice (already-correct form) |
+      | `bolt://NEO4J.IO` (apex, uppercase) | `https://NEO4J.IO` (case-insensitive suffix match; original case preserved on output) |
+      | `bolt://abc.databases.neo4j.io.evil.com` | NOT matched (must be the suffix, not anywhere) — falls through to the generic 7687→7474 rule |
+      | `bolt://abc.databases.neo4j.io:9999` | `https://abc.databases.neo4j.io` (Aura is always 443 — even a custom-looking port gets dropped, since `*.neo4j.io` IS Aura) |
+      | `bolt://abc.databases.neo4j.io/path?q=1` | `https://abc.databases.neo4j.io/path?q=1` (path/query preserved) |
+      | `bolt://user:pass@abc.databases.neo4j.io:7687` | `https://user:pass@abc.databases.neo4j.io` (userinfo preserved on rewrite; notice's `displayOrig` masks pw via `Redacted()`) |
+
+      **Doc / skill / PRD updates**:
+
+      - Update the `--uri` help string to mention the Aura special case. Suggested: `Bolt URIs (bolt://, neo4j://, neo4j+s://) are auto-rewritten to http(s)://. Aura hosts (*.neo4j.io) are always rewritten to https://<host> (port 443).`
+      - Add a one-line bullet to `neo4j-cli/internal/skill/additions.md` describing the Aura rewrite (or extend the existing bolt-rewrite bullet).
+      - Update PRD REQ-F-017 to document the Aura host special case.
+      - Run `make generate` to regenerate the skill bundle.
+
+      **No changelog entry** — feature still unreleased on the feature branch.
+
+      **Edge case to NOT handle** (out of scope): `console.neo4j.io`, `customers.neo4j.io`, etc. — non-Aura subdomains. The rule is "if it ends in `.neo4j.io` AND the user is using a bolt-family scheme, treat it as Aura". A user typing `bolt://console.neo4j.io` is misusing the tool anyway; rewriting to `https://console.neo4j.io` is no worse than failing. Don't try to enumerate Aura's actual subdomain prefixes.
+    status: pending
+    dependencies:
+      - task-014
+    acceptance_criteria:
+      - "`bolt://abc.databases.neo4j.io:7687` rewrites to `https://abc.databases.neo4j.io` (force https, drop port)"
+      - "`neo4j://abc.databases.neo4j.io:7687` rewrites to `https://abc.databases.neo4j.io` (drop port)"
+      - "`neo4j+s://abc.databases.neo4j.io` (no port) still rewrites to `https://abc.databases.neo4j.io` (regression check; was already correct)"
+      - "Even a custom port on an Aura host is dropped: `bolt://abc.databases.neo4j.io:9999` → `https://abc.databases.neo4j.io`"
+      - "Path, query, and userinfo are preserved across the Aura rewrite"
+      - "Suffix matching is case-insensitive (`bolt://NEO4J.IO` matches) but does NOT match `*.neo4j.io.evil.com`"
+      - "Already-`https://` Aura URLs pass through unchanged with no notice"
+      - "`TestNormalizeURI` is extended with all the cases listed in the task description"
+      - "`--uri` help text mentions the Aura special case"
+      - "`neo4j-cli/internal/skill/additions.md` describes the Aura rewrite (extending the existing bolt bullet is fine)"
+      - "PRD REQ-F-017 documents the Aura host rule"
+      - "`make generate-check` is clean after `make generate`"
+      - "`make test`, `make fmt-check`, `make build`, `make license-check` all pass"
+    completed_at: null
