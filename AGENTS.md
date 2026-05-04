@@ -173,6 +173,12 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Lightweight cobra command tests can wire `clicfg.NewConfig(testfs.GetTestFs(...), version)` directly without the heavier `testutils.NewAuraTestHelper` — the latter pulls in API mocking and credential setup that `skill` doesn't need.
 - For repo-wide gate tests that must auto-discover content (e.g. `common/skill/bundles_test.go` walking every `<bin>/internal/skill/bundle/SKILL.md`), resolve repo root via `runtime.Caller(0)` then `filepath.Walk` from there. Suffix-match paths after `filepath.ToSlash` so Windows runs match. Prune `.git`, `node_modules`, `bin`, `.changes` to keep the walk fast.
 
+## Windows CI Gotchas
+
+- Path-separator bugs in `expandPath`-style helpers are Windows-only. Catalog entries keep forward slashes (portable convention); helpers MUST wrap any post-substitution path through `filepath.FromSlash` (or build via `filepath.Join`) so the whole path is OS-native. A `ReplaceAll(path, "$XDG_CONFIG_HOME", xdg)` where `xdg` came from `os.Getenv` produces mixed separators on Windows (`C:\…\.config/opencode`) — fix at the helper, not the catalog.
+- Test expected values that hard-code separators bake in OS assumptions. Build expected values with `filepath.Join` / `filepath.FromSlash` rather than literals when asserting cross-OS path output. MemMapFs marker paths in detection tests must also be built OS-natively so they match what the (post-fix) helper looks up.
+- Committed `.md` / golden / bundle files MUST be pinned to LF via `.gitattributes` — Windows runners have `core.autocrlf=true` by default and will rewrite to CRLF on checkout. The renderer (`common/skill/render`) and `make generate-check` both assume LF; a CRLF checkout breaks byte-equal golden tests AND `git diff --exit-code`. The repo-root `.gitattributes` covers `common/skill/render/testdata/**`, `**/internal/skill/bundle/**`, `**/internal/skill/additions.md`, `**/internal/skill/description.txt`. `common/skill/bundles_test.go::TestCommittedBundlesAndTestdataAreLF` is the assertion that catches a weakened/removed attribute.
+
 ## golangci-lint Notes
 
 - Version installed: v2.11.4 (via Homebrew)

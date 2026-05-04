@@ -572,3 +572,69 @@ Key Decisions:
   used an inline interface that wouldn't compile.
 
 Next Task: none — feature complete (real-world bug fixed)
+
+================================================================================
+TASK-017: Fix Windows CI failures (path separators + CRLF golden files)
+Date: 2026-05-04T21:15:00Z
+================================================================================
+
+Summary:
+Two Windows-only CI failures from PR #12 (run 25311172924). Root causes
+diagnosed and fixed:
+
+1. expandPath produced mixed separators (`C:\…\.config/opencode`) on Windows
+   for OpenCode's `$XDG_CONFIG_HOME/...` catalog entry — `xdg` resolves to
+   backslashes, but the catalog's portable forward slashes survived the
+   ReplaceAll. Fix: wrap the substitution result in `filepath.FromSlash` so
+   the whole path is OS-native. Catalog stays portable (forward slashes).
+
+2. Golden `.md` files in `testdata/` and committed
+   `<bin>/internal/skill/bundle/**` were checked out as CRLF on Windows
+   (default `core.autocrlf=true` on windows-latest runners), but the
+   renderer always emits LF. Byte-equal compare and `git diff --exit-code`
+   failed. Fix: top-level `.gitattributes` pinning LF for the four byte-
+   compared path patterns (testdata, bundle/, additions.md, description.txt
+   under any internal/skill/). `git add --renormalize .` produced no
+   surprise changes (files were already LF on this macOS checkout).
+
+Regression guards:
+- New `TestExpandPathOpenCodeMixedSlashIsOSNative` + table-driven case
+  "OpenCode-style mixed-slash input is normalised to OS-native". Vacuous on
+  Unix (os.PathSeparator='/' makes the NotContains assertion trivially
+  true), Windows-effective.
+- Existing TestExpandPath cases that hard-coded forward-slash expected
+  values pivoted to `filepath.FromSlash` / `filepath.Join` so they're
+  portable now.
+- TestDetectAgents and TestDetectAgentsIgnoresFile updated to write marker
+  paths via `filepath.Join` / `filepath.FromSlash` — needed because the
+  expandPath fix means MemMapFs lookups now hit OS-native keys on Windows.
+- New `TestCommittedBundlesAndTestdataAreLF` walks all 19 guarded files
+  and asserts no `\r\n` content. Catches the case where `.gitattributes`
+  is removed or weakened.
+
+Files Changed:
+- common/skill/agents.go (filepath.FromSlash on XDG substitution)
+- common/skill/agents_test.go (new dedicated test, table case, OS-portable
+  assertions in DetectAgents tests)
+- common/skill/bundles_test.go (CRLF guard test + findLFGuardedFiles
+  helper)
+- .gitattributes (new — LF pin for testdata/bundle/additions/description)
+- AGENTS.md (added Windows CRLF + path-separator gotcha note)
+- .plans/tasks-skill-install-command.yml (status=completed)
+
+Key Decisions:
+- Cannot make path-separator regression test fail on Linux — the bug is
+  inherently Windows-only because `\` isn't a Unix separator. The test is
+  Windows-effective via the `os.PathSeparator != '/'` gate; on Linux the
+  table case still locks the contract that mixed-slash → OS-native.
+- `.gitattributes` patterns are narrow (4 patterns), don't touch `.go` /
+  `.yml` / docs. Verified via `git add --renormalize .` showing zero
+  unexpected changes.
+- Did NOT relax the macOS / Linux assertion — those continue to expect
+  forward-slash output (which is OS-native there). Same source code
+  produces correct output on every OS.
+- Coverage gate: did not measure (no Go-level changes that would lower
+  coverage; both new tests are pure additions).
+
+Next Task: none — all task-017 acceptance criteria satisfied. Awaiting CI
+re-run on PR #12 to confirm Windows green.

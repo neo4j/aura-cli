@@ -77,6 +77,70 @@ func TestCommittedBundlesObeyAnthropicSkillRules(t *testing.T) {
 	}
 }
 
+// TestCommittedBundlesAndTestdataAreLF asserts no committed
+// `<bin>/internal/skill/bundle/**`, `<bin>/internal/skill/additions.md`,
+// `<bin>/internal/skill/description.txt`, or
+// `common/skill/render/testdata/**` file contains a `\r\n` line ending.
+//
+// `.gitattributes` at the repo root pins these paths to `eol=lf` so a
+// Windows checkout (with the default `autocrlf=true`) doesn't silently
+// flip them to CRLF — which would break byte-equal golden-file tests
+// (the renderer always emits LF) and produce spurious `git diff` output
+// from `make generate-check`. This test catches the case where the
+// `.gitattributes` rule is removed or weakened.
+func TestCommittedBundlesAndTestdataAreLF(t *testing.T) {
+	repoRoot := repoRoot(t)
+	files := findLFGuardedFiles(t, repoRoot)
+	require.NotEmpty(t, files,
+		"expected at least one bundle/testdata/additions/description file under the repo")
+
+	for _, path := range files {
+		path := path
+		rel, _ := filepath.Rel(repoRoot, path)
+		t.Run(rel, func(t *testing.T) {
+			data, err := os.ReadFile(path)
+			require.NoErrorf(t, err, "%s: read", rel)
+			assert.NotContainsf(t, string(data), "\r\n",
+				"%s: contains CRLF line endings — `.gitattributes` should pin this path to `eol=lf` (renderer + golden-file tests assume LF)",
+				rel)
+		})
+	}
+}
+
+// findLFGuardedFiles walks the repo and returns every file whose path
+// matches one of the four `.gitattributes` LF-pinned patterns:
+//   - `common/skill/render/testdata/**`
+//   - `**/internal/skill/bundle/**`
+//   - `**/internal/skill/additions.md`
+//   - `**/internal/skill/description.txt`
+func findLFGuardedFiles(t *testing.T, repoRoot string) []string {
+	t.Helper()
+	var out []string
+	err := filepath.Walk(repoRoot, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			base := info.Name()
+			if base == ".git" || base == "node_modules" || base == "bin" || base == ".changes" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		slash := filepath.ToSlash(path)
+		switch {
+		case strings.Contains(slash, "/common/skill/render/testdata/"),
+			strings.Contains(slash, "/internal/skill/bundle/"),
+			strings.HasSuffix(slash, "/internal/skill/additions.md"),
+			strings.HasSuffix(slash, "/internal/skill/description.txt"):
+			out = append(out, path)
+		}
+		return nil
+	})
+	require.NoError(t, err)
+	return out
+}
+
 // repoRoot returns the absolute path to the repository root, resolved via
 // runtime.Caller(0). This file lives at <repo>/common/skill/bundles_test.go,
 // so two parent jumps from its directory land at the repo root. Mirrors the

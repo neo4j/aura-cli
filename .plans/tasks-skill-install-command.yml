@@ -346,6 +346,7 @@ tasks:
 
   - id: task-017
     title: "Fix Windows CI failures (path separators + CRLF golden files)"
+    status: completed
     description: |
       Two Windows-only failures surfaced on the PR #12 CI run
       (https://github.com/neo4j-labs/neo4j-cli/actions/runs/25311172924):
@@ -387,7 +388,6 @@ tasks:
       bundles_test.go) that no committed testdata/bundle file contains
       `\r\n` — `.gitattributes` is the primary defence; the assertion
       catches the case where someone removes or weakens the attribute.
-    status: pending
     dependencies:
       - task-016
     acceptance_criteria:
@@ -398,4 +398,4 @@ tasks:
       - "make generate-check is green on Windows (no spurious CRLF/LF diffs)"
       - "make build / make test green on the full ubuntu/windows/macos matrix in PR #12 CI"
       - "No regression on ubuntu/macos coverage or test counts"
-    completed_at: null
+    completed_at: 2026-05-04T21:15:00Z

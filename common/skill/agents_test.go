@@ -4,6 +4,7 @@
 package skill
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -76,7 +77,11 @@ func TestExpandPath(t *testing.T) {
 			path:   "$XDG_CONFIG_HOME/opencode",
 			home:   "/home/alice",
 			xdg:    "/home/alice/xdg",
-			want:   "/home/alice/xdg/opencode",
+			// Result is OS-native: forward slashes on Unix, backslashes on
+			// Windows. expandPath runs the substitution through
+			// filepath.FromSlash so the catalog's portable forward-slash
+			// path doesn't produce mixed separators on Windows.
+			want:   filepath.FromSlash("/home/alice/xdg/opencode"),
 			wantOk: true,
 		},
 		{
@@ -102,6 +107,21 @@ func TestExpandPath(t *testing.T) {
 			home:     "",
 			xdgUnset: true,
 			wantOk:   false,
+		},
+		{
+			// Regression for the Windows CI failure: the OpenCode catalog
+			// entry uses forward slashes, but on Windows xdg resolves to
+			// `C:\…\.config` (backslashes). Without filepath.FromSlash the
+			// substitution would yield mixed separators
+			// (`C:\…\.config/opencode`). Build `xdg` with the OS separator
+			// so the test exercises the same shape on every OS, then assert
+			// the result contains zero forward slashes on Windows.
+			name:   "OpenCode-style mixed-slash input is normalised to OS-native",
+			path:   "$XDG_CONFIG_HOME/opencode/skills",
+			home:   "/home/alice",
+			xdg:    filepath.Join(string(filepath.Separator)+"some", "native", "config"),
+			want:   filepath.Join(string(filepath.Separator)+"some", "native", "config", "opencode", "skills"),
+			wantOk: true,
 		},
 		{
 			name:   "absolute path unchanged",
@@ -139,6 +159,34 @@ func TestExpandPath(t *testing.T) {
 	}
 }
 
+// TestExpandPathOpenCodeMixedSlashIsOSNative is an explicit regression
+// guard for the Windows CI failure where `expandPath` produced mixed
+// separators (`C:\…\.config/opencode`) for OpenCode's catalog entry.
+// The catalog entry uses forward slashes (portable convention) but the
+// substituted XDG value can be OS-native (backslashes on Windows). Fix:
+// run the result through `filepath.FromSlash` so the entire path uses
+// the OS separator. On Unix this is a no-op (forward slashes are
+// native); on Windows it ensures backslash-only output.
+func TestExpandPathOpenCodeMixedSlashIsOSNative(t *testing.T) {
+	t.Setenv("HOME", filepath.FromSlash("/home/alice"))
+	// Force the OS-native form so the post-substitution path inherits
+	// the OS separator.
+	t.Setenv("XDG_CONFIG_HOME", filepath.FromSlash("/home/alice/.config"))
+
+	got, ok := expandPath("$XDG_CONFIG_HOME/opencode/skills")
+	require.True(t, ok)
+
+	want := filepath.Join(filepath.FromSlash("/home/alice/.config"), "opencode", "skills")
+	assert.Equal(t, want, got)
+
+	// On Windows os.PathSeparator is `\`, so the result must contain no
+	// `/`. On Unix os.PathSeparator is `/` and this assertion is vacuous.
+	if os.PathSeparator != '/' {
+		assert.NotContains(t, got, "/",
+			"expandPath produced mixed separators (%q) — must run substitution through filepath.FromSlash", got)
+	}
+}
+
 func TestFindAgent(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -170,9 +218,12 @@ func TestDetectAgents(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "/home/alice/xdg")
 
 	fs := afero.NewMemMapFs()
-	// Fake two agent install markers.
-	require.NoError(t, fs.MkdirAll("/home/alice/.claude", 0755))
-	require.NoError(t, fs.MkdirAll("/home/alice/xdg/opencode", 0755))
+	// Fake two agent install markers. Build the marker paths the same
+	// way expandPath does so MemMapFs lookups match on every OS — XDG
+	// substitution runs through filepath.FromSlash so the path is
+	// OS-native.
+	require.NoError(t, fs.MkdirAll(filepath.Join("/home/alice", ".claude"), 0755))
+	require.NoError(t, fs.MkdirAll(filepath.FromSlash("/home/alice/xdg/opencode"), 0755))
 
 	got := DetectAgents(fs)
 	require.Len(t, got, 2)
@@ -206,7 +257,7 @@ func TestDetectAgentsIgnoresFile(t *testing.T) {
 	// detected.
 	t.Setenv("HOME", "/home/alice")
 	fs := afero.NewMemMapFs()
-	require.NoError(t, afero.WriteFile(fs, "/home/alice/.claude", []byte("not a dir"), 0644))
+	require.NoError(t, afero.WriteFile(fs, filepath.Join("/home/alice", ".claude"), []byte("not a dir"), 0644))
 
 	got := DetectAgents(fs)
 	assert.Empty(t, got)

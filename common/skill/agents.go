@@ -117,7 +117,12 @@ func expandPath(path string) (string, bool) {
 			}
 			xdg = filepath.Join(home, ".config")
 		}
-		return strings.ReplaceAll(path, "$XDG_CONFIG_HOME", xdg), true
+		// Catalog entries keep forward slashes (portable convention) but
+		// `xdg` may already contain OS-native separators (e.g. `C:\…\.config`
+		// on Windows). Run the substitution through filepath.FromSlash so
+		// the whole result uses the OS separator — otherwise mixing yields
+		// `C:\…\.config/opencode` on Windows.
+		return filepath.FromSlash(strings.ReplaceAll(path, "$XDG_CONFIG_HOME", xdg)), true
 	}
 	return path, true
 }
