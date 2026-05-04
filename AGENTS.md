@@ -140,6 +140,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `common/skill/filesystem.go::CopyBundle(dst, dstDir, bundle fs.FS)` walks `bundle` (already scoped — generators do `fs.Sub(Bundle, "bundle")` upstream). Uses `filepath.FromSlash` on each entry so embed.FS forward slashes translate to OS separators on Windows.
 - `common/skill/render.Bundle(root, opts)` returns `map[string][]byte` keyed with forward-slash paths (`SKILL.md`, `references/<sub>.md`). Uses `LocalFlags()` (not `Flags()`) when rendering subcommand flag tables to avoid duplicating root persistent flags shown in SKILL.md "Global Flags". Sorts subcommands + flag rows for byte-determinism. TOC inserted only when reference body >100 lines, between the H1 and the rest of the body.
 - Render golden-file tests use a `-update` flag (`go test ./common/skill/render -update`) to regenerate `testdata/`. The gate runs without it; pass `-update` only when the renderer's output legitimately changes.
+- `common/skill/installer.go` Install/Remove/List/Check: typed sentinel errors (`ErrNoAgentsDetected`, `ErrUnknownAgent`, `ErrAgentNotDetected`) for command-layer assertions. `{{VERSION}}` substituted in SKILL.md only — references stay verbatim. Install RemoveDir's the dst before copy so reinstall doesn't leave stale references. Check returns rows only for installed agents; drift=true also fires on `unknown-version` (frontmatter missing/unparseable). Frontmatter parsed via `regexp` — no YAML dep.
 
 ## Hermetic Test Notes
 

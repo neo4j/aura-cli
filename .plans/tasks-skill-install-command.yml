@@ -99,7 +99,7 @@ tasks:
       regex-parses the `version:` line in each installed SKILL.md and
       compares to the running binary version. Add table-driven
       installer_test.go covering all REQ-T-003 cases on afero.NewMemMapFs.
-    status: pending
+    status: completed
     dependencies:
       - task-002
       - task-003
@@ -110,7 +110,7 @@ tasks:
       - "Remove on uninstalled is a no-op (no error)"
       - "Check exits non-zero (returns drift) when installed version differs from runtime"
       - "Coverage of installer.go ≥80%"
-    completed_at: null
+    completed_at: 2026-05-04T14:45:00Z
 
   - id: task-006
     title: "Implement common/skill/command.go cobra wrapper + tests"

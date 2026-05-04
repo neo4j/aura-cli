@@ -90,3 +90,44 @@ Key Decisions:
 - Coverage of render package: 97.1% (well above 80% gate).
 
 Next Task: task-005
+
+================================================================================
+TASK-005: Implement common/skill/installer.go (Install/Remove/List/Check)
+Date: 2026-05-04T14:45:00Z
+================================================================================
+
+Summary:
+Added installer with four operations on afero.Fs + io/fs.FS bundle: Install
+(substitutes {{VERSION}} in SKILL.md only, references verbatim, cleans dst
+before copy so reinstall removes stale references), Remove (idempotent),
+List (one row per AGENTS entry — Detected/Installed/InstalledVersion),
+Check (filters to installed agents, returns drift bool). Typed sentinel
+errors: ErrNoAgentsDetected, ErrUnknownAgent, ErrAgentNotDetected.
+Frontmatter `version:` parsed via single-line regex (no YAML dep).
+Hermetic table-driven tests on afero.MemMapFs cover every REQ-T-003 case.
+
+Files Changed:
+- common/skill/installer.go (created)
+- common/skill/installer_test.go (created)
+- common/skill/filesystem.go (gofmt: dropped trailing blank line)
+
+Key Decisions:
+- versionPlaceholder is duplicated in installer.go (not imported from
+  render) — render is a child of skill and importing back would require
+  inverting the package layering. The string is a public-ish contract;
+  drift between the two is caught by render's golden tests + installer's
+  TestSubstituteVersion.
+- Install always RemoveDir's the destination before CopyBundle. Otherwise
+  removing a reference upstream and reinstalling would leave a stale file
+  behind. Tested with TestInstallOverwritesExisting.
+- Substitution scoped to SKILL.md only (matches PRD REQ-F-005). References
+  with literal `{{VERSION}}` survive — guarded by an explicit assertion.
+- Check returns rows ONLY for installed agents; uninstalled agents are
+  silent. drift=true also fires on "unknown-version" (frontmatter missing
+  or unparseable) — failing-loudly is safer than silent-pass for a check
+  command.
+- Used afero.WriteFile directly (mode 0600) instead of fileutils.WriteFile
+  to surface errors instead of panicking, matching task-003's CopyBundle.
+- Coverage of common/skill: 88.6% (above 80% gate).
+
+Next Task: task-006

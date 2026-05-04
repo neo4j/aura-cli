@@ -74,4 +74,3 @@ func RemoveDir(filesystem afero.Fs, dir string) error {
 	}
 	return err
 }
-
