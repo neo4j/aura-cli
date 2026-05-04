@@ -83,12 +83,12 @@ func runQuery(cmd *cobra.Command, args []string, cfg *clicfg.Config) error {
 	maxRows, _ := cmd.Flags().GetInt("max-rows")
 	values, truncated := capRows(values, maxRows)
 	if truncated {
-		fmt.Fprintf(cmd.ErrOrStderr(),
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(),
 			"warning: truncated to %d rows (use --max-rows 0 for unlimited)\n",
 			len(values))
 	}
 	if arraysTruncated > 0 && truncOver > 0 {
-		fmt.Fprintf(cmd.ErrOrStderr(),
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(),
 			"warning: truncated %d arrays larger than %d items (use --truncate-arrays-over 0 to disable)\n",
 			arraysTruncated, truncOver)
 	}
@@ -132,11 +132,11 @@ func promptPassword(cmd *cobra.Command) (string, error) {
 		return "", clierr.NewUsageError(
 			"password is required: set --password, NEO4J_PASSWORD, or add it to a .env file")
 	}
-	fmt.Fprint(cmd.ErrOrStderr(), "Password: ")
+	_, _ = fmt.Fprint(cmd.ErrOrStderr(), "Password: ")
 	pw, err := passwordReader()
 	// Always print a newline after the (echo-less) prompt so subsequent output
 	// starts on its own line.
-	fmt.Fprintln(cmd.ErrOrStderr())
+	_, _ = fmt.Fprintln(cmd.ErrOrStderr())
 	if err != nil {
 		return "", fmt.Errorf("query: read password: %w", err)
 	}

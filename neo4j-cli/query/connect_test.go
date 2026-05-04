@@ -5,7 +5,6 @@ package query
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -290,8 +289,6 @@ func TestNewHTTPClient_InsecureFlipsSkipVerify(t *testing.T) {
 	require.True(t, ok, "insecure client must use *http.Transport")
 	require.NotNil(t, tr.TLSClientConfig)
 	assert.True(t, tr.TLSClientConfig.InsecureSkipVerify)
-	// Sanity: the TLS config is the expected type.
-	var _ *tls.Config = tr.TLSClientConfig
 }
 
 func TestRunStatement_TLSWithoutInsecureFails(t *testing.T) {
