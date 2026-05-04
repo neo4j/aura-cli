@@ -162,7 +162,7 @@ tasks:
       gen/main.go importing `neo4j-cli/aura` and building NewStandaloneCmd.
       description.txt and additions.md scoped to aura-cli (no super-CLI
       content). Bundle generated into bundle/ and committed.
-    status: pending
+    status: completed
     dependencies:
       - task-004
     acceptance_criteria:
@@ -170,7 +170,7 @@ tasks:
       - "Generator writes bundle for aura-cli's standalone tree (aura subcommands + credential + skill)"
       - "Bundle differs from neo4j-cli's bundle (verified by diff in test)"
       - "gen/main_test.go round-trip is byte-equal with committed bundle"
-    completed_at: null
+    completed_at: 2026-05-04T17:00:00Z
 
   - id: task-009
     title: "Mount skill subcommand in both binaries"

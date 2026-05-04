@@ -224,3 +224,46 @@ Key Decisions:
   file. Walks via filepath.ToSlash so the test passes on Windows.
 
 Next Task: task-008
+
+================================================================================
+TASK-008: Add per-binary skill template for aura-cli (standalone)
+Date: 2026-05-04T17:00:00Z
+================================================================================
+
+Summary:
+Mirrored the neo4j-cli/internal/skill template under neo4j-cli/aura/internal/skill,
+scoped to aura-cli. Generator imports neo4j-cli/aura and builds NewStandaloneCmd
+(NOT NewCmd) so the bundle reflects the standalone binary's full surface
+including credential. Description and gotchas rewritten for aura-cli (no super-CLI
+content). Bundle bootstrapped via `go run ./neo4j-cli/aura/internal/skill/gen` then
+committed; round-trip test passes.
+
+Files Changed:
+- neo4j-cli/aura/internal/skill/embed.go (created)
+- neo4j-cli/aura/internal/skill/description.txt (created)
+- neo4j-cli/aura/internal/skill/additions.md (created)
+- neo4j-cli/aura/internal/skill/gen/main.go (created)
+- neo4j-cli/aura/internal/skill/gen/main_test.go (created)
+- neo4j-cli/aura/internal/skill/bundle/SKILL.md (generated, committed)
+- neo4j-cli/aura/internal/skill/bundle/references/{config,credential,customer-managed-key,graph-analytics,instance,tenant}.md (generated, committed)
+
+Key Decisions:
+- gen/main.go uses aura.NewStandaloneCmd (not NewCmd) — without `credential`
+  the standalone binary's bundle would mis-represent the surface and miss
+  credential-management instructions. PRD REQ-F-011 explicitly mandates this.
+- cfg.Version passed as literal "dev" — render emits the {{VERSION}} placeholder
+  regardless of cfg.Version, so the value doesn't surface in the bundle. No
+  per-binary Version export needed (aura.cmd/main.go's main.Version isn't
+  importable; this avoids creating a new aura.Version export just for gen).
+- Bootstrapped bundle/ before relying on `go generate` — embed.go's `//go:embed
+  bundle` fails to compile if the directory is missing. `go run ./gen` works
+  even before embed.go can compile because gen/ is a sibling package.
+- Cross-bundle diff verification done manually via shell `diff` rather than
+  in a test — adding a cross-package test would create undue coupling, and
+  the structural diff is guaranteed by different cobra trees (NewStandaloneCmd
+  vs app.NewCmd) plus different description.txt/additions.md content.
+- AuraBetaEnabled-gated commands (dataapi, import, deployment) are absent from
+  the bundle because cfg.Aura.AuraBetaEnabled() returns false on a fresh
+  MemMapFs config. This matches the default-build surface.
+
+Next Task: task-009
