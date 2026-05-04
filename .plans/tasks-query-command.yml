@@ -185,3 +185,35 @@ tasks:
       - "PRD REQ-F-009 wording is updated to describe the empty-array behavior; no other PRD section references the placeholder string"
       - "`fmt` import is removed from `truncate.go` (no longer needed); `make test` and `make fmt-check` pass"
     completed_at: 2026-05-04T20:15:00Z
+
+  - id: task-012
+    title: "Add aggregate stderr warning + JSON flag for --truncate-arrays-over"
+    description: |
+      Task-011 made array truncation silent (the placeholder string is gone, replaced by `[]`). That removed an in-band signal: scripts and humans currently can't tell an empty array (server returned `[]`) from a truncated array (server returned >N items, dropped to `[]` by `--truncate-arrays-over`). Add an aggregate signal in both surfaces:
+
+      - **Stderr (always)**: at end-of-run, if at least one array was truncated, print exactly one line — `warning: truncated N arrays larger than M items (use --truncate-arrays-over 0 to disable)` — to `cmd.ErrOrStderr()`. Where `N` is the count of arrays truncated and `M` is the configured threshold. Suppressed when `--truncate-arrays-over 0` (truncation off) and when `N == 0`.
+      - **JSON output**: extend the JSON envelope with an `arrays_truncated: <int>` field carrying the same count `N`. Always emit the field (zero value when nothing was truncated) so downstream JSON consumers can treat it as a stable schema. Order: `{columns, rows, truncated, arrays_truncated}`.
+      - **Table output**: no change to the table body. The stderr line is the signal.
+
+      Implementation: `truncateArrays` (or a new `truncateArraysCount`) needs to return the count alongside the truncated value. Plumb the count through `runQuery` (call site is in `run.go` per task-006) so it can both render into the JSON envelope and drive the stderr warning. Update the `renderRows` signature in `output.go` to accept `arraysTruncated int` and serialize it.
+
+      Tests: add three end-to-end cases driving `runQuery` against `httptest.NewServer`:
+      1. JSON with truncation: assert stderr contains the exact warning line AND assert the JSON contains `"arrays_truncated": 1` (or higher) AND no `truncated:true` row-cap signal (separate concern).
+      2. Table with truncation: assert stderr contains the warning line; table body unchanged.
+      3. No truncation (short arrays): assert stderr is silent and JSON `arrays_truncated` is `0`.
+      Plus a unit test on the count return from `truncateArrays` covering scalar passthrough (count 0), single long top-level array (count 1), nested long arrays at multiple levels (count = number of distinct slices truncated), and `max == 0` (count always 0).
+
+      Update PRD REQ-F-009 to document the dual-signal aggregate warning + JSON field. No changelog entry — feature unreleased.
+    status: pending
+    dependencies:
+      - task-011
+    acceptance_criteria:
+      - "When at least one array is truncated, stderr contains exactly one line: `warning: truncated N arrays larger than M items (use --truncate-arrays-over 0 to disable)`"
+      - "When zero arrays are truncated (no over-limit arrays in the result, OR `--truncate-arrays-over 0`), stderr is silent for array-truncation"
+      - "JSON output envelope includes an `arrays_truncated: <int>` field; the field is always present with zero value when nothing was truncated"
+      - "Table output body is unchanged; the only signal in table mode is the stderr warning"
+      - "`truncateArrays` (or a new helper) returns the count of distinct slices that were truncated; nested truncations count separately"
+      - "Three new end-to-end tests cover JSON-with-truncation, table-with-truncation, and no-truncation; one unit test covers the count return on scalar/single/nested/max=0 inputs"
+      - "PRD REQ-F-009 documents the stderr warning and the `arrays_truncated` JSON field"
+      - "`make test` and `make fmt-check` pass"
+    completed_at: null
