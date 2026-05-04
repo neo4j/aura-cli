@@ -1,0 +1,160 @@
+feature: query-command
+prd: ./prd-query-command.md
+created_at: 2026-05-04T15:00:00Z
+updated_at: 2026-05-04T15:00:00Z
+
+tasks:
+  - id: task-001
+    title: "Scaffold neo4j-cli/query package, mount in app.go, register persistent flags"
+    description: |
+      Create the `neo4j-cli/query/` package with an empty parent file `query.go` exposing `NewCmd(cfg *clicfg.Config) *cobra.Command`. Register every persistent flag the command tree will use (`--uri`, `-u`/`--username`, `-p`/`--password`, `-d`/`--database`, `--env`, `--output`, `--param`, `--max-rows`, `--truncate-arrays-over`, `--insecure`) on the parent. Wire `PersistentPreRunE` to validate `--output` against `clicfg.ValidOutputValues` and bind it via `cfg.Aura.BindOutput` (mirror `neo4j-cli/aura/internal/subcommands/instance/instance.go`). Add `cmd.AddCommand(query.NewCmd(cfg))` to `neo4j-cli/app/app.go`. Leave RunE as a stub returning a "not yet implemented" error so the build is green and `--help` is correct. Add the Neo4j copyright header to every new file.
+    status: pending
+    dependencies: []
+    acceptance_criteria:
+      - "`make build` succeeds; `bin/neo4j-cli query --help` lists all persistent flags with the documented defaults and env-var hints"
+      - "`neo4j-cli query` appears in the parent help output alongside `aura`, `credential`, `skill`"
+      - "`--output` is bound through `cfg.Aura.BindOutput` and rejects values outside `clicfg.ValidOutputValues` with a clear error"
+      - "`query.go` is ≤ 80 lines and contains only `NewCmd` plus persistent-flag wiring (per AGENTS.md cobra layout rules)"
+      - "Every new `.go` file starts with the Neo4j copyright header; `make license-check` passes"
+    completed_at: null
+
+  - id: task-002
+    title: "Implement --param parser (params.go) with JSON-or-string fallback"
+    description: |
+      Add `neo4j-cli/query/params.go` exposing `parseParams(raw []string) (map[string]any, error)`. For each `key=value`: try `json.Unmarshal([]byte(value), &v)`; on failure, fall back to the raw string. Reject entries missing `=` or with empty key. Add `params_test.go` covering number, bool, null, JSON array, JSON object, plain string, JSON-quoted string, malformed JSON (string fallback), missing-equals (error), empty-key (error). Use the table-driven style required by AGENTS.md §"Testing Framework".
+    status: pending
+    dependencies:
+      - task-001
+    acceptance_criteria:
+      - "`parseParams([\"k=5\"])` returns `map[string]any{\"k\": float64(5)}` (json.Unmarshal default for numbers)"
+      - "`parseParams([\"name=alice\"])` returns `map[string]any{\"name\": \"alice\"}` via string fallback"
+      - "`parseParams([\"xs=[1,2,3]\"])` returns the slice; `parseParams([\"obj={\\\"a\\\":1}\"])` returns the map"
+      - "Missing `=` or empty key returns an error referencing the offending entry"
+      - "Tests are table-driven and run under `go test ./neo4j-cli/query/...`"
+    completed_at: null
+
+  - id: task-003
+    title: "Implement recursive array truncation (truncate.go)"
+    description: |
+      Add `neo4j-cli/query/truncate.go` exposing `truncateArrays(value any, max int) any`. Walk maps and slices recursively. When `max > 0` and a `[]any` has `len > max`, replace it with a single-element `[]any{"<truncated: K items>"}` (capture original length in K). When `max == 0`, return the input unchanged. Add `truncate_test.go` table-driven cases: scalar passthrough, short array passthrough, long top-level array, array nested in map, array nested in array, mixed nesting, `max == 0` disables truncation.
+    status: pending
+    dependencies:
+      - task-001
+    acceptance_criteria:
+      - "Top-level array with 200 items and `max=100` becomes `[\"<truncated: 200 items>\"]`"
+      - "Array nested under a map key is truncated; sibling scalar values are left untouched"
+      - "Arrays inside arrays are truncated independently at every level"
+      - "`max == 0` returns the input value byte-identical (no truncation applied)"
+      - "Function is pure (no I/O), and tests are table-driven"
+    completed_at: null
+
+  - id: task-004
+    title: "Implement HTTP transport + connection resolution (connect.go)"
+    description: |
+      Add `neo4j-cli/query/connect.go`. Define `httpDoer interface{ Do(*http.Request) (*http.Response, error) }` to enable test injection. Implement `resolveConn(cmd, cfg) (*conn, error)` that loads `.env` (path from `--env` or auto walk-up from cwd; ignore if absent), then merges values lowest→highest as `.env` < OS env (`NEO4J_URI`/`NEO4J_USERNAME`/`NEO4J_PASSWORD`/`NEO4J_DATABASE`/`NEO4J_INSECURE`) < flags. Defaults: uri=`http://localhost:7474`, username=`neo4j`, database=`neo4j`. Build an `*http.Client` honoring `--insecure` (sets `tls.Config{InsecureSkipVerify: true}`). Expose `runStatement(ctx, conn, statement string, params map[string]any) (*queryResult, error)` that POSTs to `<uri>/db/<database>/query/v2` with HTTP Basic auth and parses `data.fields`/`data.values`/`errors`. On non-2xx or non-empty `errors[]`, return an error containing the upstream `code` and `message`. Add `connect_test.go` using `httptest.NewServer` for transport tests and `afero.NewMemMapFs` + `t.Setenv("HOME", ...)` + `t.Setenv("XDG_CONFIG_HOME", "")` for the `.env` walk-up + precedence cases.
+    status: pending
+    dependencies:
+      - task-001
+    acceptance_criteria:
+      - "Precedence: a value set in `.env`, env, AND flags resolves to the flag value; with no flag, env wins; with neither, `.env` wins"
+      - "Auto-discovery finds `.env` in the cwd or any parent directory; explicit `--env <path>` short-circuits the walk"
+      - "`runStatement` against an `httptest.NewServer` returning canned `data.fields`/`data.values` produces the expected `queryResult`"
+      - "A 4xx response with `errors[].code` + `errors[].message` surfaces both fields in the returned Go error"
+      - "`--insecure` flips `InsecureSkipVerify` on; without it, a self-signed-cert server returns a TLS error from `runStatement`"
+    completed_at: null
+
+  - id: task-005
+    title: "Implement output renderers for query rows (output.go)"
+    description: |
+      Add `neo4j-cli/query/output.go` exposing `renderRows(cmd, cfg, columns []string, rows []map[string]any, truncated bool)`. Branch on `cfg.Aura.Output()`. JSON: emit `{"columns": [...], "rows": [...], "truncated": <bool>}` via `json.MarshalIndent` and `cmd.Println`. Table: use `github.com/jedib0t/go-pretty/v6/table` with header in result order, each cell JSON-stringified, style `table.StyleLight`. Convert API positional `data.values` arrays into `{col: val}` maps before rendering (helper in this file). Add `output_test.go` table-driven cases for both modes; assert table header matches `strings.ToLower(...)` for `go-pretty` headers per AGENTS.md hermetic-test note.
+    status: pending
+    dependencies:
+      - task-001
+    acceptance_criteria:
+      - "JSON mode emits `{columns, rows, truncated}` with rows as `col → value` objects (not positional arrays)"
+      - "Table mode preserves the user's `RETURN` column order and renders nested values as JSON-stringified cell text"
+      - "Header assertions in tests use lower-cased comparison; tests pass on Windows (no path-separator literals)"
+      - "Output renderer is pure (takes `cmd`, structured input, no I/O beyond `cmd.Println`)"
+      - "`renderRows` does NOT print the stderr warning — that lives in run.go (task-006)"
+    completed_at: null
+
+  - id: task-006
+    title: "Wire query parent RunE: stdin/arg input, password prompt, run, truncate, render"
+    description: |
+      Replace the stub RunE in `neo4j-cli/query/query.go` with a delegate to `runQuery(cmd, args, cfg)` in a new `neo4j-cli/query/run.go`. Cypher resolution: positional arg first; if absent and stdin is not a TTY, read all of stdin; otherwise return a usage error. Password resolution: if empty after merging .env/env/flag AND `os.Stdin` is a TTY, prompt securely via `golang.org/x/term.ReadPassword` with no echo and a "Password: " prompt; if not a TTY, return a clear error directing the user to `--password`/`NEO4J_PASSWORD`/`.env`. Parse params via `parseParams`. Call `runStatement`. Apply `truncateArrays` to each row's values BEFORE row-limit handling. Apply `--max-rows` (`0` = unlimited): cap rows; if the API returned more than the cap, set `truncated=true` and print `warning: truncated to <N> rows (use --max-rows 0 for unlimited)` to `cmd.ErrOrStderr()`. Render via `renderRows`. Add `run_test.go` driving the full path against `httptest.NewServer` (success, server error, truncation, stdin input, env-only password). Confirm `golang.org/x/term` is in `go.mod`; if not, `go get` it (note in PR description).
+    status: pending
+    dependencies:
+      - task-002
+      - task-003
+      - task-004
+      - task-005
+    acceptance_criteria:
+      - "Positional cypher arg works; `echo 'RETURN 1' | neo4j-cli query` works when stdin is piped"
+      - "TTY without password set triggers a no-echo prompt; non-TTY without password returns a clear error mentioning `--password`, `NEO4J_PASSWORD`, and `.env`"
+      - "`--max-rows 2` against a 10-row response yields 2 rows in output AND `truncated:true` in JSON AND the stderr warning regardless of output mode"
+      - "`--truncate-arrays-over 3` mutates row values before row-limit handling (both feature interact correctly)"
+      - "Server error (non-2xx with `errors[]`) surfaces `code` + `message` and the command exits non-zero"
+    completed_at: null
+
+  - id: task-007
+    title: "Implement :schema subcommand (schema.go) with json default + table mode"
+    description: |
+      Add `neo4j-cli/query/schema.go` exposing `newSchemaCmd(cfg)` and mount it from `query.go` via `cmd.AddCommand(newSchemaCmd(cfg))`. The cobra `Use` is the literal `":schema"`. RunE resolves the connection (reuse `resolveConn`), then runs the introspection queries sequentially: (1) `CALL db.schema.nodeTypeProperties() YIELD nodeType, nodeLabels, propertyName, propertyTypes, mandatory`; (2) `CALL db.schema.relTypeProperties() YIELD relType, propertyName, propertyTypes, mandatory`; (3) per relType: `MATCH (n)-[r:`<type>`]->(m) WITH DISTINCT labels(n) AS from, labels(m) AS to RETURN from, to`; (4) `SHOW INDEXES YIELD name, type, entityType, labelsOrTypes, properties, state, owningConstraint, options`; (5) `SHOW CONSTRAINTS YIELD name, type, entityType, labelsOrTypes, properties, ownedIndex, propertyType`; plus optional swallow-errors `CALL dbms.components()` and `SHOW SETTINGS YIELD name, value WHERE name = 'db.query.default_language' RETURN value`. Build a single `schemaResult` struct and render: JSON default = one structured object; `--output table` = 5 stacked sub-tables with H2 separators (one per section). `--max-rows`/`--truncate-arrays-over` do NOT apply to `:schema`. Add `schema_test.go` against `httptest.NewServer` returning canned responses for the introspection queries.
+    status: pending
+    dependencies:
+      - task-004
+      - task-005
+    acceptance_criteria:
+      - "`neo4j-cli query :schema` is dispatched as a cobra subcommand whose `Use` is the literal `:schema`"
+      - "JSON output is one object with keys `database`, `nodes`, `relationships`, `relationship_paths`, `indexes`, `constraints`"
+      - "`--output table` emits 5 sub-tables (one per section) separated by H2 markers; sections render in the documented order"
+      - "Failures of the optional `dbms.components()` / `SHOW SETTINGS` calls do NOT fail the command — the database section is just omitted/partial"
+      - "Tests cover happy path + at least one introspection query failing (must fail the command for required queries 1–5)"
+    completed_at: null
+
+  - id: task-008
+    title: "Regenerate skill bundle and verify generate-check passes"
+    description: |
+      Run `make generate` so `neo4j-cli/internal/skill/bundle/SKILL.md` lists `query` in the Subcommands table and `neo4j-cli/internal/skill/bundle/references/query.md` is generated from the cobra tree. Per AGENTS.md §"Repo Layout Notes", the generator imports `neo4j-cli/app` so adding `query.NewCmd` to `app.go` is sufficient — no manual edits to the bundle. Confirm `make generate-check` (which runs `go generate ./...` then `git diff --exit-code`) is clean. Verify the bundle files are LF-only via the existing `.gitattributes` rule (no manual fix needed unless drift is found).
+    status: pending
+    dependencies:
+      - task-006
+      - task-007
+    acceptance_criteria:
+      - "`neo4j-cli/internal/skill/bundle/SKILL.md` Subcommands table includes a `query` row pointing to `references/query.md`"
+      - "`neo4j-cli/internal/skill/bundle/references/query.md` exists and documents the persistent flags + `:schema` subcommand"
+      - "`make generate-check` exits cleanly (no uncommitted diff after `go generate`)"
+      - "Both new bundle files have LF line endings (covered by repo `.gitattributes`)"
+    completed_at: null
+
+  - id: task-009
+    title: "Add user-facing changelog entry for neo4j-cli"
+    description: |
+      Per AGENTS.md §"Build System": `query` is user-facing, so add a changelog entry under `.changes/unreleased/` for the `neo4j-cli` project (kind `Minor`). Use `changie new --projects neo4j-cli --kind Minor --body "Add 'query' command to run Cypher against a Neo4j database via the HTTP Query API"` if changie is available locally; otherwise hand-author the YAML at `.changes/unreleased/neo4j-cli-Minor-<YYYYMMDD>-<HHMMSS>.yaml` with fields `project: neo4j-cli`, `kind: Minor`, `body: '...'`, and an RFC3339 `time:`. Do NOT add an `aura-cli` entry — `query` is mounted only on the super-CLI.
+    status: pending
+    dependencies:
+      - task-006
+      - task-007
+    acceptance_criteria:
+      - "Exactly one new YAML file under `.changes/unreleased/` with `project: neo4j-cli`, `kind: Minor`"
+      - "Body summarizes the user-visible feature in one sentence and mentions Cypher + HTTP Query API"
+      - "No `aura-cli` entry is created"
+      - "File name follows `neo4j-cli-Minor-<YYYYMMDD>-<HHMMSS>.yaml`"
+    completed_at: null
+
+  - id: task-010
+    title: "End-to-end verification against a real Neo4j and run all CI gates"
+    description: |
+      Boot a local Neo4j 5 (`docker run -d --rm -p 7474:7474 -e NEO4J_AUTH=neo4j/testtest neo4j:5`) and walk the full PRD acceptance-criteria list: simple `RETURN 1` table + JSON; numeric and string `--param`; `--max-rows` truncation (verify stderr warning + JSON `truncated:true`); `--truncate-arrays-over` mutating a long array; `:schema` JSON and table; stdin input; env-var auth; `.env` auto-discovery; TTY password prompt; non-TTY missing-password error; `--insecure` against self-signed HTTPS (use a self-signed dev certificate or skip with a documented manual step). Then run all final gates: `make test`, `make fmt-check`, `make lint`, `make license-check`, `make generate-check`. Capture command transcripts in the PR description for reviewers.
+    status: pending
+    dependencies:
+      - task-006
+      - task-007
+      - task-008
+      - task-009
+    acceptance_criteria:
+      - "Every PRD `Acceptance Criteria` checkbox is verified against a live Neo4j 5 container"
+      - "`make test`, `make fmt-check`, `make lint`, `make license-check`, `make generate-check` all pass locally"
+      - "PR description includes the verification transcript / output snippets"
+      - "Any verification step that could not be run (e.g. `--insecure` if no self-signed cert was set up) is called out explicitly with the workaround"
+    completed_at: null
