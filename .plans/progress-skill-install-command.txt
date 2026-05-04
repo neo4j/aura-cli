@@ -488,3 +488,30 @@ Key Decisions:
   each path in detail.
 
 Next Task: task-015
+
+================================================================================
+TASK-015: Add dual-project changelog entries
+Date: 2026-05-04T11:05:00Z
+================================================================================
+
+Summary:
+Hand-authored two changelog YAML files under .changes/unreleased/ — one
+tagged `project: aura-cli`, one `project: neo4j-cli` — both kind Minor with
+a body announcing the new `skill` subcommand. changie binary not installed
+locally, so authored directly from the existing aura-cli-Minor-20260502
+template format. Verified make test still passes.
+
+Files Changed:
+- .changes/unreleased/aura-cli-Minor-20260504-090200.yaml (created)
+- .changes/unreleased/neo4j-cli-Minor-20260504-090200.yaml (created)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- Hand-authored YAML matching existing files verbatim (single-quoted body
+  with backtick-quoted code identifiers) instead of installing changie just
+  for one entry. Format is stable per repo's existing changelog history.
+- Both files share the same UTC-derived timestamp suffix and time field —
+  changie's natural behaviour for dual-project entries created in one call.
+- Body uses the exact wording from the PRD's REQ-NF-003 / task-015 brief.
+
+Next Task: none — feature complete

@@ -289,11 +289,11 @@ tasks:
       --body "Add `skill` subcommand to install agent skills into supported
       AI agents (Claude Code, Cursor, Windsurf, etc.)"`. Verify both project
       entries land under `.changes/unreleased/` correctly tagged.
-    status: pending
+    status: completed
     dependencies:
       - task-009
     acceptance_criteria:
       - ".changes/unreleased/ has entries for both aura-cli and neo4j-cli projects"
       - "Kind = Minor; body describes the skill subcommand"
       - "make test still passes"
-    completed_at: null
+    completed_at: 2026-05-04T11:05:00Z

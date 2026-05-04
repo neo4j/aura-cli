@@ -116,6 +116,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `changie merge` (no flags) automatically iterates all `projects:` in config and writes each to its own `changelog:` path — confirmed from source (`cmd/merge.go`). Calling `changie merge --project` is not supported by changie's CLI.
 - `changie new --projects <a> --projects <b>` creates entries for multiple projects in one call; the interactive prompt (`make changelog`) also supports multi-select
 - This repo uses kind labels `Major`, `Minor`, `Patch` (not `added`/`feat`) — check `.changie.yaml` `kinds:` before using `--kind`
+- If changie isn't installed locally, hand-author YAML files under `.changes/unreleased/` named `<project>-<Kind>-<YYYYMMDD>-<HHMMSS>.yaml` with fields `project / kind / body / time` (single-quoted body, RFC3339 time). Write one file per project for dual-project entries.
 
 ## Changie Workflow Notes
 
