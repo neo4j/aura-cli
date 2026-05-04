@@ -209,7 +209,7 @@ func TestRunQuery_RowLimitZeroMeansUnlimited(t *testing.T) {
 
 func TestRunQuery_TruncateArraysAppliesBeforeRowCap(t *testing.T) {
 	// One row with a 5-element array; --truncate-arrays-over=3 should rewrite
-	// the value to the placeholder slice; --max-rows=10 leaves the row intact.
+	// the value to an empty slice; --max-rows=10 leaves the row intact.
 	srv := startServer(t, 0, []byte(`{"data":{"fields":["xs"],"values":[[[1,2,3,4,5]]]}}`))
 
 	h := newRunHarness(t, "json")
@@ -226,8 +226,77 @@ func TestRunQuery_TruncateArraysAppliesBeforeRowCap(t *testing.T) {
 	require.Len(t, got.Rows, 1)
 	xs, ok := got.Rows[0]["xs"].([]any)
 	require.True(t, ok, "xs must be []any after truncation")
-	require.Len(t, xs, 1)
-	assert.Equal(t, "<truncated: 5 items>", xs[0])
+	assert.Empty(t, xs, "over-limit array must be elided to []")
+}
+
+// TestRunQuery_TruncateArrays_JSONOutputContainsEmptyArray verifies the
+// rendered JSON literally contains `"xs": []` for an over-limit top-level
+// array — closes the gap where in-memory shape was tested but not the
+// actual `--output json` byte stream.
+func TestRunQuery_TruncateArrays_JSONOutputContainsEmptyArray(t *testing.T) {
+	// 10-item array; --truncate-arrays-over=3 → emit empty array.
+	srv := startServer(t, 0, []byte(`{"data":{"fields":["xs"],"values":[[[1,2,3,4,5,6,7,8,9,10]]]}}`))
+
+	h := newRunHarness(t, "json")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		"--truncate-arrays-over=3",
+		"RETURN xs",
+	)
+	require.NoError(t, err)
+
+	out := h.stdout.String()
+	assert.Contains(t, out, `"xs": []`,
+		"rendered JSON must contain literal empty-array for the elided value")
+	assert.NotContains(t, out, "<truncated:",
+		"output must NOT contain any placeholder string")
+}
+
+// TestRunQuery_TruncateArrays_NestedArray_JSONOutputContainsEmptyArray covers
+// an array nested inside a map value (e.g. `{"data": [...]}` returned as a
+// row column) — the recursion must elide the nested array end-to-end.
+func TestRunQuery_TruncateArrays_NestedArray_JSONOutputContainsEmptyArray(t *testing.T) {
+	// One row, one column "obj" whose value is {"data": [1..10]}.
+	srv := startServer(t, 0, []byte(
+		`{"data":{"fields":["obj"],"values":[[{"data":[1,2,3,4,5,6,7,8,9,10]}]]}}`))
+
+	h := newRunHarness(t, "json")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		"--truncate-arrays-over=3",
+		"RETURN obj",
+	)
+	require.NoError(t, err)
+
+	out := h.stdout.String()
+	assert.Contains(t, out, `"data": []`,
+		"nested array must render as empty-array literal in JSON")
+	assert.NotContains(t, out, "<truncated:",
+		"output must NOT contain any placeholder string")
+}
+
+// TestRunQuery_TruncateArrays_TableOutputCellIsEmptyArray covers --output
+// table: the cell rendering for an over-limit array must be `[]` (the
+// JSON-stringified empty array), not the legacy placeholder string.
+func TestRunQuery_TruncateArrays_TableOutputCellIsEmptyArray(t *testing.T) {
+	srv := startServer(t, 0, []byte(`{"data":{"fields":["xs"],"values":[[[1,2,3,4,5,6,7,8,9,10]]]}}`))
+
+	h := newRunHarness(t, "table")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		"--truncate-arrays-over=3",
+		"RETURN xs",
+	)
+	require.NoError(t, err)
+
+	out := h.stdout.String()
+	assert.Contains(t, out, "[]",
+		"table cell must render the elided value as []")
+	assert.NotContains(t, out, "<truncated:",
+		"output must NOT contain any placeholder string")
 }
 
 func TestRunQuery_StdinInputWhenNoArg(t *testing.T) {

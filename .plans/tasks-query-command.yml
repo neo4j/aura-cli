@@ -173,7 +173,7 @@ tasks:
       Update `.plans/prd-query-command.md` REQ-F-009 wording to drop the placeholder language and document the empty-array behavior.
 
       No new changelog entry needed — this feature has not shipped yet (still on a feature branch with one unreleased changie YAML).
-    status: pending
+    status: completed
     dependencies:
       - task-010
     acceptance_criteria:
@@ -184,4 +184,4 @@ tasks:
       - "A third end-to-end case covers `--output table` and asserts the cell content is `[]` (not the placeholder)"
       - "PRD REQ-F-009 wording is updated to describe the empty-array behavior; no other PRD section references the placeholder string"
       - "`fmt` import is removed from `truncate.go` (no longer needed); `make test` and `make fmt-check` pass"
-    completed_at: null
+    completed_at: 2026-05-04T20:15:00Z

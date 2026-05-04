@@ -498,3 +498,45 @@ Key Decisions:
   on/off modes, so the live-server retest provides no additional signal.
 
 Next Task: NONE — all 10 tasks complete. Ready for PR.
+
+================================================================================
+TASK-011: Change array truncation to empty array; add reliable end-to-end tests
+Date: 2026-05-04T20:15:00Z
+================================================================================
+
+Summary:
+Replaced over-limit array placeholder slice (`["<truncated: K items>"]`) with
+empty slice `[]any{}`. Type-safe + JSON-friendly: `"xs": []` instead of
+`"xs": ["<truncated: 10 items>"]`. Updated truncate.go (dropped fmt import),
+truncate_test.go cases, run_test.go existing case, and added 3 end-to-end
+tests that verify the rendered output buffer (not just in-memory shape):
+top-level array → JSON, nested-in-map array → JSON, top-level array → table.
+All three assert no `<truncated:` substring anywhere in stdout. PRD REQ-F-009
++ acceptance-criteria bullet + open-question entry updated to describe the
+new behavior. No new changelog entry — feature unreleased.
+
+Files Changed:
+- neo4j-cli/query/truncate.go (modified — over-limit returns []any{}; fmt
+  import removed; doc updated)
+- neo4j-cli/query/truncate_test.go (modified — 4 long-array cases now assert
+  []any{} equality)
+- neo4j-cli/query/run_test.go (modified — existing TruncateArraysAppliesBeforeRowCap
+  asserts empty slice; 3 new e2e tests for JSON top-level, JSON nested-in-map,
+  table top-level)
+- .plans/prd-query-command.md (REQ-F-009 + acceptance bullet + open question)
+- .plans/tasks-query-command.yml (status / completed_at)
+- .plans/progress-query-command.txt (this entry)
+
+Key Decisions:
+- Empty array, not null/sentinel: keeps the column's type stable for jq-style
+  consumers (`.rows[].xs | length` still works, returns 0 for elided values).
+- E2E tests assert against rendered output bytes (h.stdout.String()) rather
+  than only the parsed envelope — this is the lesson from the prior gap, where
+  in-memory shape was right but rendered placeholder leaked through.
+- Table mode test uses Contains "[]" + NotContains "<truncated:" rather than
+  pinning go-pretty whitespace; the absence of the placeholder is the
+  load-bearing assertion.
+- No changelog entry: feature still on a feature branch with one unreleased
+  changie YAML; behavior change pre-ship is editorial, not user-visible.
+
+Next Task: All tasks complete

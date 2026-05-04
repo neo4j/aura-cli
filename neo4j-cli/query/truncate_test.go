@@ -63,10 +63,10 @@ func TestTruncateArrays(t *testing.T) {
 			want: []any{"a", "b"},
 		},
 		{
-			name: "long top-level array truncates",
+			name: "long top-level array truncates to empty slice",
 			in:   makeRange(200),
 			max:  100,
-			want: []any{"<truncated: 200 items>"},
+			want: []any{},
 		},
 		{
 			name: "array nested in map truncates; sibling scalar untouched",
@@ -77,14 +77,14 @@ func TestTruncateArrays(t *testing.T) {
 			max: 10,
 			want: map[string]any{
 				"name":  "alice",
-				"items": []any{"<truncated: 50 items>"},
+				"items": []any{},
 			},
 		},
 		{
 			name: "array nested in array truncates inner only",
 			in:   []any{"a", makeRange(20), "b"},
 			max:  5,
-			want: []any{"a", []any{"<truncated: 20 items>"}, "b"},
+			want: []any{"a", []any{}, "b"},
 		},
 		{
 			name: "mixed nesting truncates at every level",
@@ -97,9 +97,9 @@ func TestTruncateArrays(t *testing.T) {
 			},
 			max: 10,
 			want: map[string]any{
-				"shallow": []any{"<truncated: 150 items>"},
+				"shallow": []any{},
 				"deep": map[string]any{
-					"nested": []any{"x", []any{"<truncated: 30 items>"}},
+					"nested": []any{"x", []any{}},
 					"keep":   []any{float64(1), float64(2)},
 				},
 			},

@@ -34,7 +34,7 @@ Add a top-level `query` command to the `neo4j-cli` super-CLI that executes Cyphe
 - REQ-F-006: When the resolved password is empty AND stdin is a TTY, prompt the user securely (no echo) via `golang.org/x/term`. When stdin is not a TTY, fail with `password required (set --password, NEO4J_PASSWORD, or .env NEO4J_PASSWORD=...)`.
 - REQ-F-007: `--param key=value` (repeatable). Value parsing: try `json.Unmarshal`; on failure, treat as a raw string. Supports number, bool, null, JSON array, JSON object, plain string.
 - REQ-F-008: `--max-rows N` caps printed rows (default `100`; `0` = unlimited). When the API returns more than `N` rows, drop the extras, set `truncated: true` in JSON output, and print `warning: truncated to <N> rows (use --max-rows 0 for unlimited)` to stderr regardless of output mode.
-- REQ-F-009: `--truncate-arrays-over N` recursively replaces arrays with `len > N` inside row values (default `100`; `0` = off). Truncated arrays render as `["<truncated: K items>"]` (placeholder string captures the original length). Applied before row-limit handling.
+- REQ-F-009: `--truncate-arrays-over N` recursively replaces arrays with `len > N` inside row values (default `100`; `0` = off). Truncated arrays render as an empty array (`[]`) — a type-safe signal that the value was elided without polluting downstream JSON consumers with a placeholder string. Applied before row-limit handling.
 - REQ-F-010: `--output json|table|default` (validated against `clicfg.ValidOutputValues`, bound via `cfg.Aura.BindOutput`). Default → `table`.
 - REQ-F-011: Table output uses `github.com/jedib0t/go-pretty/v6/table`, header row = column names in result order (preserve user's `RETURN` ordering), each cell is the JSON-stringified value. Style `table.StyleLight`.
 - REQ-F-012: JSON output shape: `{"columns": [...], "rows": [{"col": value, ...}, ...], "truncated": <bool>}`. Rows are `col → value` objects (not positional arrays) for jq ergonomics.
@@ -99,7 +99,7 @@ The parent has `RunE` (cobra supports parent-with-RunE alongside subcommands); t
 - [ ] `--output json` produces `{"columns":["n"],"rows":[{"n":1}],"truncated":false}`.
 - [ ] `--param k=5 "RETURN $k AS x"` sends `5` as an integer; `--param name=alice "RETURN $name AS x"` sends `"alice"` as a string (string fallback).
 - [ ] `--max-rows 2 "UNWIND range(1,10) AS i RETURN i"` returns 2 rows, sets `truncated:true` in JSON, and prints the stderr warning.
-- [ ] `--truncate-arrays-over 3 "RETURN range(1,10) AS xs"` produces a row whose `xs` value is the truncation placeholder.
+- [ ] `--truncate-arrays-over 3 "RETURN range(1,10) AS xs"` produces a row whose `xs` value is an empty array (`[]`).
 - [ ] `neo4j-cli query :schema` emits the expected structured object (JSON default) and 5 stacked tables under `--output table`.
 - [ ] `echo "RETURN 1" | neo4j-cli query --password testtest` reads from stdin successfully.
 - [ ] `NEO4J_PASSWORD=testtest neo4j-cli query "RETURN 1"` succeeds via env.
@@ -127,5 +127,5 @@ The parent has `RunE` (cobra supports parent-with-RunE alongside subcommands); t
 
 - Does `golang.org/x/term` need to be added explicitly to `go.mod`, or is it already available transitively? (Confirm at implementation time; the change is trivial either way.)
 - Should the `--insecure` flag print a one-line stderr warning ("WARNING: TLS verification disabled") on every invocation, or stay silent and let `--help` carry the warning?
-- Truncation placeholder wording — `"<truncated: K items>"` is one option; a structured object like `{"truncated": true, "length": K}` would be more machine-parseable. Decide during implementation; keep consistent with however `--max-rows` exposes the same signal.
+- Truncation signal — resolved during implementation: over-limit arrays are replaced with an empty array (`[]`). Type-safe and consumer-friendly; no placeholder string in JSON output.
 - For the `:schema` table layout, confirm the section header format (Markdown-style `## Nodes` lines vs. blank-line separators) once we see it rendered.

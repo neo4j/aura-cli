@@ -251,6 +251,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `make generate-check` diffs the WHOLE repo, not just bundle paths — any unrelated edit (e.g. an in-progress task YAML status flip) makes it fail with "ERROR: generated files are stale" even when the bundle is clean. To verify the bundle in isolation, `git stash push -- <unrelated-files>` first, run the check, then `git stash pop`. Don't mistake the false positive for real drift.
 - Bundle regen happens organically in feature-add tasks (because new cobra subcommands appear in the tree the moment they're mounted), so a dedicated "regen bundle" verification task is typically a no-op gate. Don't expect a bundle diff if the prior task already mounted the command and ran `make generate`.
 - Hand-authored changie YAMLs in `.changes/unreleased/` use single-quoted `body:`. To embed an apostrophe (e.g. `'query'`), double it: `body: 'Add ''query'' command ...'` — YAML's only single-quote escape rule. `time:` accepts RFC3339 with `Z` suffix or numeric offset; existing entries mix both styles.
+- Verify rendered output, not just in-memory shape: a unit test that asserts `xs == []any{}` after `truncateArrays` does NOT prove `--output json` emits `"xs": []` — it could still leak a placeholder if the renderer mishandles the value. End-to-end tests should `assert.Contains(stdout, "<expected substring>")` AND `assert.NotContains(stdout, "<forbidden substring>")` against the rendered byte stream. Applies to any "what does the user actually see" gap.
 
 ---
 
