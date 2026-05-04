@@ -704,4 +704,62 @@ Key Decisions:
 - Passthrough explicitly silent — assertion in the second e2e test pins
   this so future code can't accidentally chatter on every invocation.
 
+Next Task: task-015 (Aura *.neo4j.io rewrite refinement)
+
+================================================================================
+TASK-015: Rewrite *.neo4j.io (Aura) hosts to https://host (no port, defaults to 443)
+Date: 2026-05-04T22:30:00Z
+================================================================================
+
+Summary:
+Refined task-014's normalizeURI with an Aura special case. When a bolt-family
+URI's host (without port) ends in `.neo4j.io` (case-insensitive; apex matches
+too), the rewrite forces https://<host> with no port — Aura always serves
+HTTPS on 443 regardless of input port. Previously a user passing
+bolt://abc.databases.neo4j.io:7687 got http://...:7474 (broken); now they
+get https://abc.databases.neo4j.io. Suffix match strict — lookalike
+*.neo4j.io.evil.com falls through to the generic 7687→7474 rule. 13 new
+table cases extend TestNormalizeURI covering every input shape from the
+task description. --uri help, additions.md gotcha, PRD REQ-F-017 all
+updated; bundle regenerated. All gates green.
+
+Files Changed:
+- neo4j-cli/query/uri.go (modified — Aura suffix check inserted between
+  scheme detection and generic port mapping; ~15 added lines)
+- neo4j-cli/query/uri_test.go (modified — 13 new Aura cases; all existing
+  cases unchanged and still green)
+- neo4j-cli/query/query.go (modified — --uri help string mentions Aura)
+- neo4j-cli/internal/skill/additions.md (modified — extended bolt-rewrite
+  bullet with Aura sentence)
+- neo4j-cli/internal/skill/bundle/SKILL.md (regenerated — additions
+  propagation)
+- neo4j-cli/internal/skill/bundle/references/query.md (regenerated —
+  --uri row carries new help text)
+- .plans/prd-query-command.md (REQ-F-017 expanded with Aura special-case
+  paragraph)
+- .plans/tasks-query-command.yml (status / completed_at)
+- .plans/progress-query-command.txt (this entry)
+
+Key Decisions:
+- Aura check fires AFTER bolt-family scheme validation (only bolt-family
+  inputs reach the check) but BEFORE generic 7687→7473/7474 mapping. This
+  is exactly the spec ordering and avoids two side effects: (a)
+  http(s):// passes through silently as before, (b) lookalike non-aura
+  hosts on bolt-family schemes still get the generic port rewrite.
+- `host == "neo4j.io" || strings.HasSuffix(host, ".neo4j.io")` — the
+  required-leading-dot check defends against `*.neo4j.io.evil.com`. A
+  bare `strings.Contains` or `strings.HasSuffix(host, "neo4j.io")` would
+  match the lookalike. Explicit test case locks this contract.
+- `u.Host = u.Hostname()` strips port without manual parsing — cleaner
+  than `strings.Split(u.Host, ":")[0]` and naturally handles bracketed
+  IPv6 hosts (though Aura URIs are never IPv6).
+- Lowercase-host comparison is one-way: only the comparison string is
+  lowercased; `u.Host` retains the user's original case. Test
+  `bolt://NEO4J.IO → https://NEO4J.IO` locks this — the hostname matches
+  (CI suffix test) but original case is preserved on output. HTTP
+  clients are case-insensitive on hostnames so this works in practice.
+- No new e2e test added: task-014's e2e covers the stderr-notice path
+  through runQuery; task-015 is purely a rewrite-rule refinement. The
+  uri_test.go table is the right granularity.
+
 Next Task: All tasks complete

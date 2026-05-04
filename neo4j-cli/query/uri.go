@@ -15,6 +15,10 @@ import (
 // is preserved (the user clearly meant it). Custom paths/query strings/userinfo
 // are preserved on the rewritten URI.
 //
+// Aura special case: hosts ending in `.neo4j.io` (case-insensitive; apex
+// `neo4j.io` matches too) are always rewritten to `https://<host>` with NO
+// port — Aura always serves HTTPS on 443 regardless of what the user typed.
+//
 // Returns:
 //   - rewritten:   the URI to use for the HTTP request
 //   - didRewrite:  true if the scheme/port was changed
@@ -46,6 +50,17 @@ func normalizeURI(raw string) (rewritten string, didRewrite bool, displayOrig st
 	// Capture the redacted original BEFORE mutating u so password masking is
 	// applied to the input form the user typed.
 	displayOrig = u.Redacted()
+
+	// Aura special case: any *.neo4j.io host (or apex neo4j.io) on a
+	// bolt-family scheme is forced to https with no port. Aura always serves
+	// HTTPS on 443. Suffix match (case-insensitive) — must NOT match
+	// `*.neo4j.io.evil.com`.
+	host := strings.ToLower(u.Hostname())
+	if host == "neo4j.io" || strings.HasSuffix(host, ".neo4j.io") {
+		u.Scheme = "https"
+		u.Host = u.Hostname() // strip any port
+		return u.String(), true, displayOrig
+	}
 
 	u.Scheme = newScheme
 	if u.Port() == "7687" {

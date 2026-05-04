@@ -364,7 +364,6 @@ tasks:
       **No changelog entry** — feature still unreleased on the feature branch.
 
       **Edge case to NOT handle** (out of scope): `console.neo4j.io`, `customers.neo4j.io`, etc. — non-Aura subdomains. The rule is "if it ends in `.neo4j.io` AND the user is using a bolt-family scheme, treat it as Aura". A user typing `bolt://console.neo4j.io` is misusing the tool anyway; rewriting to `https://console.neo4j.io` is no worse than failing. Don't try to enumerate Aura's actual subdomain prefixes.
-    status: pending
     dependencies:
       - task-014
     acceptance_criteria:
@@ -381,4 +380,5 @@ tasks:
       - "PRD REQ-F-017 documents the Aura host rule"
       - "`make generate-check` is clean after `make generate`"
       - "`make test`, `make fmt-check`, `make build`, `make license-check` all pass"
-    completed_at: null
+    status: completed
+    completed_at: 2026-05-04T22:30:00Z

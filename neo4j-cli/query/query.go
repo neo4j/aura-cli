@@ -51,7 +51,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().String("uri", "", "Neo4j HTTP Query API base URI [env: NEO4J_URI]. Bolt URIs (bolt://, neo4j://, neo4j+s://) are auto-rewritten to http(s)://. (default \"http://localhost:7474\")")
+	cmd.PersistentFlags().String("uri", "", "Neo4j HTTP Query API base URI [env: NEO4J_URI]. Bolt URIs (bolt://, neo4j://, neo4j+s://) are auto-rewritten to http(s)://. Aura hosts (*.neo4j.io) are always rewritten to https://<host> (port 443). (default \"http://localhost:7474\")")
 	cmd.PersistentFlags().StringP("username", "u", "", "Neo4j username [env: NEO4J_USERNAME] (default \"neo4j\")")
 	cmd.PersistentFlags().StringP("password", "p", "", "Neo4j password [env: NEO4J_PASSWORD]; prompted on TTY if unset")
 	cmd.PersistentFlags().StringP("database", "d", "", "Target database name [env: NEO4J_DATABASE] (default \"neo4j\")")
