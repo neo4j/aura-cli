@@ -9,9 +9,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clierr"
-	"github.com/spf13/cobra"
 )
 
 // NewCmd returns the `query` parent cobra command, with all persistent flags
@@ -46,7 +47,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("query: not yet implemented")
+			return runQuery(cmd, args, cfg)
 		},
 	}
 

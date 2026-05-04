@@ -196,3 +196,61 @@ Key Decisions:
   AuraConfig. Mirrors common/skill/cmd_helpers_test.go pattern.
 
 Next Task: task-006 (wire RunE: stdin/arg, password prompt, run, render)
+
+================================================================================
+TASK-006: Wire query parent RunE: stdin/arg input, password prompt, run, truncate, render
+Date: 2026-05-04T17:55:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/query/run.go wiring the parent RunE end-to-end: resolveCypher
+(positional arg → piped stdin → usage error on TTY), parseParams via existing
+helper, resolveConn, optional TTY password prompt via golang.org/x/term
+(with non-TTY usage error mentioning --password/NEO4J_PASSWORD/.env),
+runStatement, truncateValues (applies truncateArrays to row positional values
+BEFORE row-cap), capRows enforcing --max-rows (0 = unlimited), stderr warning
+on cap-trigger regardless of output mode, then rowsFromValues + renderRows.
+Three package-level var test seams (passwordReader, stdinIsTTY, stdinReader)
+let run_test.go drive the full path without the real terminal/stdin. Test
+suite covers happy path table+JSON, server error pass-through, row-cap
+truncation in both modes (stderr + JSON truncated:true), --max-rows=0
+unlimited, --truncate-arrays-over BEFORE row cap, stdin-input branch,
+TTY/non-TTY missing-cypher and missing-password errors, env-only password
+skipping prompt, --param forwarding, table-driven capRows + truncateValues
+unit tests, and a focused promptPassword non-TTY error test.
+
+Files Changed:
+- neo4j-cli/query/run.go (created — runQuery + helpers + 3 test seams)
+- neo4j-cli/query/run_test.go (created — full RunE coverage via httptest)
+- neo4j-cli/query/query.go (modified — RunE now delegates to runQuery,
+  import grouping cleaned up to put cobra with stdlib group)
+- go.mod / go.sum (golang.org/x/term moves from indirect to direct)
+- .plans/tasks-query-command.yml (status update)
+
+Key Decisions:
+- Three package-level `var` test seams (passwordReader, stdinIsTTY,
+  stdinReader) instead of dependency-injecting an interface: keeps the
+  production callsite trivial (`runQuery` just calls them) and lets each
+  test reset only the seams it cares about. Restored via t.Cleanup in the
+  harness.
+- `cmd.SilenceUsage = true` set at the very top of runQuery so any
+  downstream error (server, transport, missing password) doesn't trigger
+  cobra's "Usage:" reprint after the error message.
+- Truncation order matters per acceptance criteria: truncateValues runs on
+  the original [][]any (BEFORE the row cap), then capRows narrows. Keeps
+  row-level inspection unchanged when truncate-arrays-over=0 since the
+  helper short-circuits on max<=0.
+- Warning fires regardless of output mode by writing to cmd.ErrOrStderr()
+  in runQuery rather than inside renderRows — keeps renderRows pure (per
+  task-005's split) and means JSON consumers also see the warning on
+  stderr, matching the acceptance criterion.
+- Empty/whitespace-only stdin treated as a usage error (mirrors the
+  positional-arg empty case) so users get a clear "no Cypher provided on
+  stdin" message rather than a server-side syntax error.
+- Password prompt writes "Password: " to cmd.ErrOrStderr() (NOT stdout) so
+  it doesn't pollute the JSON envelope when piped.
+- `cmd.SetContext(context.Background())` in tests because runStatement
+  pulls cmd.Context() — cobra otherwise leaves it nil and runStatement's
+  http.NewRequestWithContext rejects a nil ctx.
+
+Next Task: task-007 (:schema subcommand)

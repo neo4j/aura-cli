@@ -82,7 +82,7 @@ tasks:
     title: "Wire query parent RunE: stdin/arg input, password prompt, run, truncate, render"
     description: |
       Replace the stub RunE in `neo4j-cli/query/query.go` with a delegate to `runQuery(cmd, args, cfg)` in a new `neo4j-cli/query/run.go`. Cypher resolution: positional arg first; if absent and stdin is not a TTY, read all of stdin; otherwise return a usage error. Password resolution: if empty after merging .env/env/flag AND `os.Stdin` is a TTY, prompt securely via `golang.org/x/term.ReadPassword` with no echo and a "Password: " prompt; if not a TTY, return a clear error directing the user to `--password`/`NEO4J_PASSWORD`/`.env`. Parse params via `parseParams`. Call `runStatement`. Apply `truncateArrays` to each row's values BEFORE row-limit handling. Apply `--max-rows` (`0` = unlimited): cap rows; if the API returned more than the cap, set `truncated=true` and print `warning: truncated to <N> rows (use --max-rows 0 for unlimited)` to `cmd.ErrOrStderr()`. Render via `renderRows`. Add `run_test.go` driving the full path against `httptest.NewServer` (success, server error, truncation, stdin input, env-only password). Confirm `golang.org/x/term` is in `go.mod`; if not, `go get` it (note in PR description).
-    status: pending
+    status: completed
     dependencies:
       - task-002
       - task-003
@@ -94,7 +94,7 @@ tasks:
       - "`--max-rows 2` against a 10-row response yields 2 rows in output AND `truncated:true` in JSON AND the stderr warning regardless of output mode"
       - "`--truncate-arrays-over 3` mutates row values before row-limit handling (both feature interact correctly)"
       - "Server error (non-2xx with `errors[]`) surfaces `code` + `message` and the command exits non-zero"
-    completed_at: null
+    completed_at: 2026-05-04T17:55:00Z
 
   - id: task-007
     title: "Implement :schema subcommand (schema.go) with json default + table mode"
