@@ -297,3 +297,49 @@ tasks:
       - "Kind = Minor; body describes the skill subcommand"
       - "make test still passes"
     completed_at: 2026-05-04T11:05:00Z
+
+  - id: task-016
+    title: "Fix bundle root mismatch + add end-to-end install regression test"
+    description: |
+      Bug discovered in real-world dogfooding: `./bin/neo4j-cli skill install
+      claude-code` reports success but writes to
+      `~/.claude/skills/neo4j-cli/bundle/SKILL.md` instead of
+      `~/.claude/skills/neo4j-cli/SKILL.md`, and `{{VERSION}}` is never
+      substituted. Root cause: `//go:embed bundle` exposes an fs.FS rooted
+      ABOVE the bundle/ directory, so WalkDir(".") sees `bundle/SKILL.md`.
+      The installer's `p == "SKILL.md"` substitution check and the
+      destination path both assume the bundle is flat. Existing unit tests
+      use `fstest.MapFS{"SKILL.md": ...}` (already flat) so the bug never
+      surfaced.
+
+      Fix: change both per-binary embed packages
+      (`neo4j-cli/internal/skill/embed.go` and
+      `neo4j-cli/aura/internal/skill/embed.go`) to expose `Bundle` as an
+      `fs.FS` derived from `fs.Sub(rawBundle, "bundle")`. Keep the raw
+      `//go:embed bundle` directive unexported.
+
+      Add a regression test that catches THIS specific class of bug — i.e.
+      that uses the actual exported `Bundle` (not a hand-rolled fixture) to
+      drive `Install` against `afero.NewMemMapFs` and asserts:
+      (a) SKILL.md lands at `<skillsDir>/<skillName>/SKILL.md` (no stray
+          `bundle/` segment),
+      (b) `{{VERSION}}` placeholder is replaced with the supplied version,
+      (c) at least one `references/<sub>.md` file is also written, and
+      (d) the bundle's WalkDir(".") yields `SKILL.md` at the root.
+
+      Place the test in each per-binary skill package (e.g.
+      `neo4j-cli/internal/skill/install_e2e_test.go` and the aura
+      counterpart) so it exercises the real embed.FS + the installer
+      together. Use `t.Setenv("HOME", t.TempDir())` so detection finds the
+      Claude Code agent without touching the user's real ~/.claude.
+    status: pending
+    dependencies:
+      - task-009
+    acceptance_criteria:
+      - "Both `<bin>/internal/skill/embed.go` files expose `Bundle fs.FS` rooted at the bundle/ contents (WalkDir at root yields `SKILL.md`, not `bundle/SKILL.md`)"
+      - "Real-world repro is fixed: `./bin/neo4j-cli skill install claude-code` writes `~/.claude/skills/neo4j-cli/SKILL.md` (not `bundle/SKILL.md`) and the version frontmatter is substituted"
+      - "End-to-end regression test in each per-binary skill package uses the exported Bundle, runs Install on afero.MemMapFs, asserts SKILL.md path, version substitution, and at least one references/* file"
+      - "An additional test in common/skill (or per-binary) confirms that WalkDir(Bundle, \".\") yields `SKILL.md` (not `bundle/SKILL.md`) — locks the contract for future binaries"
+      - "Existing tests still pass; coverage of common/skill stays ≥80%"
+      - "make build / make test / make generate-check all green"
+    completed_at: null
