@@ -2,9 +2,17 @@
 
 ## Installation
 
-Downloadable binaries are available from the [releases](https://github.com/neo4j-labs/neo4j-cli/releases/latest) page.
+### npm (recommended)
 
-Download the appropriate archive for your operating system and architecture.
+```bash
+npm i -g @neo4j-labs/cli
+```
+
+This installs a small Node wrapper plus a prebuilt `neo4j-cli` binary matching your OS and CPU. `pnpm add -g @neo4j-labs/cli` and `yarn global add @neo4j-labs/cli` work the same way. Prereleases are available via `npm i -g @neo4j-labs/cli@alpha` (also `@beta`, `@rc`, `@next`). See [`distribution/npm/cli/README.md`](./distribution/npm/cli/README.md) for the supported platform matrix.
+
+### Prebuilt archives
+
+Downloadable binaries are also available from the [releases](https://github.com/neo4j-labs/neo4j-cli/releases/latest) page. Download the appropriate archive for your operating system and architecture.
 
 ## Usage
 

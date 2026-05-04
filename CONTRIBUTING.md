@@ -75,6 +75,10 @@ To add agent-skill support to a new standalone binary:
 3. Mount the subcommand in the binary's entrypoint: `cmd.AddCommand(skill.NewCmd(cfg, binskill.Bundle, "<newcli>"))`.
 4. Run `go run ./<newcli>/internal/skill/gen` to bootstrap `bundle/`, then commit the result. No edits to `common/skill/` are needed.
 
+### Releasing
+
+The full release lifecycle (changelog → Release PR → GitHub Release → npm publish) is documented in [`RELEASING.md`](RELEASING.md). The short version: add a changelog entry on your PR, merge normally, and `changie` opens a separate Release PR — merging *that* is what ships binaries and npm packages.
+
 ### Pull requests
 
 As well as your code changes, pull requests need a changelog entry. These are added using the tool [`changie`](https://changie.dev/). You will need to install this using the following command:
