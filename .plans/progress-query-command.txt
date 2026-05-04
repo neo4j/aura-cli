@@ -317,3 +317,31 @@ Key Decisions:
   alloc per query instead of one per row.
 
 Next Task: task-008 (regen skill bundle and verify generate-check)
+
+================================================================================
+TASK-008: Regenerate skill bundle and verify generate-check passes
+Date: 2026-05-04T18:45:00Z
+================================================================================
+
+Summary:
+Verification task. Bundle was already regenerated in task-001 (initial scaffold)
+and task-007 (:schema add), so `make generate` is a no-op now. Confirmed via
+clean `git diff` after `go generate ./...` (excluding the in-progress YAML
+edit). SKILL.md Subcommands table lists `query` with link to references/query.md;
+references/query.md documents all 10 persistent flags + the `:schema` h2
+section. Both files report `i/lf w/lf attr/text eol=lf` from `git ls-files
+--eol`, confirming LF-only enforcement via .gitattributes is active.
+
+Files Changed:
+- .plans/tasks-query-command.yml (status / completed_at)
+
+Key Decisions:
+- No bundle regeneration commit needed — earlier tasks already kept the bundle
+  in lockstep with the cobra tree, so task-008 is purely a verification gate.
+  This is the expected outcome given the AGENTS.md note about the generator
+  importing app.NewCmd directly.
+- Verified `make generate-check` passes by stashing the YAML status edit
+  before running it (the target diffs the whole repo, so any unrelated edit
+  triggers the failure even when the bundle itself is clean).
+
+Next Task: task-009 (changelog entry)

@@ -247,6 +247,8 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Routing httptest pattern for multi-statement tests: one `httptest.NewServer` whose handler reads `req["statement"]` and substring-matches against a `map[string]cannedResponse` route table. `errBody` field on the route triggers a 4xx + `errors[]` envelope so the existing `runStatement` error path exercises end-to-end. Required-query failure tests inject a route override on the happy-path map; the test stays one assertion away from the canned setup.
 - Avoid using `any` as a local variable name even though syntactically valid post-Go 1.18 — Go's `any` is an alias for `interface{}`, shadowing it confuses readers. Rename to `gotAny`/`hasAny`.
 - Raw string literals (backticks) cannot contain backticks; use `"..." + "..."` regular-string concatenation when test fixtures need to embed Cypher backtick-quoting (e.g. `:"`ACTED_IN`"`). gofmt detects this as a parse error before tests can even run.
+- `make generate-check` diffs the WHOLE repo, not just bundle paths — any unrelated edit (e.g. an in-progress task YAML status flip) makes it fail with "ERROR: generated files are stale" even when the bundle is clean. To verify the bundle in isolation, `git stash push -- <unrelated-files>` first, run the check, then `git stash pop`. Don't mistake the false positive for real drift.
+- Bundle regen happens organically in feature-add tasks (because new cobra subcommands appear in the tree the moment they're mounted), so a dedicated "regen bundle" verification task is typically a no-op gate. Don't expect a bundle diff if the prior task already mounted the command and ran `make generate`.
 
 ---
 

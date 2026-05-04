@@ -116,7 +116,7 @@ tasks:
     title: "Regenerate skill bundle and verify generate-check passes"
     description: |
       Run `make generate` so `neo4j-cli/internal/skill/bundle/SKILL.md` lists `query` in the Subcommands table and `neo4j-cli/internal/skill/bundle/references/query.md` is generated from the cobra tree. Per AGENTS.md §"Repo Layout Notes", the generator imports `neo4j-cli/app` so adding `query.NewCmd` to `app.go` is sufficient — no manual edits to the bundle. Confirm `make generate-check` (which runs `go generate ./...` then `git diff --exit-code`) is clean. Verify the bundle files are LF-only via the existing `.gitattributes` rule (no manual fix needed unless drift is found).
-    status: pending
+    status: completed
     dependencies:
       - task-006
       - task-007
@@ -125,7 +125,7 @@ tasks:
       - "`neo4j-cli/internal/skill/bundle/references/query.md` exists and documents the persistent flags + `:schema` subcommand"
       - "`make generate-check` exits cleanly (no uncommitted diff after `go generate`)"
       - "Both new bundle files have LF line endings (covered by repo `.gitattributes`)"
-    completed_at: null
+    completed_at: 2026-05-04T18:45:00Z
 
   - id: task-009
     title: "Add user-facing changelog entry for neo4j-cli"
