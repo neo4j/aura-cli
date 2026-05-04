@@ -65,3 +65,43 @@ Key Decisions:
   string fallback".
 
 Next Task: task-003 (truncate.go)
+
+================================================================================
+TASK-003: Implement recursive array truncation (truncate.go)
+Date: 2026-05-04T16:30:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/query/truncate.go exposing truncateArrays(value any, max int)
+any. Recursively descends into map[string]any and []any; when a []any exceeds
+max, replaces it with []any{"<truncated: K items>"} where K is the original
+length. max <= 0 short-circuits and returns the input unchanged
+(byte-identical reference). Function is pure — reallocates slices/maps that
+need to change rather than mutating in place. Table-driven tests cover scalar
+passthrough (string/number/bool/nil), short array passthrough (len ==/< max),
+long top-level array, array nested in map (sibling scalar untouched), array
+nested in array, mixed nesting at multiple levels, max == 0, max < 0
+(defensive), empty array/map. A separate TestTruncateArrays_DoesNotMutateInput
+locks the no-mutation contract.
+
+Files Changed:
+- neo4j-cli/query/truncate.go (created — 47 lines, truncateArrays + private
+  recursive helper)
+- neo4j-cli/query/truncate_test.go (created — table-driven tests + mutation
+  guard)
+- .plans/tasks-query-command.yml (status update)
+
+Key Decisions:
+- Treat max <= 0 (not just == 0) as "off" to avoid surprises if a future caller
+  passes a negative sentinel; PRD says 0 disables, negative is undefined so the
+  conservative choice is also disable.
+- Fixed K-item placeholder format string ("<truncated: %d items>") matches the
+  PRD example. Always plural even for K==1 since arrays of len > max>=1 always
+  have K >= 2; not worth a singular branch.
+- Reallocate maps/slices on the descent rather than mutate in place — keeps
+  the function pure and makes test mutation-guard trivial. Cost is one alloc
+  per nested container, negligible against typical query result sizes.
+- Two separate test functions (TestTruncateArrays + TestTruncateArrays_DoesNotMutateInput)
+  follows the params_test.go split-by-concern pattern.
+
+Next Task: task-004 (HTTP transport + connect.go)

@@ -37,7 +37,7 @@ tasks:
     title: "Implement recursive array truncation (truncate.go)"
     description: |
       Add `neo4j-cli/query/truncate.go` exposing `truncateArrays(value any, max int) any`. Walk maps and slices recursively. When `max > 0` and a `[]any` has `len > max`, replace it with a single-element `[]any{"<truncated: K items>"}` (capture original length in K). When `max == 0`, return the input unchanged. Add `truncate_test.go` table-driven cases: scalar passthrough, short array passthrough, long top-level array, array nested in map, array nested in array, mixed nesting, `max == 0` disables truncation.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -46,7 +46,7 @@ tasks:
       - "Arrays inside arrays are truncated independently at every level"
       - "`max == 0` returns the input value byte-identical (no truncation applied)"
       - "Function is pure (no I/O), and tests are table-driven"
-    completed_at: null
+    completed_at: 2026-05-04T16:30:00Z
 
   - id: task-004
     title: "Implement HTTP transport + connection resolution (connect.go)"
