@@ -366,3 +366,56 @@ Verification:
 
 Next Task: task-009 (user-facing distribution/npm/cli/README.md, depends on
 task-002 and task-003)
+
+================================================================================
+TASK-009: Write user-facing distribution/npm/cli/README.md (ships in tarball)
+Date: 2026-05-04T18:30:00Z
+================================================================================
+
+Summary:
+Created distribution/npm/cli/README.md (77 lines) — the user-facing README
+that ships inside the published @neo4j/cli tarball. Covers install command
+(npm i -g @neo4j/cli), supported platform/arch matrix, friendly-error path
+for unsupported platforms and --omit=optional installs, prerelease channels
+(@alpha/@beta/@rc/@next), and links to the main project repo, issues, and
+Aura usage guide. README.md was already in the wrapper template's files:
+array (added in task-003 in anticipation), so no template edits needed.
+
+Files Changed:
+- distribution/npm/cli/README.md (created — 77 lines, user-facing tarball README)
+
+Key Decisions:
+- Used neo4j-labs/neo4j-cli for repo links, matching the actual GitHub repo
+  and the repo-root README.md. The wrapper template's homepage field still
+  says neo4j/cli — that's a separate cleanup not in this task's AC.
+- Kept it short (77 lines vs the 196-line maintainer README): user-facing
+  README's job is install instructions + channel info + link to canonical
+  docs. Detailed usage lives in the repo-root README and usage guides.
+- Documented both the --omit=optional case (platform IS in matrix but pkg
+  was excluded → reinstall without flag) AND the unsupported-platform case
+  (download from GH releases). Mirrors the bin shim's two-branch error
+  message — keeps user-facing surface consistent with what the shim prints
+  at runtime if either failure mode hits.
+- Listed pnpm/yarn equivalents inline rather than as a separate block —
+  one-liner each, and the file picker behavior is identical so a separate
+  section would be padding.
+- Channels table mirrors the maintainer README's table for consistency, but
+  user README focuses on install commands (not what the publish script does)
+  — same data, audience-appropriate framing.
+- Did NOT add usage examples beyond `--help` and a single `aura instance
+  list` invocation. Detailed usage docs live in the repo-root README and the
+  usage guides; duplicating them in the tarball README invites drift.
+- Apache-2.0 license note at the bottom — required by npm hygiene; full
+  license text lives in the project repo, not the tarball.
+
+Verification:
+- wc -l → 77 lines
+- All 5 AC mapped: install command, platform matrix + friendly-error path,
+  prerelease channels, project repo/docs links, files: array entry (already
+  in wrapper template from task-003)
+- Cross-links verified: github.com/neo4j-labs/neo4j-cli (releases, issues,
+  usage guide all reachable)
+- make fmt-check + make test — both clean (no Go changes)
+
+Next Task: task-010 (repo README install section + changelog entry — final task)
+

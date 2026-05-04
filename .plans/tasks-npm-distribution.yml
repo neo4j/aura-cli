@@ -167,7 +167,7 @@ tasks:
       by the wrapper template's `files:` array). Covers: install (`npm i -g @neo4j/cli`), basic
       usage, link to the main project docs, and channel info — `npm i @neo4j/cli@alpha` for
       prereleases. Open question 4 from PRD: keep prerelease channel info present.
-    status: pending
+    status: completed
     dependencies:
       - task-002
       - task-003
@@ -177,7 +177,7 @@ tasks:
       - "Documents prerelease channels: `npm i @neo4j/cli@alpha` etc."
       - "Links to the main project repo / docs"
       - "Listed in the wrapper template's `files:` array so it ends up in the published tarball"
-    completed_at: null
+    completed_at: 2026-05-04T18:30:00Z
 
   - id: task-010
     title: "Update repo README install section + add changelog entry"
