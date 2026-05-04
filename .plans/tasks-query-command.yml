@@ -217,3 +217,48 @@ tasks:
       - "PRD REQ-F-009 documents the stderr warning and the `arrays_truncated` JSON field"
       - "`make test` and `make fmt-check` pass"
     completed_at: 2026-05-04T20:45:00Z
+
+  - id: task-013
+    title: "Add real-Neo4j HTTPS smoke test for --insecure (shell script + env-gated Go test)"
+    description: |
+      The `--insecure` flag is currently covered only by `httptest.NewTLSServer` unit tests in `connect_test.go`. Add a real-world smoke test that boots a Neo4j 5 container with HTTPS enabled on port 7473, exercises the CLI binary against it, and asserts both the positive (`--insecure` succeeds) and negative (default TLS verification fails on a self-signed cert) paths.
+
+      Out of scope: making this run on every CI matrix entry. Docker is not available on GHA macOS runners. Keep this as a local / docker-equipped-CI verification.
+
+      **Implementation:**
+
+      1. **Shell script `scripts/test-https.sh`** (executable; bash; `set -euo pipefail`):
+         - Generate a self-signed cert into a temp dir using `openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 30 -subj "/CN=localhost"`. Neo4j expects `private.key` (no password) and `public.crt` in `https/` plus `trusted/` and `revoked/` directories — lay them out per the docs.
+         - Build the binary via `make build` (or assume `bin/neo4j-cli` exists if `SKIP_BUILD=1`).
+         - `docker run -d --rm --name neo4j-https-test -p 7473:7473 -p 7474:7474 -e NEO4J_AUTH=neo4j/testtest -e NEO4J_server_https_enabled=true -e NEO4J_dbms_ssl_policy_https_enabled=true -e NEO4J_dbms_ssl_policy_https_base__directory=/ssl -e NEO4J_dbms_ssl_policy_https_private__key=private.key -e NEO4J_dbms_ssl_policy_https_public__certificate=public.crt -e NEO4J_dbms_ssl_policy_https_client__auth=NONE -v <tempdir>:/ssl:ro neo4j:5` (verify the exact env-var spellings against current Neo4j 5 docs — single-underscore for `.`s, double for `_`s in nested keys; `dbms.ssl.policy.https.*` is the right namespace).
+         - Wait for HTTPS readiness: poll `curl -sf -k https://localhost:7473` until 200 (cap at ~60s; fail with a clear message if the deadline elapses).
+         - Positive: `bin/neo4j-cli query --uri https://localhost:7473 --insecure -u neo4j -p testtest "RETURN 1 AS n"` must exit 0 and stdout must contain `1`.
+         - Negative: `bin/neo4j-cli query --uri https://localhost:7473 -u neo4j -p testtest "RETURN 1"` (no `--insecure`) must exit non-zero and stderr must mention TLS / x509 / certificate. Use `set +e` around this single invocation so the script can assert non-zero without aborting.
+         - Always tear down: `trap 'docker rm -f neo4j-https-test >/dev/null 2>&1; rm -rf "$tempdir"' EXIT`.
+         - Print a final `OK: --insecure verified end-to-end` line on success.
+
+      2. **Env-gated Go smoke test `neo4j-cli/query/query_https_smoke_test.go`**:
+         - `func TestHTTPS_Smoke(t *testing.T)` — `if os.Getenv("NEO4J_HTTPS_TEST") != "1" { t.Skip("set NEO4J_HTTPS_TEST=1 to run; needs docker + scripts/test-https.sh") }`.
+         - Resolve the script path via `runtime.Caller(0)` → repo root → `scripts/test-https.sh` (cross-platform-ish, though this whole test is Unix-only by design — gate with `//go:build !windows` if needed).
+         - `cmd := exec.Command("bash", scriptPath); cmd.Stdout = os.Stdout; cmd.Stderr = os.Stderr` and assert `cmd.Run() == nil`.
+         - The Go test exists so `go test ./...` discovers it (and skips by default), and so devs can run `NEO4J_HTTPS_TEST=1 go test ./neo4j-cli/query/ -run TestHTTPS_Smoke -v` without remembering the script path.
+
+      3. **Documentation**: add a one-line note to AGENTS.md (or a new "Local verification scripts" subsection if no existing home) pointing at `scripts/test-https.sh` and the env-gated Go wrapper. Be terse.
+
+      4. **No changelog entry** — this is a test-only addition, not user-facing.
+
+      5. **Defensive checks in the script**: bail with a clear message if `docker` or `openssl` are not on PATH, or if port 7473/7474 is already in use. The user-facing error message matters because this script will be run by humans, not CI.
+    status: pending
+    dependencies:
+      - task-012
+    acceptance_criteria:
+      - "`scripts/test-https.sh` exists, is executable, and uses `set -euo pipefail`"
+      - "Running the script locally (with docker + openssl on PATH) generates a self-signed cert, boots Neo4j with HTTPS on 7473, runs both positive and negative CLI invocations, and exits 0 on success"
+      - "Negative branch (no `--insecure`) is asserted to exit non-zero AND emit a TLS-related error to stderr"
+      - "Positive branch (`--insecure`) is asserted to exit 0 AND emit `1` (the row value) to stdout"
+      - "Container and temp cert dir are cleaned up via a `trap` regardless of exit path"
+      - "Pre-flight checks fail fast with a clear human message when `docker`, `openssl`, or the required ports are unavailable"
+      - "`neo4j-cli/query/query_https_smoke_test.go` skips by default (`go test ./...` is unaffected) and runs the script when `NEO4J_HTTPS_TEST=1` is set"
+      - "AGENTS.md has a one-line pointer to the script + the env-gated Go wrapper"
+      - "`make test`, `make fmt-check`, and `make build` continue to pass; `make generate-check` is unaffected"
+    completed_at: null
