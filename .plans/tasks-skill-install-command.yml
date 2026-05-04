@@ -402,6 +402,7 @@ tasks:
 
   - id: task-018
     title: "Restructure common/skill cobra files to match one-file-per-leaf convention"
+    status: completed
     description: |
       Audit (post-PR-#12) found two cobra-layout deviations from the
       dominant codebase pattern. The dominant style — used by
@@ -438,7 +439,6 @@ tasks:
       `grep skill.go` discover the parent; lets future contributors
       copy the `instance/<action>.go` template when adding a new leaf
       (e.g. `skill update`).
-    status: pending
     dependencies:
       - task-006
     acceptance_criteria:
@@ -449,4 +449,4 @@ tasks:
       - "make test green; coverage of common/skill stays ≥80%; no behaviour change"
       - "make fmt-check, make lint, make license-check, make generate-check all green"
       - "Public API of common/skill is unchanged (verified: only NewCmd, Install, Remove, List, Check, AGENTS, FindAgent, etc. remain exported with same signatures)"
-    completed_at: null
+    completed_at: 2026-05-04T22:00:00Z

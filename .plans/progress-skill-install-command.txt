@@ -638,3 +638,63 @@ Key Decisions:
 
 Next Task: none — all task-017 acceptance criteria satisfied. Awaiting CI
 re-run on PR #12 to confirm Windows green.
+
+================================================================================
+TASK-018: Restructure common/skill cobra files to match one-file-per-leaf convention
+Date: 2026-05-04T22:00:00Z
+================================================================================
+
+Summary:
+Pure file-reorg refactor. Split the 311-line common/skill/command.go (all four
+leaves inline + helpers) into the dominant in-repo pattern: parent file
+`skill.go` with only NewCmd + persistent-flag wiring, one file per leaf
+(install.go / remove.go / list.go / check.go), shared cross-leaf helpers in
+helpers.go, leaf-specific helpers colocated. Did the same split on
+command_test.go: tests moved to install_test.go / remove_test.go /
+list_test.go / check_test.go alongside their leaves; the lone TestInvalidOutputFlag
+stays in skill_test.go (parent persistent-flag concern); shared fixture
+helpers extracted to cmd_helpers_test.go. No behaviour change, no API change.
+
+Files Changed:
+- common/skill/skill.go (created — parent factory only, 59 lines)
+- common/skill/install.go (created — newInstallCmd + installResultRow + renderInstallResult)
+- common/skill/remove.go (created — newRemoveCmd; reuses install's render helper)
+- common/skill/list.go (created — newListCmd + listResultRow + renderListResult + boolStr)
+- common/skill/check.go (created — newCheckCmd + checkResultRow + renderCheckResult)
+- common/skill/helpers.go (created — formatAgentErr, agentNames, printJSON; shared by ≥2 leaves)
+- common/skill/skill_test.go (created — TestInvalidOutputFlag)
+- common/skill/install_test.go (created — 5 tests moved verbatim)
+- common/skill/remove_test.go (created — 4 tests moved verbatim)
+- common/skill/list_test.go (created — 2 tests moved verbatim)
+- common/skill/check_test.go (created — 4 tests moved verbatim)
+- common/skill/cmd_helpers_test.go (created — fixture, fixtureBundle, newFixture, exec, resetBuffers)
+- common/skill/command.go (deleted)
+- common/skill/command_test.go (deleted)
+- AGENTS.md (added per-leaf cobra file convention note)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- skill.go strictly limited to NewCmd + persistent-flag wiring (59 lines, well
+  under the ≤80 line acceptance criterion). Helpers carved out into helpers.go
+  to honour "ONLY the parent factory" wording — task brief allowed either
+  skill.go or co-location with the heaviest consumer; a separate helpers.go
+  is a third reasonable option for ≥2-leaf shared helpers (formatAgentErr +
+  agentNames used by install/remove; printJSON used by all four leaves).
+- boolStr moved to list.go since list is its only consumer.
+- TestInvalidOutputFlag landed in skill_test.go (parent NewCmd
+  persistent-flag concern), not in any leaf file. cmd_helpers_test.go holds
+  the shared fixture + bundle scaffolding.
+- Test count preserved: 16 functions across the 5 new test files vs 16 in
+  the original command_test.go. No tests deleted.
+- Coverage of common/skill: 90.1% (was 90.1% pre-refactor; matches —
+  refactor is identity-preserving).
+- Verified --help output unchanged on bin/neo4j-cli skill / install / remove /
+  list / check by exec'ing each post-build.
+- Public API surface verified via `go doc ./common/skill`: unchanged.
+  NewCmd(cfg *clicfg.Config, bundle fs.FS, skillName string) *cobra.Command
+  signature identical.
+- License headers present on all 11 new files.
+- make fmt-check, make build, make test all green. golangci-lint /
+  addlicense not installed locally; both run in CI on the existing matrix.
+
+Next Task: none — task-018 closes the file-reorg follow-up from the post-PR-#12 audit.
