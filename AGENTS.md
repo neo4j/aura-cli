@@ -254,6 +254,11 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Verify rendered output, not just in-memory shape: a unit test that asserts `xs == []any{}` after `truncateArrays` does NOT prove `--output json` emits `"xs": []` — it could still leak a placeholder if the renderer mishandles the value. End-to-end tests should `assert.Contains(stdout, "<expected substring>")` AND `assert.NotContains(stdout, "<forbidden substring>")` against the rendered byte stream. Applies to any "what does the user actually see" gap.
 - Silent-elision needs a dual-signal: stderr line + stable JSON envelope field. When `--truncate-arrays-over` rewrites array values silently to `[]`, scripts can't tell elided from natively-empty. Pattern is (a) one stderr line `warning: truncated N arrays larger than M items (use --truncate-arrays-over 0 to disable)` aggregated end-of-run, gated on `count>0 && truncOver>0`; (b) `arrays_truncated: <int>` in the JSON envelope, ALWAYS present (zero when nothing was elided) so jq consumers have a stable schema. Helper returns `(value, count)` — count is per-distinct-slice (one 200-item array → 1; two over-limit arrays → 2; nested truncations count separately). Same posture as the existing `truncated:bool` row-cap signal.
 
+## Local Verification Scripts
+
+- `scripts/test-https.sh` — real-Neo4j HTTPS smoke for `query --insecure` (boots `neo4j:5` with self-signed cert, asserts positive + negative TLS paths). Runnable directly or via `NEO4J_HTTPS_TEST=1 go test ./neo4j-cli/query/ -run TestHTTPS_Smoke -v`. Requires docker + openssl + curl; ports 7473/7474 free. Skipped by default in `go test ./...`.
+- Neo4j 5 docker HTTPS env-vars use single-underscore for `.` and double for `_`: `NEO4J_server_https_enabled`, `NEO4J_dbms_ssl_policy_https_{enabled,base__directory,private__key,public__certificate,client__auth}`. Bind-mount cert dir at `<base_directory>` (e.g. `/ssl`) containing `private.key` + `public.crt` plus empty `trusted/` and `revoked/` subdirs (Neo4j requires both even when `client__auth=NONE`). Cert files must be world-readable (0644) — container user is uid 7474.
+
 ---
 
 _This AGENTS.md was generated using agent-based project discovery._

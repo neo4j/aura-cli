@@ -595,4 +595,55 @@ Key Decisions:
   rather than splitting them — the dual-signal pattern is a single
   semantic unit and tests should mirror that.
 
+Next Task: task-013 (real-Neo4j HTTPS smoke for --insecure)
+
+================================================================================
+TASK-013: Add real-Neo4j HTTPS smoke test for --insecure (shell script + env-gated Go test)
+Date: 2026-05-04T21:00:00Z
+================================================================================
+
+Summary:
+Added scripts/test-https.sh that boots a neo4j:5 container with HTTPS on 7473
+using a self-signed cert from a temp dir, asserts the positive (--insecure
+exits 0 + stdout contains '1') and negative (no --insecure exits non-zero +
+stderr matches tls|x509|certificate) paths, and tears down via trap.
+Pre-flight checks docker/openssl/curl on PATH and that ports 7473/7474 are
+free. Added neo4j-cli/query/query_https_smoke_test.go (//go:build !windows)
+that skips by default and runs the script when NEO4J_HTTPS_TEST=1. AGENTS.md
+gains a "Local Verification Scripts" section + a Neo4j 5 docker HTTPS env-var
+gotcha entry.
+
+Files Changed:
+- scripts/test-https.sh (created — bash, set -euo pipefail, executable)
+- neo4j-cli/query/query_https_smoke_test.go (created — env-gated wrapper,
+  Unix-only via build constraint)
+- AGENTS.md (Local Verification Scripts section + Neo4j docker env-var note)
+- .plans/tasks-query-command.yml (status / completed_at)
+- .plans/progress-query-command.txt (this entry)
+
+Key Decisions:
+- chmod 0644 (not 0600) on private.key: the bind mount is read-only, the host
+  dir is a private mktemp tree, and the Neo4j container runs as uid 7474 so
+  it needs world-readable. Trading file-permission strictness for container
+  readability inside an already-isolated temp dir.
+- Empty `trusted/` and `revoked/` subdirs are created even though
+  `client__auth=NONE`: Neo4j 5 still scans those directories at boot and
+  fails if they're missing. Documented in AGENTS.md.
+- Resolve repo root from script location via cd to ${SCRIPT_DIR}/..: lets
+  the script run from any cwd (including the Go test's cwd, which is the
+  package dir).
+- Negative-branch error matcher uses grep -iE 'tls|x509|certificate':
+  Go version drift changes the exact wording, so accept any of the three
+  case-insensitively.
+- Container name pinned (neo4j-https-test) and pre-removed before docker run
+  to handle leftover from a previous failed run; trap also removes on exit.
+- Negative branch wraps the single CLI invocation in `set +e` ... `set -e`
+  rather than disabling errexit globally — minimizes the window where a
+  failure could be silently swallowed.
+- Go test path gating: //go:build !windows + env gate so `go test ./...` is
+  unaffected on every platform but devs on macOS/Linux can opt in.
+- shellcheck unavailable locally; bash -n syntax check passed. CI lint is
+  golangci-lint only — no shellcheck integration in this repo, so the
+  script will be lint-checked by reviewers.
+
 Next Task: All tasks complete

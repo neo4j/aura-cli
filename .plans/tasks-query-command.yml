@@ -220,6 +220,7 @@ tasks:
 
   - id: task-013
     title: "Add real-Neo4j HTTPS smoke test for --insecure (shell script + env-gated Go test)"
+    status: completed
     description: |
       The `--insecure` flag is currently covered only by `httptest.NewTLSServer` unit tests in `connect_test.go`. Add a real-world smoke test that boots a Neo4j 5 container with HTTPS enabled on port 7473, exercises the CLI binary against it, and asserts both the positive (`--insecure` succeeds) and negative (default TLS verification fails on a self-signed cert) paths.
 
@@ -248,7 +249,6 @@ tasks:
       4. **No changelog entry** — this is a test-only addition, not user-facing.
 
       5. **Defensive checks in the script**: bail with a clear message if `docker` or `openssl` are not on PATH, or if port 7473/7474 is already in use. The user-facing error message matters because this script will be run by humans, not CI.
-    status: pending
     dependencies:
       - task-012
     acceptance_criteria:
@@ -261,4 +261,4 @@ tasks:
       - "`neo4j-cli/query/query_https_smoke_test.go` skips by default (`go test ./...` is unaffected) and runs the script when `NEO4J_HTTPS_TEST=1` is set"
       - "AGENTS.md has a one-line pointer to the script + the env-gated Go wrapper"
       - "`make test`, `make fmt-check`, and `make build` continue to pass; `make generate-check` is unaffected"
-    completed_at: null
+    completed_at: 2026-05-04T21:00:00Z
