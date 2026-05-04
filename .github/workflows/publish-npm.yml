@@ -122,7 +122,7 @@ jobs:
           # archives, no GoReleaser re-invocation needed. The publish script
           # expects dist/<archive_basename>/<binary>; archive_basename matches
           # the .tar.gz / .zip filename without the extension.
-          mkdir -p "${{ runner.temp }}/dist-archives" "${{ runner.temp }}/dist-extracted" dist
+          mkdir -p "${{ runner.temp }}/dist-archives" dist
           gh release download "v${VERSION}" \
             --repo "${GITHUB_REPOSITORY}" \
             --pattern 'neo4j-cli_*' \
@@ -134,6 +134,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           VERSION: ${{ inputs.version }}
+          ARCHIVES_DIR: ${{ runner.temp }}/dist-archives
         run: |
           # Extract each archive into dist/<archive_basename>/ to recreate the
           # GoReleaser dist/ layout. .tar.gz archives use tar; .zip uses unzip.
@@ -142,13 +143,13 @@ jobs:
           # column (with ${VERSION} substituted) — GoReleaser names them this
           # way already, so the basename without extension lines up.
           shopt -s nullglob
-          for archive in dist-archives/neo4j-cli_*.tar.gz; do
+          for archive in "${ARCHIVES_DIR}"/neo4j-cli_*.tar.gz; do
             base=$(basename "$archive" .tar.gz)
             mkdir -p "dist/${base}"
             tar -xzf "$archive" -C "dist/${base}"
             echo "[publish-npm] extracted ${archive} -> dist/${base}/"
           done
-          for archive in dist-archives/neo4j-cli_*.zip; do
+          for archive in "${ARCHIVES_DIR}"/neo4j-cli_*.zip; do
             base=$(basename "$archive" .zip)
             mkdir -p "dist/${base}"
             unzip -q "$archive" -d "dist/${base}"
