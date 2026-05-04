@@ -52,7 +52,7 @@ tasks:
     title: "Implement HTTP transport + connection resolution (connect.go)"
     description: |
       Add `neo4j-cli/query/connect.go`. Define `httpDoer interface{ Do(*http.Request) (*http.Response, error) }` to enable test injection. Implement `resolveConn(cmd, cfg) (*conn, error)` that loads `.env` (path from `--env` or auto walk-up from cwd; ignore if absent), then merges values lowest→highest as `.env` < OS env (`NEO4J_URI`/`NEO4J_USERNAME`/`NEO4J_PASSWORD`/`NEO4J_DATABASE`/`NEO4J_INSECURE`) < flags. Defaults: uri=`http://localhost:7474`, username=`neo4j`, database=`neo4j`. Build an `*http.Client` honoring `--insecure` (sets `tls.Config{InsecureSkipVerify: true}`). Expose `runStatement(ctx, conn, statement string, params map[string]any) (*queryResult, error)` that POSTs to `<uri>/db/<database>/query/v2` with HTTP Basic auth and parses `data.fields`/`data.values`/`errors`. On non-2xx or non-empty `errors[]`, return an error containing the upstream `code` and `message`. Add `connect_test.go` using `httptest.NewServer` for transport tests and `afero.NewMemMapFs` + `t.Setenv("HOME", ...)` + `t.Setenv("XDG_CONFIG_HOME", "")` for the `.env` walk-up + precedence cases.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -61,7 +61,7 @@ tasks:
       - "`runStatement` against an `httptest.NewServer` returning canned `data.fields`/`data.values` produces the expected `queryResult`"
       - "A 4xx response with `errors[].code` + `errors[].message` surfaces both fields in the returned Go error"
       - "`--insecure` flips `InsecureSkipVerify` on; without it, a self-signed-cert server returns a TLS error from `runStatement`"
-    completed_at: null
+    completed_at: 2026-05-04T16:30:00Z
 
   - id: task-005
     title: "Implement output renderers for query rows (output.go)"

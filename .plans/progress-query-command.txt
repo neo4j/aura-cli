@@ -105,3 +105,46 @@ Key Decisions:
   follows the params_test.go split-by-concern pattern.
 
 Next Task: task-004 (HTTP transport + connect.go)
+
+================================================================================
+TASK-004: Implement HTTP transport + connection resolution (connect.go)
+Date: 2026-05-04T16:30:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/query/connect.go: httpDoer test seam, conn struct, resolveConn
+(merges .env < OS env < flags with defaults applied last), loadEnvFile (afero
++ explicit-path or walk-up), newHTTPClient honoring --insecure, runStatement
+that POSTs to <uri>/db/<database>/query/v2 with basic auth and surfaces
+upstream code+message on errors. Added connect_test.go with full coverage
+including TLS-pass/fail against httptest.NewTLSServer, precedence tests using
+real OsFs + t.Chdir(t.TempDir()), and behaviour tests using afero.MemMapFs
+where cwd doesn't matter.
+
+Files Changed:
+- neo4j-cli/query/connect.go (created — ~270 lines)
+- neo4j-cli/query/connect_test.go (created — table-driven precedence/transport)
+- go.mod (subosito/gotenv promoted to direct dep via `go mod tidy`)
+- .plans/tasks-query-command.yml (status update)
+
+Key Decisions:
+- pickString-style first-non-empty was wrong for precedence (returns dotenv
+  when both dotenv+env set); replaced with overlay() which applies left→right
+  with last-non-empty-wins, matching .env < env < flag semantics.
+- Use cmd.Flag(name).Value.String() (which falls through persistent flag
+  parents) rather than cmd.Flags().GetString — the latter doesn't see
+  persistent flags until mergePersistentFlags fires during Execute, breaking
+  unit tests that call resolveConn directly without a full Execute.
+- --insecure precedence handled via cmd.Flag("insecure").Changed because the
+  bool flag's zero value (false) is meaningful and indistinguishable from
+  "unset" otherwise.
+- loadEnvFile takes (fs, explicitPath, startDir) so tests can drive walk-up
+  with afero.MemMapFs without t.Chdir; resolveConn glues it to os.Getwd +
+  cfg.Aura.Fs() in production.
+- gotenv (subosito) was already transitively required; promoted to direct
+  dep via go mod tidy. No new third-party deps.
+- Tests use t.Chdir(t.TempDir()) for hermetic cwd switching (Go 1.24+).
+  Mixed afero.MemMapFs + afero.NewOsFs depending on whether the test crosses
+  the os.Getwd seam.
+
+Next Task: task-005 (output renderers for query rows)

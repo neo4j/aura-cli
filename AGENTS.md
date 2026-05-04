@@ -224,6 +224,19 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Config lives at `.golangci.yml` in repo root
 - In CI, `golangci/golangci-lint-action@v6` is used as the lint step — it installs, caches, and runs golangci-lint using `.golangci.yml`. This is equivalent to `make lint`. Renovate will pin the SHA.
 
+## Cobra Flag Access Notes
+
+- `cmd.Flags().GetString("foo")` only sees LOCAL flags until `mergePersistentFlags()` runs (during `Execute` or `ParseFlags`). Calling it from a unit test that drives a function directly (without Execute) will fail with `flag accessed but not defined`. Use `cmd.Flag("foo").Value.String()` instead — `Flag()` falls through to persistent flags + parents' persistent flags via `persistentFlag()`/`updateParentsPflags()`. Same applies to GetBool — for bool defaults that overlap with "unset" (e.g. `--insecure` defaults false), gate on `cmd.Flag("name").Changed` to disambiguate.
+- For first-non-empty-wins precedence pass values to a helper that picks the FIRST non-empty. For lowest→highest precedence (`.env` < env < flag) use a `last-non-empty-wins` helper instead — easy to swap accidentally; query/connect.go calls this `overlay()`.
+
+## Query Command Notes
+
+- `neo4j-cli/query/connect.go` exposes `httpDoer interface { Do(*http.Request) (*http.Response, error) }` as the test seam — tests inject `srv.Client()` from `httptest.NewServer`/`NewTLSServer` rather than monkey-patching.
+- `loadEnvFile(fs afero.Fs, explicitPath, startDir string) (map[string]string, error)` is the pure helper for `.env` resolution; `resolveConn` glues it to `os.Getwd()` + `cfg.Aura.Fs()` in production. Walk-up uses `filepath.Dir` and stops when `parent == dir` (root reached).
+- TLS unit tests: `httptest.NewTLSServer` produces a self-signed cert. The default `newHTTPClient(false)` rejects it; `newHTTPClient(true)` (i.e. `--insecure`) accepts. `srv.Client()` IS pre-configured to trust httptest's cert — for the secure-rejection assertion you MUST construct your own client (`newHTTPClient(false)`), NOT use `srv.Client()`.
+- `subosito/gotenv` was already a transitive dep (via viper); `go mod tidy` after first import promotes it to direct. No new third-party deps for the query command.
+- `t.Chdir(t.TempDir())` (Go 1.24+) is the hermetic primitive for tests that need a controlled cwd — go.mod `go 1.25.0` baseline allows it.
+
 ---
 
 _This AGENTS.md was generated using agent-based project discovery._
