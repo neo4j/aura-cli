@@ -14,9 +14,32 @@
 // the cobra tree built by aura.NewStandaloneCmd.
 package skill
 
-import "embed"
+import (
+	"embed"
+	"io/fs"
+)
 
 //go:generate go run ./gen
 
+// rawBundle is the raw embed.FS rooted ABOVE the bundle/ directory. Do not
+// expose this directly to the installer — `fs.WalkDir(rawBundle, ".")` would
+// yield `bundle/SKILL.md`, not `SKILL.md`, and the installer assumes the
+// flat layout produced by render.Bundle.
+//
 //go:embed bundle
-var Bundle embed.FS
+var rawBundle embed.FS
+
+// Bundle is the agent-skill bundle rooted at the bundle/ contents, so
+// `fs.WalkDir(Bundle, ".")` yields `SKILL.md` and `references/<sub>.md`
+// at the root — the flat layout the installer expects.
+var Bundle fs.FS = mustSub(rawBundle, "bundle")
+
+// mustSub wraps fs.Sub and panics on error. The only failure modes are
+// programmer errors (invalid path), so a panic at init time is acceptable.
+func mustSub(parent fs.FS, dir string) fs.FS {
+	sub, err := fs.Sub(parent, dir)
+	if err != nil {
+		panic(err)
+	}
+	return sub
+}

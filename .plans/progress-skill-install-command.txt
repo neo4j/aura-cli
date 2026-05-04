@@ -514,4 +514,61 @@ Key Decisions:
   changie's natural behaviour for dual-project entries created in one call.
 - Body uses the exact wording from the PRD's REQ-NF-003 / task-015 brief.
 
-Next Task: none — feature complete
+Next Task: task-016
+
+================================================================================
+TASK-016: Fix bundle root mismatch + add end-to-end install regression test
+Date: 2026-05-04T20:30:00Z
+================================================================================
+
+Summary:
+Fixed real-world bug where `./bin/neo4j-cli skill install claude-code` wrote
+to `~/.claude/skills/neo4j-cli/bundle/SKILL.md` (extra `bundle/` segment) and
+never substituted `{{VERSION}}`. Root cause: `//go:embed bundle` exposes an
+fs.FS rooted ABOVE the bundle/ directory, so WalkDir(".") yielded
+`bundle/SKILL.md`, not `SKILL.md`. The installer's `p == "SKILL.md"`
+substitution check + destination path both assume flat layout. Existing
+unit tests used `fstest.MapFS{"SKILL.md": ...}` (already flat) so the bug
+never surfaced.
+
+Fix: both `<bin>/internal/skill/embed.go` files now expose a sub-rooted
+`Bundle fs.FS` via `fs.Sub(rawBundle, "bundle")`. Public API change is
+type widening (embed.FS → fs.FS); embed.FS already satisfies fs.FS so all
+callers compile unchanged. Added e2e regression tests in each per-binary
+skill package (`install_e2e_test.go`) that exercise the real exported
+Bundle through `commonskill.Install` against `afero.NewMemMapFs`, plus a
+contract test (`TestBundleWalkAtRoot`) that asserts `fs.WalkDir(Bundle,
+".")` yields `SKILL.md` at the root. Verified the new tests FAIL when
+the embed.go fix is reverted (with the exact error wording from the
+original bug report) and PASS with the fix applied. Real-world repro
+confirmed: install/list/remove now work correctly against `~/.claude`.
+
+Files Changed:
+- neo4j-cli/internal/skill/embed.go (Bundle: embed.FS → fs.FS rooted at bundle/)
+- neo4j-cli/aura/internal/skill/embed.go (same fix)
+- neo4j-cli/internal/skill/install_e2e_test.go (new — package skill_test)
+- neo4j-cli/aura/internal/skill/install_e2e_test.go (new — package skill_test)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- Used `fs.Sub` at package init (with mustSub-panic on error) rather than
+  doing the Sub at every install call — cleaner public API and the only
+  failure mode is a programmer error caught at process start.
+- Kept the raw `//go:embed bundle` directive, just renamed the var to
+  `rawBundle` (unexported). External callers depending on `embed.FS`-
+  specific methods would have broken; verified none exist.
+- e2e tests live in the per-binary packages (NOT common/skill) so they
+  exercise the real embed.FS, not a fixture. Common/skill's existing
+  fstest.MapFS tests stay — they cover the installer logic in isolation.
+- TestBundleWalkAtRoot duplicated in both per-binary packages rather
+  than centralised — each binary's Bundle is a separate variable, so a
+  single shared test would need parametrisation; per-binary keeps it
+  obvious.
+- Verified by stashing the embed.go fix and running the new tests:
+  TestBundleWalkAtRoot fails with "got [bundle/SKILL.md ...] does not
+  contain SKILL.md", TestInstallE2E fails on the SKILL.md exists check.
+  This proves the regression test catches the original bug.
+- afero.Walk takes a `filepath.WalkFunc` (os.FileInfo) — initial draft
+  used an inline interface that wouldn't compile.
+
+Next Task: none — feature complete (real-world bug fixed)

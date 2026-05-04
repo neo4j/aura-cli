@@ -332,7 +332,7 @@ tasks:
       counterpart) so it exercises the real embed.FS + the installer
       together. Use `t.Setenv("HOME", t.TempDir())` so detection finds the
       Claude Code agent without touching the user's real ~/.claude.
-    status: pending
+    status: completed
     dependencies:
       - task-009
     acceptance_criteria:
@@ -342,4 +342,4 @@ tasks:
       - "An additional test in common/skill (or per-binary) confirms that WalkDir(Bundle, \".\") yields `SKILL.md` (not `bundle/SKILL.md`) — locks the contract for future binaries"
       - "Existing tests still pass; coverage of common/skill stays ≥80%"
       - "make build / make test / make generate-check all green"
-    completed_at: null
+    completed_at: 2026-05-04T20:30:00Z
