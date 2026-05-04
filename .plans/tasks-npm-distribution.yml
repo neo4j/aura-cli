@@ -12,14 +12,14 @@ tasks:
       `.gitattributes` with LF-pinning globs for `distribution/**/*.{json,tmpl,js,sh}`. This is the
       foundation other tasks build on — `publish.sh` sources `platforms.tsv`, and committed
       templates/scripts must stay LF on Windows checkouts.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "`distribution/platforms.tsv` exists with 8 rows covering darwin arm64/x64, linux arm64/ia32/x64, win32 arm64/ia32/x64"
       - "Each row maps to the GoReleaser archive directory naming pattern from `.goreleaser.yaml:48-54` (`neo4j-cli_<version>_<OS>_<arch>`)"
       - "`.gitattributes` gains `distribution/**/*.json`, `*.tmpl`, `*.js`, `*.sh` entries pinned to `eol=lf`"
       - "File uses tab-separated columns with a single header line so `awk -F'\\t'` and `read` both work"
-    completed_at: null
+    completed_at: 2026-05-04T12:30:00Z
 
   - id: task-002
     title: "Implement wrapper bin shim distribution/npm/cli/bin/neo4j-cli.js"

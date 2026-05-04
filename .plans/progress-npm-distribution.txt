@@ -1,0 +1,22 @@
+================================================================================
+TASK-001: Bootstrap distribution/ scaffolding (platforms.tsv + .gitattributes)
+Date: 2026-05-04T12:30:00Z
+================================================================================
+
+Summary:
+Created shared platform table at distribution/platforms.tsv with 8 rows
+(darwin arm64/x64, linux arm64/ia32/x64, win32 arm64/ia32/x64) mapping
+GoReleaser archive directory names to npm os/cpu/bin filenames. Extended
+.gitattributes with LF-pinning globs for distribution/**/*.{json,tmpl,js,sh,tsv}.
+
+Files Changed:
+- distribution/platforms.tsv (created — TSV with 4 cols: goreleaser_dirname_template, npm_os, npm_cpu, bin_filename)
+- .gitattributes (modified — added 5 LF-pin globs for distribution/)
+
+Key Decisions:
+- Used ${VERSION} placeholder in dirname column; publish.sh will substitute via sed at publish time
+- GoReleaser dirname pattern matches .goreleaser.yaml:48-54: title-cased OS (Darwin/Linux/Windows) + arch alias (x86_64/i386/arm64)
+- Added .tsv to LF globs defensively even though task only required json/tmpl/js/sh — platforms.tsv itself benefits
+- Verified TSV parses cleanly with both awk -F'\t' and shell while-read IFS=$'\t' loops
+
+Next Task: task-002 (wrapper bin shim distribution/npm/cli/bin/neo4j-cli.js)
