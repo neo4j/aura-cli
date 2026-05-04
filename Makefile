@@ -1,7 +1,7 @@
 GOPATH := $(shell go env GOPATH)
 GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
 
-.PHONY: build build-aura build-neo4j snapshot test lint fmt fmt-check license-check run-aura run-neo4j clean changelog generate generate-check
+.PHONY: build build-aura build-neo4j snapshot test lint fmt fmt-check license-check run-aura run-neo4j clean changelog generate generate-check npm-publish-dry
 
 ## build: build both aura-cli and neo4j-cli into bin/
 build: build-aura build-neo4j
@@ -77,3 +77,12 @@ generate-check: generate
 		echo "ERROR: generated files are stale. Run 'make generate' and commit the result."; \
 		exit 1; \
 	fi
+
+## npm-publish-dry: dry-run the npm publish flow (renders templates, exercises ordering)
+## REQUIRES: `make snapshot` first if you want real binaries copied into the rendered packages.
+##           snapshot is NOT a prerequisite here — it is slow and re-running it on every
+##           dry-run would be painful. In --dry-run mode publish.sh tolerates missing binaries
+##           by stubbing them with a 1-byte placeholder, so this target works against an empty
+##           dist/ and is purely a template-rendering + publish-ordering sanity check.
+npm-publish-dry:
+	GORELEASER_CURRENT_TAG=v0.0.0-dry distribution/npm/publish.sh --dry-run

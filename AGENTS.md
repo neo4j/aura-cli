@@ -42,6 +42,7 @@ See [`.agents/build.md`](.agents/build.md) for full details.
 - Local build: `make build` (produces `bin/aura-cli` and `bin/neo4j-cli`)
 - Local run (no build): `make run-aura` / `make run-neo4j`
 - Release build (current platform, ldflags baked in): `make snapshot` (uses goreleaser, outputs to `bin/`)
+- npm publish dry-run (template + ordering check): `make npm-publish-dry`. Works against empty `dist/` because `publish.sh --dry-run` stubs missing platform binaries with a 1-byte placeholder; run `make snapshot` first if you want real binaries packed. Real-binary path (CI) still hard-errors on missing binaries — the stub is dry-run-only.
 - All `.go` files must start with the Neo4j copyright header (enforced in CI via `addlicense`)
 - PRs require a changelog entry via `make changelog` **only for user-facing changes** (new features, bug fixes, behaviour changes visible to CLI users). Internal changes (CI/CD workflow fixes, build scripts, code refactors with no visible effect) do not need changelog entries. Because `neo4j-cli` bundles all child CLIs, user-facing changes to a child require entries for both — use `changie new --projects <child> --projects neo4j-cli --kind <kind> --body <body>` for non-interactive use
 

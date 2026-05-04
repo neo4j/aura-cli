@@ -152,16 +152,25 @@ while IFS=$'\t' read -r DIRNAME_TMPL NPM_OS NPM_CPU BIN_FILENAME; do
   PKG_NAME="@neo4j/cli-${NPM_OS}-${NPM_CPU}"
   PKG_DIR="${WORK_ROOT}/cli-${NPM_OS}-${NPM_CPU}"
 
-  if [ ! -f "$SRC_BIN" ]; then
-    echo "ERROR: expected binary not found: $SRC_BIN" >&2
-    echo "       (did GoReleaser run? is the dist/ artifact extracted at the right layout?)" >&2
-    exit 1
-  fi
-
   rm -rf "$PKG_DIR"
   mkdir -p "${PKG_DIR}/bin"
-  # Copy binary preserving exec bit. macOS cp -p / GNU cp -p both preserve mode.
-  cp -p "$SRC_BIN" "${PKG_DIR}/bin/${BIN_FILENAME}"
+
+  if [ ! -f "$SRC_BIN" ]; then
+    if [ -n "$DRY_RUN" ]; then
+      # In dry-run we tolerate missing binaries: maintainer's `make snapshot` only builds
+      # the current platform, so 7/8 binaries are absent locally. Stub them so template
+      # rendering + ordering checks still execute end-to-end.
+      echo "[dry-run-stub] ${SRC_BIN} missing — writing 1-byte placeholder"
+      printf '#' >"${PKG_DIR}/bin/${BIN_FILENAME}"
+    else
+      echo "ERROR: expected binary not found: $SRC_BIN" >&2
+      echo "       (did GoReleaser run? is the dist/ artifact extracted at the right layout?)" >&2
+      exit 1
+    fi
+  else
+    # Copy binary preserving exec bit. macOS cp -p / GNU cp -p both preserve mode.
+    cp -p "$SRC_BIN" "${PKG_DIR}/bin/${BIN_FILENAME}"
+  fi
   chmod +x "${PKG_DIR}/bin/${BIN_FILENAME}"
 
   # Render package.json.

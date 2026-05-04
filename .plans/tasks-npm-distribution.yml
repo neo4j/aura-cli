@@ -128,7 +128,7 @@ tasks:
       the current `make snapshot` output. Lets a maintainer sanity-check template rendering and
       publish ordering locally before pushing a release. Should depend on or document `make snapshot`
       as the prerequisite (no implicit run — `make snapshot` is slow).
-    status: pending
+    status: completed
     dependencies:
       - task-004
     acceptance_criteria:
@@ -136,7 +136,7 @@ tasks:
       - "Sets a `GORELEASER_CURRENT_TAG=v0.0.0-dry` env var (or similar) so the script doesn't error on missing tag"
       - "Target documented in Makefile comments (or via existing `help` target convention if present) as 'requires `make snapshot` first'"
       - "Running `make npm-publish-dry` after `make snapshot` exits 0 and prints what would be published for all 9 packages"
-    completed_at: null
+    completed_at: 2026-05-04T17:15:00Z
 
   - id: task-008
     title: "Write maintainer-facing distribution/npm/README.md"

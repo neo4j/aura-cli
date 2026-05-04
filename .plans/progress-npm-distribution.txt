@@ -262,3 +262,52 @@ Verification:
 - make fmt-check → clean
 
 Next Task: task-007 (Makefile npm-publish-dry target — depends on 004 only)
+
+================================================================================
+TASK-007: Add Makefile target npm-publish-dry
+Date: 2026-05-04T17:15:00Z
+================================================================================
+
+Summary:
+Added `npm-publish-dry` Makefile target that runs `distribution/npm/publish.sh
+--dry-run` with GORELEASER_CURRENT_TAG=v0.0.0-dry. Also tweaked publish.sh so
+--dry-run tolerates missing platform binaries by writing a 1-byte stub —
+without this, the target would error because `make snapshot` only builds the
+current platform (--single-target) and 7/8 expected binaries are absent
+locally. Real-binary path (CI) is unchanged: missing binary still hard-errors
+when --dry-run is not set.
+
+Files Changed:
+- Makefile (modified — added npm-publish-dry target + .PHONY entry, ~7 lines
+  including header comments documenting the snapshot-not-required behavior)
+- distribution/npm/publish.sh (modified — moved mkdir before the missing-binary
+  check, added a dry-run-stub branch that writes a 1-byte placeholder when
+  SRC_BIN is missing AND DRY_RUN is set; non-dry path still hard-errors)
+
+Key Decisions:
+- Stub missing binaries in dry-run rather than making `make snapshot` build
+  all 8 platforms (slow) or making the target depend on snapshot (slow + AC
+  said no implicit run). The goal is template+ordering sanity, not real
+  binary contents — npm publish --dry-run packs whatever's in bin/, and a
+  1-byte file is enough to validate the tarball gets assembled.
+- Used `printf '#'` for the stub (1 byte). Shorter than echo and avoids
+  trailing newline that would make the stub 2 bytes — pure cosmetics.
+- Logged stub events with `[dry-run-stub]` prefix matching the existing
+  log conventions ([publish], [skip]) so the maintainer sees exactly which
+  binaries were stubbed in the output.
+- Did NOT add snapshot as a prerequisite of npm-publish-dry — AC explicitly
+  said "no implicit run". Maintainer who wants real binaries runs `make
+  snapshot` first; the stub fallback is purely a convenience for the
+  template-rendering check.
+- Updated Makefile header comment to accurately describe the new tolerant
+  behavior — initial wording said "fail loudly" which contradicted the
+  stub fallback. Caught in self-review.
+
+Verification:
+- bash -n distribution/npm/publish.sh — clean
+- make npm-publish-dry against empty dist/ — exits 0, prints all 9
+  publish lines (8 platforms then wrapper), correct dist-tag selection
+  (next, because v0.0.0-dry has -dry suffix)
+- make fmt-check + make test — both clean
+
+Next Task: task-008 (maintainer-facing distribution/npm/README.md)
