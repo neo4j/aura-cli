@@ -23,3 +23,23 @@ Key Decisions:
 - Aura side untouched — already exposes NewCmd/NewStandaloneCmd.
 
 Next Task: task-002
+
+================================================================================
+TASK-002: Implement common/skill/agents.go agent catalog and path expansion
+Date: 2026-05-04T12:30:00Z
+================================================================================
+
+Summary:
+Ported the Rust skill.rs agent catalog into Go: 10 agents with DetectDir/SkillsDir, expandPath supporting `~`, `~/foo`, and `$XDG_CONFIG_HOME` (with $HOME/.config fallback), case-insensitive FindAgent, and DetectAgents(afero.Fs) for hermetic detection. Table-driven tests cover all REQ-T-002 cases.
+
+Files Changed:
+- common/skill/agents.go (created — package skill, Agent struct, AGENTS slice, expandPath, FindAgent, DetectAgents)
+- common/skill/agents_test.go (created — table-driven tests, all hermetic via afero.MemMapFs + t.Setenv)
+
+Key Decisions:
+- Followed the Rust reference's split: Agent.DetectPath/SkillsPath do path expansion only; DetectAgents holds the FS dependency. PRD wording is slightly loose but matches the Rust shape.
+- expandPath returns (string, bool) where ok=false signals unresolvable HOME — caller (DetectAgents) treats this as not-detected.
+- DetectAgents uses afero.DirExists so files at the marker path don't count as detection (added test case).
+- Agent.SkillsPath included now even though install/list don't yet use it — required by REQ-T-002 acceptance criterion and used by upcoming tasks.
+
+Next Task: task-003

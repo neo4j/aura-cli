@@ -32,7 +32,7 @@ tasks:
       Agent.DetectPath / SkillsPath return expanded paths and an ok bool.
       Add `agents_test.go` table-driven covering all REQ-T-002 cases with
       t.Setenv("HOME", ...) and afero.NewMemMapFs.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "common/skill/agents.go and agents_test.go committed with license headers"
@@ -41,7 +41,7 @@ tasks:
       - "FindAgent case-insensitive; unknown returns nil"
       - "DetectAgents takes afero.Fs and returns only agents whose DetectDir exists"
       - "go test ./common/skill/... passes; no real-disk reads in tests"
-    completed_at: null
+    completed_at: 2026-05-04T12:30:00Z
 
   - id: task-003
     title: "Implement common/skill/filesystem.go bundle copy/remove helpers"

@@ -136,6 +136,12 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 
 - `neo4j-cli/app/app.go` builds the neo4j-cli cobra tree and exports `Version`. `neo4j-cli/main.go` is a thin entrypoint. Generators (e.g. skill bundle) import `app` to walk the tree without main-side effects.
 - `neo4j-cli/aura/aura.go` already exposes `NewCmd` (super-CLI mount) and `NewStandaloneCmd` (aura-cli binary, adds credential).
+- `common/skill/` holds shared agent-skill logic (catalog, path expansion, installer). Hermetic-friendly: `DetectAgents(afero.Fs)` takes an FS; tests use `afero.NewMemMapFs` + `t.Setenv("HOME", ...)`.
+
+## Hermetic Test Notes
+
+- For path-expansion tests using `~` / `$XDG_CONFIG_HOME`, use `t.Setenv("HOME", "...")` and `t.Setenv("XDG_CONFIG_HOME", "")` — Go's `os.Getenv` returns "" for both unset and set-to-empty, and `t.Setenv` auto-restores after the test.
+- Use `afero.DirExists` (not `Exists`) for "is the agent installed?" checks — files at the marker path shouldn't count as detected.
 
 ## golangci-lint Notes
 
