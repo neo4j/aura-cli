@@ -438,13 +438,14 @@ func TestRunQuery_ParamsForwardedAsRequestBody(t *testing.T) {
 // for the truncateValues helper to lock the max<=0 short-circuit semantics.
 func TestRunQuery_TruncateValues_PassThrough_WhenMaxZero(t *testing.T) {
 	in := [][]any{{[]any{1, 2, 3, 4, 5}}}
-	out := truncateValues(in, 0)
+	out, count := truncateValues(in, 0)
 	// Returned slice should be the same backing array (untouched).
 	require.Len(t, out, 1)
 	require.Len(t, out[0], 1)
 	xs, ok := out[0][0].([]any)
 	require.True(t, ok)
 	assert.Len(t, xs, 5)
+	assert.Equal(t, 0, count, "max=0 must report zero truncations")
 }
 
 // TestRunQuery_CapRows_Behaviour locks the table-driven contract for the
@@ -470,6 +471,80 @@ func TestRunQuery_CapRows_Behaviour(t *testing.T) {
 			assert.Equal(t, tc.wantTrunc, trunc)
 		})
 	}
+}
+
+// TestRunQuery_TruncateArrays_JSON_AggregateWarningAndField verifies that
+// when at least one array is elided, JSON output includes
+// `"arrays_truncated": <N>` AND stderr contains the exact aggregate
+// warning line. The row-cap (`truncated:true`) is a separate concern and
+// must remain false here because --max-rows is unset.
+func TestRunQuery_TruncateArrays_JSON_AggregateWarningAndField(t *testing.T) {
+	srv := startServer(t, 0, []byte(`{"data":{"fields":["xs"],"values":[[[1,2,3,4,5,6,7,8,9,10]]]}}`))
+
+	h := newRunHarness(t, "json")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		"--truncate-arrays-over=3",
+		"RETURN xs",
+	)
+	require.NoError(t, err)
+
+	stderr := h.stderr.String()
+	assert.Contains(t, stderr,
+		"warning: truncated 1 arrays larger than 3 items (use --truncate-arrays-over 0 to disable)",
+		"stderr must contain the exact aggregate warning line")
+
+	var got jsonRowsResult
+	require.NoError(t, json.Unmarshal(h.stdout.Bytes(), &got))
+	assert.Equal(t, 1, got.ArraysTruncated, "JSON envelope must report arrays_truncated=1")
+	assert.False(t, got.Truncated, "row-cap signal must remain false")
+}
+
+// TestRunQuery_TruncateArrays_Table_AggregateWarning verifies that table
+// output emits the exact aggregate warning to stderr while leaving the
+// table body unchanged (cells render as `[]` per task-011).
+func TestRunQuery_TruncateArrays_Table_AggregateWarning(t *testing.T) {
+	srv := startServer(t, 0, []byte(`{"data":{"fields":["xs"],"values":[[[1,2,3,4,5,6,7,8,9,10]]]}}`))
+
+	h := newRunHarness(t, "table")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		"--truncate-arrays-over=3",
+		"RETURN xs",
+	)
+	require.NoError(t, err)
+
+	assert.Contains(t, h.stderr.String(),
+		"warning: truncated 1 arrays larger than 3 items (use --truncate-arrays-over 0 to disable)")
+
+	out := h.stdout.String()
+	assert.Contains(t, out, "[]", "table cell must render the elided value as []")
+}
+
+// TestRunQuery_TruncateArrays_NoTruncation_NoWarningAndZeroField verifies
+// that when no arrays exceed the threshold, stderr is silent of the
+// array-truncation warning AND JSON `arrays_truncated` is `0`.
+func TestRunQuery_TruncateArrays_NoTruncation_NoWarningAndZeroField(t *testing.T) {
+	srv := startServer(t, 0, []byte(`{"data":{"fields":["xs"],"values":[[[1,2,3]]]}}`))
+
+	h := newRunHarness(t, "json")
+	err := h.execute(t,
+		"--uri="+srv.URL,
+		"--password=pw",
+		"--truncate-arrays-over=10",
+		"RETURN xs",
+	)
+	require.NoError(t, err)
+
+	stderr := h.stderr.String()
+	assert.NotContains(t, stderr, "arrays larger than",
+		"stderr must be silent for the array-truncation warning when nothing was elided")
+
+	var got jsonRowsResult
+	require.NoError(t, json.Unmarshal(h.stdout.Bytes(), &got))
+	assert.Equal(t, 0, got.ArraysTruncated, "arrays_truncated must be 0 when nothing was elided")
 }
 
 func TestPromptPassword_NonTTYReturnsUsageError(t *testing.T) {

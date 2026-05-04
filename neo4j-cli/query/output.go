@@ -14,12 +14,15 @@ import (
 )
 
 // jsonRowsResult is the JSON shape emitted in JSON output mode. Field order
-// (columns, rows, truncated) is fixed via struct field order so encoding/json
-// preserves it for downstream consumers.
+// (columns, rows, truncated, arrays_truncated) is fixed via struct field
+// order so encoding/json preserves it for downstream consumers. The
+// arrays_truncated field always emits (zero value when nothing was elided)
+// so the schema is stable for jq-style consumers.
 type jsonRowsResult struct {
-	Columns   []string         `json:"columns"`
-	Rows      []map[string]any `json:"rows"`
-	Truncated bool             `json:"truncated"`
+	Columns         []string         `json:"columns"`
+	Rows            []map[string]any `json:"rows"`
+	Truncated       bool             `json:"truncated"`
+	ArraysTruncated int              `json:"arrays_truncated"`
 }
 
 // renderRows writes the query result to cmd's stdout in either JSON or table
@@ -27,13 +30,15 @@ type jsonRowsResult struct {
 // {column: value} maps — use rowsFromValues to convert raw positional API
 // values. The truncated flag is propagated to the JSON output but does not
 // itself emit a warning; the caller (runQuery) prints any stderr warning.
-func renderRows(cmd *cobra.Command, cfg *clicfg.Config, columns []string, rows []map[string]any, truncated bool) {
+// arraysTruncated is the aggregate count of slices elided by
+// --truncate-arrays-over and is always emitted in the JSON envelope.
+func renderRows(cmd *cobra.Command, cfg *clicfg.Config, columns []string, rows []map[string]any, truncated bool, arraysTruncated int) {
 	if rows == nil {
 		rows = []map[string]any{}
 	}
 
 	if cfg.Aura.Output() == "json" {
-		printJSONRows(cmd, columns, rows, truncated)
+		printJSONRows(cmd, columns, rows, truncated, arraysTruncated)
 		return
 	}
 
@@ -60,14 +65,15 @@ func rowsFromValues(columns []string, values [][]any) []map[string]any {
 	return rows
 }
 
-func printJSONRows(cmd *cobra.Command, columns []string, rows []map[string]any, truncated bool) {
+func printJSONRows(cmd *cobra.Command, columns []string, rows []map[string]any, truncated bool, arraysTruncated int) {
 	if columns == nil {
 		columns = []string{}
 	}
 	out := jsonRowsResult{
-		Columns:   columns,
-		Rows:      rows,
-		Truncated: truncated,
+		Columns:         columns,
+		Rows:            rows,
+		Truncated:       truncated,
+		ArraysTruncated: arraysTruncated,
 	}
 	bytes, err := json.MarshalIndent(out, "", "\t")
 	if err != nil {

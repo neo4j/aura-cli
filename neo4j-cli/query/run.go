@@ -78,7 +78,7 @@ func runQuery(cmd *cobra.Command, args []string, cfg *clicfg.Config) error {
 	}
 
 	truncOver, _ := cmd.Flags().GetInt("truncate-arrays-over")
-	values := truncateValues(res.Rows, truncOver)
+	values, arraysTruncated := truncateValues(res.Rows, truncOver)
 
 	maxRows, _ := cmd.Flags().GetInt("max-rows")
 	values, truncated := capRows(values, maxRows)
@@ -87,9 +87,14 @@ func runQuery(cmd *cobra.Command, args []string, cfg *clicfg.Config) error {
 			"warning: truncated to %d rows (use --max-rows 0 for unlimited)\n",
 			len(values))
 	}
+	if arraysTruncated > 0 && truncOver > 0 {
+		fmt.Fprintf(cmd.ErrOrStderr(),
+			"warning: truncated %d arrays larger than %d items (use --truncate-arrays-over 0 to disable)\n",
+			arraysTruncated, truncOver)
+	}
 
 	rows := rowsFromValues(res.Columns, values)
-	renderRows(cmd, cfg, res.Columns, rows, truncated)
+	renderRows(cmd, cfg, res.Columns, rows, truncated, arraysTruncated)
 	return nil
 }
 
@@ -140,20 +145,25 @@ func promptPassword(cmd *cobra.Command) (string, error) {
 
 // truncateValues applies truncateArrays to each row's positional values. The
 // returned slice is a freshly allocated outer slice; inner slices are
-// reallocated only where truncation actually changes the data.
-func truncateValues(values [][]any, max int) [][]any {
+// reallocated only where truncation actually changes the data. The second
+// return value is the aggregate count of slices elided across all rows;
+// each over-limit slice (including nested ones) increments the count by 1.
+func truncateValues(values [][]any, max int) ([][]any, int) {
 	if max <= 0 {
-		return values
+		return values, 0
 	}
 	out := make([][]any, len(values))
+	total := 0
 	for i, row := range values {
 		newRow := make([]any, len(row))
 		for j, v := range row {
-			newRow[j] = truncateArrays(v, max)
+			truncated, c := truncateArrays(v, max)
+			newRow[j] = truncated
+			total += c
 		}
 		out[i] = newRow
 	}
-	return out
+	return out, total
 }
 
 // capRows enforces --max-rows. A maxRows <= 0 means unlimited; a positive

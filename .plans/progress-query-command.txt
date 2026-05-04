@@ -540,3 +540,59 @@ Key Decisions:
   changie YAML; behavior change pre-ship is editorial, not user-visible.
 
 Next Task: All tasks complete
+
+================================================================================
+TASK-012: Add aggregate stderr warning + JSON flag for --truncate-arrays-over
+Date: 2026-05-04T20:45:00Z
+================================================================================
+
+Summary:
+Added dual-signal aggregate warning for --truncate-arrays-over to close the
+silent-elision gap from task-011. truncateArrays now returns (truncatedValue,
+count) where count is the number of distinct slices elided (each over-limit
+[]any adds 1, including nested truncations). Plumbed through truncateValues
+→ runQuery, which emits a single stderr line `warning: truncated N arrays
+larger than M items (use --truncate-arrays-over 0 to disable)` when N>0 AND
+truncOver>0, and renders `arrays_truncated: <int>` (always present, zero
+when nothing elided) into the JSON envelope. Table output body unchanged —
+stderr is the only signal in table mode. Added 3 end-to-end tests + extended
+the truncate unit tests with count assertions and a "two distinct" case.
+
+Files Changed:
+- neo4j-cli/query/truncate.go (modified — return (any, int); doc updated)
+- neo4j-cli/query/truncate_test.go (modified — wantCount on every case + new
+  "two distinct over-limit arrays count separately" case)
+- neo4j-cli/query/output.go (modified — jsonRowsResult.ArraysTruncated,
+  renderRows + printJSONRows accept arraysTruncated int)
+- neo4j-cli/query/output_test.go (modified — JSON tests assert
+  arrays_truncated field; renderRows callers updated for new arg)
+- neo4j-cli/query/run.go (modified — truncateValues returns count;
+  aggregate stderr warning gated on count>0 && truncOver>0; count plumbed
+  to renderRows)
+- neo4j-cli/query/run_test.go (modified — TruncateValues_PassThrough asserts
+  count=0; 3 new e2e tests: JSON aggregate warning + arrays_truncated field;
+  table aggregate warning; no-truncation silent + arrays_truncated=0)
+- .plans/prd-query-command.md (REQ-F-009 documents dual-signal; REQ-F-012
+  JSON shape now includes arrays_truncated)
+- .plans/tasks-query-command.yml (status / completed_at)
+- .plans/progress-query-command.txt (this entry)
+
+Key Decisions:
+- Stderr warning gate is `arraysTruncated > 0 && truncOver > 0` — the second
+  clause is technically redundant (truncateValues short-circuits to count=0
+  when max<=0) but matches the explicit suppression rule in the task spec
+  and is cheap defense-in-depth against future refactors.
+- arrays_truncated is always emitted in the JSON envelope (zero when
+  nothing was elided) so jq-style consumers can rely on a stable schema —
+  same posture as `truncated:bool` already had.
+- Counts are per-distinct-slice (not per-element-elided): a single 200-item
+  array adds 1; a map with two over-limit arrays adds 2. Matches the
+  "N arrays larger than M items" wording on stderr.
+- `truncate` (the inner switch helper) returns count from each branch and
+  the truncateArrays public wrapper just forwards. Keeps the descent
+  recursive and readable; no global counter / pointer-passed accumulator.
+- Three e2e tests assert the literal stderr line + JSON field together
+  rather than splitting them — the dual-signal pattern is a single
+  semantic unit and tests should mirror that.
+
+Next Task: All tasks complete

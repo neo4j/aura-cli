@@ -204,7 +204,7 @@ tasks:
       Plus a unit test on the count return from `truncateArrays` covering scalar passthrough (count 0), single long top-level array (count 1), nested long arrays at multiple levels (count = number of distinct slices truncated), and `max == 0` (count always 0).
 
       Update PRD REQ-F-009 to document the dual-signal aggregate warning + JSON field. No changelog entry — feature unreleased.
-    status: pending
+    status: completed
     dependencies:
       - task-011
     acceptance_criteria:
@@ -216,4 +216,4 @@ tasks:
       - "Three new end-to-end tests cover JSON-with-truncation, table-with-truncation, and no-truncation; one unit test covers the count return on scalar/single/nested/max=0 inputs"
       - "PRD REQ-F-009 documents the stderr warning and the `arrays_truncated` JSON field"
       - "`make test` and `make fmt-check` pass"
-    completed_at: null
+    completed_at: 2026-05-04T20:45:00Z

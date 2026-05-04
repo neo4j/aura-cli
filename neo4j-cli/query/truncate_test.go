@@ -21,52 +21,60 @@ func TestTruncateArrays(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		in   any
-		max  int
-		want any
+		name      string
+		in        any
+		max       int
+		want      any
+		wantCount int
 	}{
 		{
-			name: "scalar string passthrough",
-			in:   "hello",
-			max:  100,
-			want: "hello",
+			name:      "scalar string passthrough",
+			in:        "hello",
+			max:       100,
+			want:      "hello",
+			wantCount: 0,
 		},
 		{
-			name: "scalar number passthrough",
-			in:   float64(42),
-			max:  100,
-			want: float64(42),
+			name:      "scalar number passthrough",
+			in:        float64(42),
+			max:       100,
+			want:      float64(42),
+			wantCount: 0,
 		},
 		{
-			name: "scalar bool passthrough",
-			in:   true,
-			max:  100,
-			want: true,
+			name:      "scalar bool passthrough",
+			in:        true,
+			max:       100,
+			want:      true,
+			wantCount: 0,
 		},
 		{
-			name: "scalar nil passthrough",
-			in:   nil,
-			max:  100,
-			want: nil,
+			name:      "scalar nil passthrough",
+			in:        nil,
+			max:       100,
+			want:      nil,
+			wantCount: 0,
 		},
 		{
-			name: "short array passthrough (len equals max)",
-			in:   []any{float64(1), float64(2), float64(3)},
-			max:  3,
-			want: []any{float64(1), float64(2), float64(3)},
+			name:      "short array passthrough (len equals max)",
+			in:        []any{float64(1), float64(2), float64(3)},
+			max:       3,
+			want:      []any{float64(1), float64(2), float64(3)},
+			wantCount: 0,
 		},
 		{
-			name: "short array passthrough (len below max)",
-			in:   []any{"a", "b"},
-			max:  10,
-			want: []any{"a", "b"},
+			name:      "short array passthrough (len below max)",
+			in:        []any{"a", "b"},
+			max:       10,
+			want:      []any{"a", "b"},
+			wantCount: 0,
 		},
 		{
-			name: "long top-level array truncates to empty slice",
-			in:   makeRange(200),
-			max:  100,
-			want: []any{},
+			name:      "long top-level array truncates to empty slice",
+			in:        makeRange(200),
+			max:       100,
+			want:      []any{},
+			wantCount: 1,
 		},
 		{
 			name: "array nested in map truncates; sibling scalar untouched",
@@ -79,12 +87,14 @@ func TestTruncateArrays(t *testing.T) {
 				"name":  "alice",
 				"items": []any{},
 			},
+			wantCount: 1,
 		},
 		{
-			name: "array nested in array truncates inner only",
-			in:   []any{"a", makeRange(20), "b"},
-			max:  5,
-			want: []any{"a", []any{}, "b"},
+			name:      "array nested in array truncates inner only",
+			in:        []any{"a", makeRange(20), "b"},
+			max:       5,
+			want:      []any{"a", []any{}, "b"},
+			wantCount: 1,
 		},
 		{
 			name: "mixed nesting truncates at every level",
@@ -103,37 +113,56 @@ func TestTruncateArrays(t *testing.T) {
 					"keep":   []any{float64(1), float64(2)},
 				},
 			},
+			wantCount: 2,
 		},
 		{
-			name: "max == 0 disables truncation entirely",
-			in:   makeRange(500),
-			max:  0,
-			want: makeRange(500),
+			name:      "max == 0 disables truncation entirely",
+			in:        makeRange(500),
+			max:       0,
+			want:      makeRange(500),
+			wantCount: 0,
 		},
 		{
-			name: "max < 0 disables truncation entirely",
-			in:   makeRange(500),
-			max:  -1,
-			want: makeRange(500),
+			name:      "max < 0 disables truncation entirely",
+			in:        makeRange(500),
+			max:       -1,
+			want:      makeRange(500),
+			wantCount: 0,
 		},
 		{
-			name: "empty array passthrough",
-			in:   []any{},
-			max:  10,
-			want: []any{},
+			name:      "empty array passthrough",
+			in:        []any{},
+			max:       10,
+			want:      []any{},
+			wantCount: 0,
 		},
 		{
-			name: "empty map passthrough",
-			in:   map[string]any{},
-			max:  10,
-			want: map[string]any{},
+			name:      "empty map passthrough",
+			in:        map[string]any{},
+			max:       10,
+			want:      map[string]any{},
+			wantCount: 0,
+		},
+		{
+			name: "two distinct over-limit arrays count separately",
+			in: map[string]any{
+				"a": makeRange(20),
+				"b": makeRange(30),
+			},
+			max: 5,
+			want: map[string]any{
+				"a": []any{},
+				"b": []any{},
+			},
+			wantCount: 2,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := truncateArrays(tc.in, tc.max)
+			got, count := truncateArrays(tc.in, tc.max)
 			assert.Equal(t, tc.want, got)
+			assert.Equal(t, tc.wantCount, count, "truncation count mismatch")
 		})
 	}
 }
@@ -149,7 +178,7 @@ func TestTruncateArrays_DoesNotMutateInput(t *testing.T) {
 	innerOrig := original["items"].([]any)
 	innerLen := len(innerOrig)
 
-	_ = truncateArrays(original, 2)
+	_, _ = truncateArrays(original, 2)
 
 	assert.Equal(t, "alice", original["name"], "sibling scalar must remain")
 	assert.Len(t, original["items"], innerLen, "input slice must not be mutated")

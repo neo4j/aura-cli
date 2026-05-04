@@ -83,49 +83,68 @@ func TestRowsFromValues(t *testing.T) {
 
 func TestRenderRows_JSON(t *testing.T) {
 	tests := []struct {
-		name      string
-		columns   []string
-		rows      []map[string]any
-		truncated bool
+		name            string
+		columns         []string
+		rows            []map[string]any
+		truncated       bool
+		arraysTruncated int
 		// expected JSON values (decoded to compare structurally, not byte-equal).
-		wantTruncated bool
-		wantRowCount  int
+		wantTruncated       bool
+		wantArraysTruncated int
+		wantRowCount        int
 	}{
 		{
-			name:          "happy path with two rows",
-			columns:       []string{"n", "m"},
-			rows:          []map[string]any{{"n": float64(1), "m": "alice"}, {"n": float64(2), "m": "bob"}},
-			truncated:     false,
-			wantTruncated: false,
-			wantRowCount:  2,
+			name:                "happy path with two rows",
+			columns:             []string{"n", "m"},
+			rows:                []map[string]any{{"n": float64(1), "m": "alice"}, {"n": float64(2), "m": "bob"}},
+			truncated:           false,
+			arraysTruncated:     0,
+			wantTruncated:       false,
+			wantArraysTruncated: 0,
+			wantRowCount:        2,
 		},
 		{
-			name:          "truncated propagated to JSON",
-			columns:       []string{"n"},
-			rows:          []map[string]any{{"n": float64(1)}},
-			truncated:     true,
-			wantTruncated: true,
-			wantRowCount:  1,
+			name:                "truncated propagated to JSON",
+			columns:             []string{"n"},
+			rows:                []map[string]any{{"n": float64(1)}},
+			truncated:           true,
+			arraysTruncated:     0,
+			wantTruncated:       true,
+			wantArraysTruncated: 0,
+			wantRowCount:        1,
 		},
 		{
-			name:          "empty rows still emits valid JSON envelope",
-			columns:       []string{"x"},
-			rows:          nil,
-			truncated:     false,
-			wantTruncated: false,
-			wantRowCount:  0,
+			name:                "arrays_truncated propagated to JSON",
+			columns:             []string{"xs"},
+			rows:                []map[string]any{{"xs": []any{}}},
+			truncated:           false,
+			arraysTruncated:     3,
+			wantTruncated:       false,
+			wantArraysTruncated: 3,
+			wantRowCount:        1,
+		},
+		{
+			name:                "empty rows still emits valid JSON envelope",
+			columns:             []string{"x"},
+			rows:                nil,
+			truncated:           false,
+			arraysTruncated:     0,
+			wantTruncated:       false,
+			wantArraysTruncated: 0,
+			wantRowCount:        0,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd, cfg, stdout := newRenderCmd(t, "json")
-			renderRows(cmd, cfg, tc.columns, tc.rows, tc.truncated)
+			renderRows(cmd, cfg, tc.columns, tc.rows, tc.truncated, tc.arraysTruncated)
 
 			var got jsonRowsResult
 			require.NoError(t, json.Unmarshal(stdout.Bytes(), &got))
 			assert.Equal(t, tc.columns, got.Columns)
 			assert.Equal(t, tc.wantTruncated, got.Truncated)
+			assert.Equal(t, tc.wantArraysTruncated, got.ArraysTruncated)
 			assert.Len(t, got.Rows, tc.wantRowCount)
 		})
 	}
@@ -135,7 +154,7 @@ func TestRenderRows_JSON_PreservesColumnOrder(t *testing.T) {
 	cmd, cfg, stdout := newRenderCmd(t, "json")
 	renderRows(cmd, cfg, []string{"z", "a", "m"}, []map[string]any{
 		{"z": float64(1), "a": "first", "m": true},
-	}, false)
+	}, false, 0)
 
 	// Asserts the JSON envelope's column array order, not just membership.
 	var raw struct {
@@ -186,7 +205,7 @@ func TestRenderRows_Table(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd, cfg, stdout := newRenderCmd(t, "table")
-			renderRows(cmd, cfg, tc.columns, tc.rows, false)
+			renderRows(cmd, cfg, tc.columns, tc.rows, false, 0)
 
 			out := stdout.String()
 			lower := strings.ToLower(out)
@@ -204,7 +223,7 @@ func TestRenderRows_Table_PreservesColumnOrder(t *testing.T) {
 	cmd, cfg, stdout := newRenderCmd(t, "table")
 	renderRows(cmd, cfg, []string{"z", "a", "m"}, []map[string]any{
 		{"z": "first-col", "a": "second-col", "m": "third-col"},
-	}, false)
+	}, false, 0)
 
 	out := stdout.String()
 	lower := strings.ToLower(out)
@@ -227,7 +246,7 @@ func TestRenderRows_Table_PreservesColumnOrder(t *testing.T) {
 func TestRenderRows_DefaultOutputRendersTable(t *testing.T) {
 	// "default" must dispatch to the table renderer (not JSON).
 	cmd, cfg, stdout := newRenderCmd(t, "default")
-	renderRows(cmd, cfg, []string{"n"}, []map[string]any{{"n": float64(42)}}, false)
+	renderRows(cmd, cfg, []string{"n"}, []map[string]any{{"n": float64(42)}}, false, 0)
 
 	out := stdout.String()
 	assert.Contains(t, out, "42")
