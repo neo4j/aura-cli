@@ -130,6 +130,12 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - GoReleaser v2 deprecates `format_overrides.format` — use `format_overrides.formats`
 - Each `archives` entry must have a unique `id`; omitting it defaults to `"default"` and causes errors when there are multiple archive blocks
 - Use `{{ .Binary }}` in `name_template` (not `{{ .ProjectName }}`) when building multiple binaries so archives are named per binary
+- `-X "<importpath>.Version=..."` ldflag must match the actual package path of the Version var. If you move Version from `package main` to e.g. `neo4j-cli/app`, update the ldflag to `-X "github.com/neo4j/cli/neo4j-cli/app.Version=..."` — a stale path silently no-ops and ships `dev`.
+
+## Repo Layout Notes
+
+- `neo4j-cli/app/app.go` builds the neo4j-cli cobra tree and exports `Version`. `neo4j-cli/main.go` is a thin entrypoint. Generators (e.g. skill bundle) import `app` to walk the tree without main-side effects.
+- `neo4j-cli/aura/aura.go` already exposes `NewCmd` (super-CLI mount) and `NewStandaloneCmd` (aura-cli binary, adds credential).
 
 ## golangci-lint Notes
 

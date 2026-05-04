@@ -12,14 +12,14 @@ tasks:
       generator can import the cobra tree. Shrink `main.go` to a thin
       entrypoint that calls `app.NewCmd`. Aura already exposes `NewCmd` /
       `NewStandaloneCmd` from `neo4j-cli/aura/aura.go` — no aura-side change.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "neo4j-cli/app/app.go exposes NewCmd(cfg *clicfg.Config) *cobra.Command and a Version package var"
       - "neo4j-cli/main.go reduced to entrypoint that wires afero, calls app.NewCmd, sets Help/error hooks"
       - "make build produces neo4j-cli with identical command surface (verified by --help output diff = empty)"
       - "make test passes; license header on the new file"
-    completed_at: null
+    completed_at: 2026-05-04T10:15:00Z
 
   - id: task-002
     title: "Implement common/skill/agents.go agent catalog and path expansion"

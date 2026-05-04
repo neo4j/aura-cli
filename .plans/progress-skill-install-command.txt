@@ -1,0 +1,25 @@
+================================================================================
+TASK-001: Refactor neo4j-cli tree builder into importable app package
+Date: 2026-05-04T10:15:00Z
+================================================================================
+
+Summary:
+Moved NewCmd and Version out of neo4j-cli/main.go into a new neo4j-cli/app
+package so the per-binary skill generator can import the cobra tree without
+pulling in main entrypoint side-effects. main.go is now a thin entrypoint
+that calls app.NewCmd and uses app.Version. Updated the goreleaser ldflag
+to target the new symbol path (app.Version) — without this, release builds
+would silently ship "dev". Verified ldflag injection still works.
+
+Files Changed:
+- neo4j-cli/app/app.go (created — package app exposing NewCmd + Version)
+- neo4j-cli/main.go (modified — reduced to entrypoint, imports app pkg)
+- .goreleaser.yaml (modified — ldflag points at app.Version, not main.Version)
+- .plans/tasks-skill-install-command.yml (status update)
+
+Key Decisions:
+- Goreleaser ldflag MUST be updated when Version moves package; otherwise
+  -X "main.Version=..." silently no-ops and binaries ship as "dev".
+- Aura side untouched — already exposes NewCmd/NewStandaloneCmd.
+
+Next Task: task-002
