@@ -39,3 +39,7 @@ jobs:
 
             - name: Test
               run: make test
+
+            - name: HTTPS smoke test (--insecure against real Neo4j)
+              if: matrix.os == 'ubuntu-latest'
+              run: bash scripts/test-https.sh
