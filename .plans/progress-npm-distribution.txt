@@ -92,3 +92,66 @@ Verification:
 - make fmt-check passes (no Go file drift)
 
 Next Task: task-004 (publish.sh — depends on tasks 001/002/003 all done)
+
+================================================================================
+TASK-004: Implement distribution/npm/publish.sh with idempotency and dist-tag selection
+Date: 2026-05-04T15:00:00Z
+================================================================================
+
+Summary:
+Created the orchestration script that publishes all 9 npm packages (8 platforms
++ wrapper) from a populated dist/ tree. Sources distribution/platforms.tsv for
+the matrix, derives version from GORELEASER_CURRENT_TAG (strips leading v),
+selects --tag from version pattern (alpha/beta/rc/next/latest), renders both
+package.json templates via sed, and uses `npm view` for per-package idempotency
+so same-version retries are safe. Wrapper published LAST so its
+optionalDependencies always resolve. Header comment documents ordering,
+idempotency, and the manual-recovery workflow.
+
+Files Changed:
+- distribution/npm/publish.sh (created — ~140 lines incl. ~50 line header comment)
+
+Key Decisions:
+- Build artifacts go to dist/.npm-build/ (under repo's existing dist/) rather
+  than a fresh top-level build/ dir — keeps everything inside the gitignored
+  dist/ tree GoReleaser already manages, no new ignore needed
+- Read platforms.tsv via `while IFS=$'\t' read ... done < <(tail -n +2 ...)`
+  process substitution to skip the header line — works under set -e because
+  tail's exit goes through the FD, not the pipeline
+- ${VERSION} substitution in the dirname column uses bash parameter expansion
+  ${VAR//pattern/replacement} not sed — keeps it self-contained in pure bash
+  and avoids escaping issues with the literal $ in ${VERSION}
+- Idempotency check via a `published()` helper that captures `npm view` output
+  and returns yes/no — keeps `set -e` happy by always returning 0; the publish
+  helper does the conditional `[skip]` log
+- TAG_FLAG variable holds either `--tag $TAG` or empty; intentionally word-split
+  in the publish call (with shellcheck disable comment) so the empty case omits
+  the flag entirely. `--dry-run` flag handled the same way
+- chmod +x on every binary copy — preserves the executable bit even if cp -p
+  somehow fails to (Linux/macOS cp -p both preserve mode, but defensive belt
+  for cross-FS copies)
+- Wrapper README.md ship is gated on its existence so this task doesn't depend
+  on task-009; once task-009 lands the file appears in the wrapper tarball
+  automatically without script edits
+- Argument parser is a simple loop, not getopt — only one supported flag, and
+  unknown args exit 2 immediately with a clear message
+
+Verification:
+- bash -n syntax check passed
+- Built fake dist/ tree mirroring GoReleaser's layout for all 8 platforms,
+  stubbed `npm` to capture invocations:
+  - Happy path: 8 platforms publish in order, then wrapper, all rendered
+    package.json files parse as valid JSON, wrapper's optionalDependencies
+    pinned to exact version (no caret), Windows pkgs got .exe suffix
+  - Idempotency: stub view returning non-empty → all 9 [skip] lines, no publish
+    invocations
+  - Dist-tag matrix: 1.2.3→default, 1.2.3-alpha.1→alpha, 1.2.3-beta.4→beta,
+    1.2.3-rc.2→rc, 1.2.3-snapshot→next, dev→default — all correct
+  - Missing GORELEASER_CURRENT_TAG → exit 1 with message
+  - Unknown flag (--bogus) → exit 2 with message
+  - --dry-run flag passes through to npm publish call
+  - Missing binary at expected dist/ path → clear ERROR with hint about
+    GoReleaser/dist layout, exit 1
+- make test + make fmt-check both pass (no Go changes)
+
+Next Task: task-005 (release.yml outputs + dist artifact upload — independent of 004)

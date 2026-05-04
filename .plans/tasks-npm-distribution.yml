@@ -67,7 +67,7 @@ tasks:
       runs `npm view <name>@<version>` to skip already-published entries, then `npm publish
       --access public --tag <tag>`. Publishes 8 platforms first, wrapper last. Supports `--dry-run`.
       Header comment documents idempotency, ordering, and recovery flow.
-    status: pending
+    status: completed
     dependencies:
       - task-001
       - task-002
@@ -79,7 +79,7 @@ tasks:
       - "Idempotency: `npm view <pkg>@<version> version 2>/dev/null` non-empty → log `[skip] <pkg>@<version> already published` and continue, do not error"
       - "Wrapper published last after all 8 platforms succeed/skip; `--access public` on every publish; `--dry-run` flag passes through"
       - "`set -euo pipefail` enabled; header comment documents ordering, idempotency, and the manual-recovery workflow"
-    completed_at: null
+    completed_at: 2026-05-04T15:00:00Z
 
   - id: task-005
     title: "Modify release.yml to surface include_neo4j and upload dist artifacts"
