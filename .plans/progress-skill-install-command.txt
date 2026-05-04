@@ -43,3 +43,23 @@ Key Decisions:
 - Agent.SkillsPath included now even though install/list don't yet use it — required by REQ-T-002 acceptance criterion and used by upcoming tasks.
 
 Next Task: task-003
+
+================================================================================
+TASK-003: Implement common/skill/filesystem.go bundle copy/remove helpers
+Date: 2026-05-04T13:15:00Z
+================================================================================
+
+Summary:
+Added CopyBundle (walks an fs.FS, copies regular files onto an afero.Fs preserving structure) and RemoveDir (recursive, idempotent — returns nil if dir is absent). Mirrors fileutils.WriteFile semantics (mode 0600 files / 0755 dirs). Hermetic table-driven tests on afero.MemMapFs via testing/fstest.MapFS, including an fs.Sub round-trip that mirrors the real generator's `fs.Sub(embed.FS, "bundle")` invocation.
+
+Files Changed:
+- common/skill/filesystem.go (created)
+- common/skill/filesystem_test.go (created)
+
+Key Decisions:
+- Kept the 3-arg signature CopyBundle(dst, dstDir, bundle) per acceptance criterion. Generators scope the embed.FS upstream with fs.Sub(Bundle, "bundle") rather than passing a root parameter — keeps the helper signature minimal.
+- RemoveDir uses afero.Fs.RemoveAll directly. MemMapFs returns nil (not ErrNotExist) for missing paths, so the explicit ErrNotExist check is a defence-in-depth for OsFs at runtime.
+- Used afero.WriteFile directly instead of fileutils.WriteFile to surface errors instead of panicking — same mode bits (0600), same semantics.
+- Coverage of common/skill/ is 88.3%.
+
+Next Task: task-004

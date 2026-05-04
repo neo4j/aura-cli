@@ -52,7 +52,7 @@ tasks:
       for destination paths, and `cfg.Aura.Fs()` (afero.Fs) for writes.
       Reuse `common/clicfg/fileutils/fileutils.go::WriteFile` for atomic
       writes.
-    status: pending
+    status: completed
     dependencies:
       - task-002
     acceptance_criteria:
@@ -60,7 +60,7 @@ tasks:
       - "CopyBundle preserves bundle file structure (SKILL.md + references/*.md) under dstDir"
       - "RemoveDir is idempotent — returns nil when dir is missing"
       - "Uses filepath.Join (no string concatenation), forward slashes preserved in any markdown content untouched"
-    completed_at: null
+    completed_at: 2026-05-04T13:15:00Z
 
   - id: task-004
     title: "Implement common/skill/render package with golden-file tests"
