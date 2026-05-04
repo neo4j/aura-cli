@@ -143,7 +143,7 @@ tasks:
       common/skill/render.Bundle, writes bundle/), and the generated bundle/
       itself. Add gen/main_test.go that runs the generator into a t.TempDir
       and asserts byte-equal with the committed bundle/.
-    status: pending
+    status: completed
     dependencies:
       - task-001
       - task-004
@@ -153,7 +153,7 @@ tasks:
       - "bundle/SKILL.md frontmatter has name=neo4j-cli, description from description.txt, version: {{VERSION}}"
       - "Reference present for every top-level subcommand (aura, credential, skill)"
       - "gen/main_test.go round-trip is byte-equal with committed bundle"
-    completed_at: null
+    completed_at: 2026-05-04T16:15:00Z
 
   - id: task-008
     title: "Add per-binary skill template for aura-cli (standalone)"

@@ -175,3 +175,52 @@ Key Decisions:
 - Coverage of common/skill: 90.1% (above 80% gate).
 
 Next Task: task-007
+
+================================================================================
+TASK-007: Add per-binary skill template for neo4j-cli (super-CLI)
+Date: 2026-05-04T16:15:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/internal/skill/ template: embed.go (//go:generate + //go:embed
+bundle, exports Bundle embed.FS), description.txt (single-line third-person
+frontmatter description), additions.md (gotchas with leading HTML comment
+explaining its purpose), gen/main.go (imports app + render, resolves package
+dir via runtime.Caller, removes-then-regenerates bundle/), plus gen/main_test.go
+(round-trip into t.TempDir, byte-equal vs committed bundle). Generator
+produces SKILL.md + references/aura.md + references/credential.md against
+the current top-level command set; references/skill.md will appear after
+task-009 mounts the skill subcommand.
+
+Files Changed:
+- neo4j-cli/internal/skill/embed.go (created)
+- neo4j-cli/internal/skill/description.txt (created)
+- neo4j-cli/internal/skill/additions.md (created)
+- neo4j-cli/internal/skill/gen/main.go (created)
+- neo4j-cli/internal/skill/gen/main_test.go (created)
+- neo4j-cli/internal/skill/bundle/SKILL.md (generated, committed)
+- neo4j-cli/internal/skill/bundle/references/aura.md (generated, committed)
+- neo4j-cli/internal/skill/bundle/references/credential.md (generated, committed)
+
+Key Decisions:
+- packageDir resolved via runtime.Caller(0) — keeps gen invocation CWD-
+  independent so `go generate ./...` from any working dir lands the bundle
+  next to the package source. Mirrors the LackOfMorals/go-cli-tool#9 pattern.
+- generate() removes bundle/ before recreating it so deleted top-level
+  subcommands (or renames) don't leave stale references files behind.
+- gen subpackage (package main) is intentionally separate from the parent
+  skill package so it can build before bundle/ exists. embed.go in the
+  parent package needs bundle/ present at build time; this lets bootstrap
+  work: run gen → generate bundle → commit, then embed.go compiles.
+- description.txt is single-line — render.go's frontmatter writer emits it
+  as one `description: …` line (no YAML escaping). strings.TrimSpace in
+  render handles the trailing newline.
+- additions.md opens with an HTML comment per REQ-D-006 explaining edits
+  here land in the SKILL.md "Gotchas" section after re-running go generate.
+- 0644 mode on generated files (not 0600 like installer.go) — these are
+  committed to the repo, where world-read is conventional.
+- TestGenerator_RoundTrip walks both committed and regenerated trees,
+  asserts identical relative-path lists AND identical byte content per
+  file. Walks via filepath.ToSlash so the test passes on Windows.
+
+Next Task: task-008
