@@ -1,0 +1,299 @@
+feature: skill-install-command
+prd: ./prd-skill-install-command.md
+created_at: 2026-05-04T12:00:00Z
+updated_at: 2026-05-04T12:00:00Z
+
+tasks:
+  - id: task-001
+    title: "Refactor neo4j-cli tree builder into importable app package"
+    description: |
+      Move `NewCmd` and `Version` out of `neo4j-cli/main.go` (package main) into
+      a new `neo4j-cli/app/app.go` (package app) so the per-binary skill
+      generator can import the cobra tree. Shrink `main.go` to a thin
+      entrypoint that calls `app.NewCmd`. Aura already exposes `NewCmd` /
+      `NewStandaloneCmd` from `neo4j-cli/aura/aura.go` — no aura-side change.
+    status: pending
+    dependencies: []
+    acceptance_criteria:
+      - "neo4j-cli/app/app.go exposes NewCmd(cfg *clicfg.Config) *cobra.Command and a Version package var"
+      - "neo4j-cli/main.go reduced to entrypoint that wires afero, calls app.NewCmd, sets Help/error hooks"
+      - "make build produces neo4j-cli with identical command surface (verified by --help output diff = empty)"
+      - "make test passes; license header on the new file"
+    completed_at: null
+
+  - id: task-002
+    title: "Implement common/skill/agents.go agent catalog and path expansion"
+    description: |
+      Port the agent catalog from LackOfMorals/go-cli-tool#9: the 10 supported
+      agents (claude-code, cursor, windsurf, copilot, gemini-cli, cline,
+      codex, pi, opencode, junie) with DetectDir / SkillsDir. Implement
+      `expandPath` (~, ~/foo, $XDG_CONFIG_HOME with $HOME/.config fallback),
+      `FindAgent` (case-insensitive lookup), and `DetectAgents(fs afero.Fs)`.
+      Agent.DetectPath / SkillsPath return expanded paths and an ok bool.
+      Add `agents_test.go` table-driven covering all REQ-T-002 cases with
+      t.Setenv("HOME", ...) and afero.NewMemMapFs.
+    status: pending
+    dependencies: []
+    acceptance_criteria:
+      - "common/skill/agents.go and agents_test.go committed with license headers"
+      - "AGENTS slice matches the Rust reference verbatim"
+      - "expandPath handles ~, bare ~, ~/foo, $XDG_CONFIG_HOME set/unset, missing HOME"
+      - "FindAgent case-insensitive; unknown returns nil"
+      - "DetectAgents takes afero.Fs and returns only agents whose DetectDir exists"
+      - "go test ./common/skill/... passes; no real-disk reads in tests"
+    completed_at: null
+
+  - id: task-003
+    title: "Implement common/skill/filesystem.go bundle copy/remove helpers"
+    description: |
+      Helpers that copy an embed.FS subtree onto an afero.Fs at a target
+      directory and recursively remove a target directory. Used by
+      Install/Remove. Use `fs.WalkDir` against the embed.FS, `filepath.Join`
+      for destination paths, and `cfg.Aura.Fs()` (afero.Fs) for writes.
+      Reuse `common/clicfg/fileutils/fileutils.go::WriteFile` for atomic
+      writes.
+    status: pending
+    dependencies:
+      - task-002
+    acceptance_criteria:
+      - "filesystem.go exposes CopyBundle(dst afero.Fs, dstDir string, bundle fs.FS) and RemoveDir(fs afero.Fs, dir string)"
+      - "CopyBundle preserves bundle file structure (SKILL.md + references/*.md) under dstDir"
+      - "RemoveDir is idempotent — returns nil when dir is missing"
+      - "Uses filepath.Join (no string concatenation), forward slashes preserved in any markdown content untouched"
+    completed_at: null
+
+  - id: task-004
+    title: "Implement common/skill/render package with golden-file tests"
+    description: |
+      `render.Bundle(root *cobra.Command, opts Options) (map[string][]byte, error)`
+      walks the cobra tree and produces an in-memory bundle: SKILL.md
+      (frontmatter + overview + global flags + subcommand index + gotchas) +
+      one references/<sub>.md per top-level subcommand (recursive flags +
+      examples, TOC if >100 lines). Always splits per top-level subcommand.
+      Deterministic: sorted subcommands, sorted flag rows, hidden cmds
+      excluded. Frontmatter `version` is the literal `{{VERSION}}` placeholder
+      (substituted later by installer). Add render_test.go with a fixture
+      cobra tree and golden files under render/testdata/.
+    status: pending
+    dependencies: []
+    acceptance_criteria:
+      - "render.Bundle returns deterministic byte-equal output for unchanged input"
+      - "SKILL.md frontmatter includes name, description, version: {{VERSION}}"
+      - "SKILL.md body includes Global Flags table and Subcommands index linking references/<sub>.md"
+      - "References for subcommands >100 lines include a Contents TOC at the top"
+      - "Hidden commands and the implicit `help` cmd are excluded"
+      - "render_test.go uses a fixture tree + testdata/ golden files; byte-equal assertion"
+      - "Coverage of render package ≥80%"
+    completed_at: null
+
+  - id: task-005
+    title: "Implement common/skill/installer.go (Install/Remove/List/Check)"
+    description: |
+      Provides Install(ctx, fs, bundle, skillName, version, agentFilter),
+      Remove(...), List(...), Check(...). Install: substitute {{VERSION}} →
+      version in SKILL.md only (references unchanged), then copy to each
+      target agent's <skillsDir>/<skillName>/. Without agentFilter: every
+      detected agent (error if none); with agentFilter: case-insensitive
+      single-agent lookup. Remove: idempotent removal. List: returns
+      per-agent rows with Detected/Installed/InstalledVersion. Check:
+      regex-parses the `version:` line in each installed SKILL.md and
+      compares to the running binary version. Add table-driven
+      installer_test.go covering all REQ-T-003 cases on afero.NewMemMapFs.
+    status: pending
+    dependencies:
+      - task-002
+      - task-003
+    acceptance_criteria:
+      - "All four operations work hermetically against afero.NewMemMapFs"
+      - "{{VERSION}} substituted with runtime version on Install; references untouched"
+      - "Install with no detected agents and no filter returns a typed error"
+      - "Remove on uninstalled is a no-op (no error)"
+      - "Check exits non-zero (returns drift) when installed version differs from runtime"
+      - "Coverage of installer.go ≥80%"
+    completed_at: null
+
+  - id: task-006
+    title: "Implement common/skill/command.go cobra wrapper + tests"
+    description: |
+      `NewCmd(cfg *clicfg.Config, bundle fs.FS, skillName string)
+      *cobra.Command` returns a parent `skill` cobra command with
+      install/remove/list/check leaves. Each leaf delegates to the installer
+      and renders results as a table by default or JSON when --output json is
+      passed (match existing CLI conventions in
+      neo4j-cli/aura/internal/output). Optional positional [agent] on install
+      and remove. Add command_test.go that execs each subcommand with
+      captured stdout/stderr, asserting both table and JSON paths.
+    status: pending
+    dependencies:
+      - task-005
+    acceptance_criteria:
+      - "skill install / remove / list / check are wired and call the installer"
+      - "--output json emits the existing JSON envelope shape"
+      - "Unknown agent on install/remove returns non-zero exit and a helpful error"
+      - "command_test.go exercises both table and JSON paths for every subcommand"
+    completed_at: null
+
+  - id: task-007
+    title: "Add per-binary skill template for neo4j-cli (super-CLI)"
+    description: |
+      Create `neo4j-cli/internal/skill/` with embed.go (//go:generate go run
+      ./gen ; //go:embed bundle ; var Bundle embed.FS), description.txt
+      (third-person `description`, ≤1024 chars), additions.md (gotchas +
+      one-line top comment), gen/main.go (imports neo4j-cli/app, calls
+      common/skill/render.Bundle, writes bundle/), and the generated bundle/
+      itself. Add gen/main_test.go that runs the generator into a t.TempDir
+      and asserts byte-equal with the committed bundle/.
+    status: pending
+    dependencies:
+      - task-001
+      - task-004
+    acceptance_criteria:
+      - "neo4j-cli/internal/skill/{embed.go,description.txt,additions.md,gen/main.go} present with license headers"
+      - "go generate ./neo4j-cli/internal/skill writes bundle/SKILL.md + bundle/references/*.md"
+      - "bundle/SKILL.md frontmatter has name=neo4j-cli, description from description.txt, version: {{VERSION}}"
+      - "Reference present for every top-level subcommand (aura, credential, skill)"
+      - "gen/main_test.go round-trip is byte-equal with committed bundle"
+    completed_at: null
+
+  - id: task-008
+    title: "Add per-binary skill template for aura-cli (standalone)"
+    description: |
+      Same template as task-007 under `neo4j-cli/aura/internal/skill/`, with
+      gen/main.go importing `neo4j-cli/aura` and building NewStandaloneCmd.
+      description.txt and additions.md scoped to aura-cli (no super-CLI
+      content). Bundle generated into bundle/ and committed.
+    status: pending
+    dependencies:
+      - task-004
+    acceptance_criteria:
+      - "neo4j-cli/aura/internal/skill/* present with license headers"
+      - "Generator writes bundle for aura-cli's standalone tree (aura subcommands + credential + skill)"
+      - "Bundle differs from neo4j-cli's bundle (verified by diff in test)"
+      - "gen/main_test.go round-trip is byte-equal with committed bundle"
+    completed_at: null
+
+  - id: task-009
+    title: "Mount skill subcommand in both binaries"
+    description: |
+      In `neo4j-cli/app/app.go::NewCmd`: `cmd.AddCommand(skill.NewCmd(cfg,
+      neo4jclibinskill.Bundle, "neo4j-cli"))`. In
+      `neo4j-cli/aura/aura.go::NewStandaloneCmd` (NOT NewCmd):
+      `cmd.AddCommand(skill.NewCmd(cfg, aurabinskill.Bundle, "aura-cli"))`.
+      Verify the super-CLI's nested `aura` subtree does NOT pick up a
+      duplicate `skill` (aura.NewCmd stays unchanged).
+    status: pending
+    dependencies:
+      - task-006
+      - task-007
+      - task-008
+    acceptance_criteria:
+      - "bin/neo4j-cli skill --help works; bin/aura-cli skill --help works"
+      - "bin/neo4j-cli aura skill --help fails with unknown command (no duplicate mount)"
+      - "Each binary's skill install writes its own bundle (skill name = binary name)"
+      - "make build green; make test green"
+    completed_at: null
+
+  - id: task-010
+    title: "Add Makefile generate targets and CI workflow guard"
+    description: |
+      Add `generate:` target running `go generate ./...` and `generate-check:`
+      that runs generate then `git diff --exit-code` (fails on any drift).
+      Wire `make generate-check` into the existing PR workflow under
+      `.github/workflows/`. Document on a deliberately-skipped-generate
+      branch that CI fails as expected.
+    status: pending
+    dependencies:
+      - task-007
+      - task-008
+    acceptance_criteria:
+      - "make generate regenerates both binaries' bundles"
+      - "make generate-check passes on a clean tree, fails when bundle is stale"
+      - "CI workflow runs make generate-check on PRs across the existing OS matrix"
+    completed_at: null
+
+  - id: task-011
+    title: "Frontmatter, line-count, and coverage gate tests"
+    description: |
+      Add a test (e.g. common/skill/bundles_test.go) that loads every
+      committed `<bin>/internal/skill/bundle/SKILL.md`, asserts: name ≤64
+      chars + allowed charset, description non-empty + ≤1024 chars, version
+      line present and equals `{{VERSION}}` on disk (substitution happens at
+      install time, not generation), and `wc -l` ≤500. Runs across both
+      committed binaries automatically. Gate makes sure new binaries can't
+      land an oversize SKILL.md.
+    status: pending
+    dependencies:
+      - task-007
+      - task-008
+    acceptance_criteria:
+      - "Test iterates all committed bundles via filepath.Walk and asserts the rules"
+      - "Failing assertions identify the offending binary and rule"
+      - "Test runs on ubuntu, windows, macos in CI"
+    completed_at: null
+
+  - id: task-012
+    title: "Update README.md with Agent skills section"
+    description: |
+      Add an "Agent skills" section to README.md after "Usage" explaining
+      what `skill install` does, listing the supported agents, showing one
+      example each for install/list/check/remove. Keep style consistent with
+      existing README sections.
+    status: pending
+    dependencies:
+      - task-009
+    acceptance_criteria:
+      - "README.md has a top-level 'Agent skills' section after Usage"
+      - "Lists all 10 supported agents"
+      - "Code blocks for install/list/check/remove with realistic examples"
+    completed_at: null
+
+  - id: task-013
+    title: "Update docs/usageGuide with skill subcommand sections"
+    description: |
+      Add a "Skill" section to both `docs/usageGuide/Neo4j CLI.md` and
+      `docs/usageGuide/A Guide To The New Aura CLI.md` documenting the four
+      subcommands. Match each guide's existing prose + code-block style.
+      Aura guide describes aura-cli surface; super-CLI guide covers
+      neo4j-cli surface.
+    status: pending
+    dependencies:
+      - task-009
+    acceptance_criteria:
+      - "Both usage guides have a Skill section"
+      - "Examples reference the correct binary (neo4j-cli vs aura-cli)"
+      - "Doc style matches surrounding sections"
+    completed_at: null
+
+  - id: task-014
+    title: "Update CONTRIBUTING.md and CLAUDE.md for generator workflow"
+    description: |
+      Add a 'Generated content' subsection to `CONTRIBUTING.md` under
+      Development covering: `go generate ./...` regenerates bundles, `make
+      generate-check` is the CI gate, bundles are committed, how to edit
+      `additions.md` per binary. Add a short note in `CLAUDE.md` Architecture
+      section pointing at `common/skill/` and per-binary `internal/skill/`
+      template, plus the rule for adding new standalone CLIs.
+    status: pending
+    dependencies:
+      - task-010
+    acceptance_criteria:
+      - "CONTRIBUTING.md documents go generate, make generate-check, additions.md"
+      - "CLAUDE.md Architecture references common/skill/ and the per-binary template"
+      - "Add-a-new-CLI procedure explained in one of the two docs"
+    completed_at: null
+
+  - id: task-015
+    title: "Add dual-project changelog entries"
+    description: |
+      Run `changie new --projects aura-cli --projects neo4j-cli --kind Minor
+      --body "Add `skill` subcommand to install agent skills into supported
+      AI agents (Claude Code, Cursor, Windsurf, etc.)"`. Verify both project
+      entries land under `.changes/unreleased/` correctly tagged.
+    status: pending
+    dependencies:
+      - task-009
+    acceptance_criteria:
+      - ".changes/unreleased/ has entries for both aura-cli and neo4j-cli projects"
+      - "Kind = Minor; body describes the skill subcommand"
+      - "make test still passes"
+    completed_at: null
