@@ -100,7 +100,7 @@ tasks:
     title: "Implement :schema subcommand (schema.go) with json default + table mode"
     description: |
       Add `neo4j-cli/query/schema.go` exposing `newSchemaCmd(cfg)` and mount it from `query.go` via `cmd.AddCommand(newSchemaCmd(cfg))`. The cobra `Use` is the literal `":schema"`. RunE resolves the connection (reuse `resolveConn`), then runs the introspection queries sequentially: (1) `CALL db.schema.nodeTypeProperties() YIELD nodeType, nodeLabels, propertyName, propertyTypes, mandatory`; (2) `CALL db.schema.relTypeProperties() YIELD relType, propertyName, propertyTypes, mandatory`; (3) per relType: `MATCH (n)-[r:`<type>`]->(m) WITH DISTINCT labels(n) AS from, labels(m) AS to RETURN from, to`; (4) `SHOW INDEXES YIELD name, type, entityType, labelsOrTypes, properties, state, owningConstraint, options`; (5) `SHOW CONSTRAINTS YIELD name, type, entityType, labelsOrTypes, properties, ownedIndex, propertyType`; plus optional swallow-errors `CALL dbms.components()` and `SHOW SETTINGS YIELD name, value WHERE name = 'db.query.default_language' RETURN value`. Build a single `schemaResult` struct and render: JSON default = one structured object; `--output table` = 5 stacked sub-tables with H2 separators (one per section). `--max-rows`/`--truncate-arrays-over` do NOT apply to `:schema`. Add `schema_test.go` against `httptest.NewServer` returning canned responses for the introspection queries.
-    status: pending
+    status: completed
     dependencies:
       - task-004
       - task-005
@@ -110,7 +110,7 @@ tasks:
       - "`--output table` emits 5 sub-tables (one per section) separated by H2 markers; sections render in the documented order"
       - "Failures of the optional `dbms.components()` / `SHOW SETTINGS` calls do NOT fail the command — the database section is just omitted/partial"
       - "Tests cover happy path + at least one introspection query failing (must fail the command for required queries 1–5)"
-    completed_at: null
+    completed_at: 2026-05-04T18:30:00Z
 
   - id: task-008
     title: "Regenerate skill bundle and verify generate-check passes"

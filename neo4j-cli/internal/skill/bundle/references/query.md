@@ -21,3 +21,11 @@ Flags:
 | `--uri` | string | - | Neo4j HTTP Query API base URI [env: NEO4J_URI] (default "http://localhost:7474") |
 | `-u, --username` | string | - | Neo4j username [env: NEO4J_USERNAME] (default "neo4j") |
 
+## neo4j-cli query :schema
+
+Introspect the connected database (labels, rel types, indexes, constraints)
+
+Introspect the connected database. Runs a sequence of read-only cypher calls and aggregates the result into one structured payload with database info, node/relationship properties, relationship paths, indexes, and constraints. --max-rows and --truncate-arrays-over do not apply.
+
+Usage: `neo4j-cli query :schema`
+

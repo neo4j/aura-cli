@@ -254,3 +254,66 @@ Key Decisions:
   http.NewRequestWithContext rejects a nil ctx.
 
 Next Task: task-007 (:schema subcommand)
+
+================================================================================
+TASK-007: Implement :schema subcommand (schema.go) with json default + table mode
+Date: 2026-05-04T18:30:00Z
+================================================================================
+
+Summary:
+Added neo4j-cli/query/schema.go exposing newSchemaCmd(cfg) mounted from
+query.go via cmd.AddCommand. Cobra Use is the literal ":schema". RunE reuses
+resolveConn + promptPassword from run.go, then runs the introspection queries
+sequentially via thin fetch helpers (fetchNodeProperties, fetchRelProperties,
+fetchRelPaths-per-relType, fetchTabular for indexes/constraints) plus an
+optional fetchDatabaseInfo that swallows errors from CALL dbms.components and
+SHOW SETTINGS. Results are aggregated into a single schemaResult struct and
+rendered: JSON marshals the struct directly (database / nodes / relationships
+/ relationship_paths / indexes / constraints); table mode emits FIVE stacked
+sub-tables (Nodes, Relationships, Relationship Paths, Indexes, Constraints)
+separated by H2 markers — Database is JSON-only per the PRD's "five stacked
+sub-tables" REQ-F-013. Tests cover JSON happy path, table happy path with
+H2-section ordering check, required-query failure (SHOW INDEXES error
+propagates as command error), optional-query failure swallowed (both probes
+fail → command still succeeds with partial Database section containing only
+Name from the connection), unique-relType dedup+sort, stripRelTypeWrap unwrap
+across :"X", :`X`, :X, plain X shapes, no-args rejection, transport error.
+
+Files Changed:
+- neo4j-cli/query/schema.go (created — newSchemaCmd, runSchema, fetch helpers,
+  renderers, helpers; ~330 lines)
+- neo4j-cli/query/schema_test.go (created — happy + failure paths against
+  routing httptest.NewServer; ~280 lines)
+- neo4j-cli/query/query.go (modified — cmd.AddCommand(newSchemaCmd(cfg)))
+- neo4j-cli/internal/skill/bundle/SKILL.md (regenerated — implicit via go
+  generate; query row already present from task-001, no diff)
+- neo4j-cli/internal/skill/bundle/references/query.md (regenerated — adds
+  the :schema h2 section + Usage line)
+- .plans/tasks-query-command.yml (status / completed_at)
+
+Key Decisions:
+- Database is JSON-only (table mode skips it). PRD REQ-F-013 explicitly says
+  "five stacked sub-tables" and the single-record metadata payload has no
+  natural tabular shape. Test asserts `## Database` is absent from table
+  output to lock the contract.
+- Routing httptest server (schemaServer) keys substrings against the inbound
+  Cypher statement so one server handles all 7+ introspection queries with
+  one canned-response map. Failure injection for required-query test sets an
+  errBody on the matching route; the helper turns that into a 4xx + errors[]
+  envelope so runStatement's existing error-surfacing path fires unchanged.
+- Per-relType MATCH calls use fmt.Sprintf with backtick quoting around the
+  stripped type name. The driver's relType is colon-wrapped (":`OWNS`"); a
+  small stripRelTypeWrap helper peels off colons and surrounding backticks
+  /quotes before interpolation. uniqueRelTypes dedups + sorts so the calls
+  fire in deterministic order (and tests can assert on the order).
+- Optional dbms.components/SHOW SETTINGS errors are swallowed inside
+  fetchDatabaseInfo. We always populate Database.Name from c.database (which
+  defaults to "neo4j") so the user sees at least the connected DB name even
+  when both probes fail. Acceptance criterion says "omitted/partial" — partial
+  satisfies it.
+- Renamed local var `any` to `gotAny` and removed now-unused row0 helper —
+  shadowing the builtin alias was confusing even though syntactically valid.
+- Hoisted indexBy(res.Columns) out of the per-row loop in fetch helpers — one
+  alloc per query instead of one per row.
+
+Next Task: task-008 (regen skill bundle and verify generate-check)

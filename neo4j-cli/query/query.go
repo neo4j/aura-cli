@@ -62,5 +62,7 @@ func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.PersistentFlags().Int("truncate-arrays-over", 100, "Recursively truncate any array longer than N inside row values (0 = off); rendered as [\"<truncated: K items>\"]")
 	cmd.PersistentFlags().Bool("insecure", false, "Skip TLS certificate verification [env: NEO4J_INSECURE] (development only)")
 
+	cmd.AddCommand(newSchemaCmd(cfg))
+
 	return cmd
 }
