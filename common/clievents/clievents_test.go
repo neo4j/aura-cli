@@ -64,7 +64,7 @@ func TestEmit_CommandWithShortHelpFlag_EmitsHelpWithCommandName(t *testing.T) {
 func TestEmit_AuraCommand_EmitsFullCommand(t *testing.T) {
 	svc := newMockService(t)
 	svc.EXPECT().EmitEvent("AURA", analytics.TrackEvent{
-		Properties: analytics.CommandEventProperties{
+		Properties: commandEventProperties{
 			Command: "aura instances list --output json",
 			Success: true,
 		},
@@ -75,7 +75,7 @@ func TestEmit_AuraCommand_EmitsFullCommand(t *testing.T) {
 func TestEmit_AuraCommand_PropagatesFailure(t *testing.T) {
 	svc := newMockService(t)
 	svc.EXPECT().EmitEvent("AURA", analytics.TrackEvent{
-		Properties: analytics.CommandEventProperties{
+		Properties: commandEventProperties{
 			Command: "aura instances list",
 			Success: false,
 		},
@@ -128,7 +128,7 @@ func TestEmit_QueryCommand_NoURI_IsAuraFalse(t *testing.T) {
 func TestEmit_SkillCommand_EmitsFullCommand(t *testing.T) {
 	svc := newMockService(t)
 	svc.EXPECT().EmitEvent("SKILL", analytics.TrackEvent{
-		Properties: analytics.CommandEventProperties{
+		Properties: commandEventProperties{
 			Command: "skill list",
 			Success: true,
 		},
@@ -139,7 +139,7 @@ func TestEmit_SkillCommand_EmitsFullCommand(t *testing.T) {
 func TestEmit_SkillCommand_PropagatesFailure(t *testing.T) {
 	svc := newMockService(t)
 	svc.EXPECT().EmitEvent("SKILL", analytics.TrackEvent{
-		Properties: analytics.CommandEventProperties{
+		Properties: commandEventProperties{
 			Command: "skill install my-skill",
 			Success: false,
 		},
@@ -152,7 +152,7 @@ func TestEmit_SkillCommand_PropagatesFailure(t *testing.T) {
 func TestEmit_UnknownCommand_EmitsCommandUsed(t *testing.T) {
 	svc := newMockService(t)
 	svc.EXPECT().EmitEvent("COMMAND", analytics.TrackEvent{
-		Properties: analytics.CommandEventProperties{
+		Properties: commandEventProperties{
 			Command: "unknown sub",
 			Success: true,
 		},
