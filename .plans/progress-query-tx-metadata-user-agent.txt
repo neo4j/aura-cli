@@ -1,0 +1,41 @@
+================================================================================
+TASK-001: Add userAgent + txType plumbing to runStatement and update all call sites
+Date: 2026-05-05T11:30:00Z
+================================================================================
+
+Summary:
+Wired userAgent into the conn struct and runStatement: resolveConn derives it
+from cfg.Version ("neo4j-cli/v<v>", "neo4j-cli/vdev" fallback). runStatement
+gained a final txType string param; body always includes txMetadata={app:
+"neo4j-cli", type: txType}. User-Agent header set after SetBasicAuth, skipped
+when userAgent is empty so Go default UA is preserved. run.go passes
+"user-direct"; all six schema.go call sites pass "schema". Test &conn{} literals
+populated with userAgent; all test runStatement calls thread an explicit
+txType. No new test coverage in this task (deferred to task-002).
+
+Files Changed:
+- neo4j-cli/query/connect.go (modified: conn.userAgent, resolveConn UA wiring,
+  runStatement signature + txMetadata + UA header)
+- neo4j-cli/query/run.go (modified: pass "user-direct")
+- neo4j-cli/query/schema.go (modified: 6 callers pass "schema")
+- neo4j-cli/query/connect_test.go (modified: 7 &conn{} literals + 7 runStatement
+  calls updated)
+- neo4j-cli/query/schema_test.go (modified: &conn{} literal updated)
+- .plans/tasks-query-tx-metadata-user-agent.yml (status update)
+
+Key Decisions:
+- "dev" fallback handled inline in resolveConn (mirrors app.go default) rather
+  than at runStatement layer — keeps the runtime check trivially "skip if empty".
+- Use userAgent="neo4j-cli/vtest" in tests to match the cfg version "test"
+  pattern used elsewhere in connect_test.go.
+- runStatement keeps the empty-userAgent guard so future direct &conn{} test
+  callers without UA don't accidentally clobber Go's default UA.
+
+Feedback Loops:
+- make test: PASS
+- make fmt-check: PASS (no output)
+- make license-check: PASS
+- make lint: SKIPPED (golangci-lint not installed locally; go vet clean; CI
+  will gate)
+
+Next Task: task-002

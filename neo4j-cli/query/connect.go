@@ -47,12 +47,13 @@ type httpDoer interface {
 // reach the server. Tests construct conn directly with a stub doer; production
 // code goes through resolveConn.
 type conn struct {
-	uri      string
-	username string
-	password string
-	database string
-	insecure bool
-	doer     httpDoer
+	uri       string
+	username  string
+	password  string
+	database  string
+	insecure  bool
+	userAgent string
+	doer      httpDoer
 }
 
 // queryResult is the parsed body of a successful POST /query/v2 response.
@@ -136,13 +137,20 @@ func resolveConn(cmd *cobra.Command, cfg *clicfg.Config) (*conn, error) {
 		uri = rewritten
 	}
 
+	version := cfg.Version
+	if version == "" {
+		version = "dev"
+	}
+	userAgent := "neo4j-cli/v" + version
+
 	return &conn{
-		uri:      uri,
-		username: username,
-		password: password,
-		database: database,
-		insecure: insecure,
-		doer:     newHTTPClient(insecure),
+		uri:       uri,
+		username:  username,
+		password:  password,
+		database:  database,
+		insecure:  insecure,
+		userAgent: userAgent,
+		doer:      newHTTPClient(insecure),
 	}, nil
 }
 
@@ -250,7 +258,10 @@ func newHTTPClient(insecure bool) *http.Client {
 // runStatement POSTs a single Cypher statement to <uri>/db/<database>/query/v2
 // and parses the response into a queryResult. Non-2xx responses or non-empty
 // errors[] arrays produce a Go error containing the upstream code+message.
-func runStatement(ctx context.Context, c *conn, statement string, params map[string]any) (*queryResult, error) {
+// txType tags the transaction in the request body's txMetadata map ({app:
+// "neo4j-cli", type: txType}) so server logs can distinguish user-issued
+// queries from :schema probes.
+func runStatement(ctx context.Context, c *conn, statement string, params map[string]any, txType string) (*queryResult, error) {
 	if c == nil {
 		return nil, errors.New("query: nil connection")
 	}
@@ -259,6 +270,7 @@ func runStatement(ctx context.Context, c *conn, statement string, params map[str
 	if params != nil {
 		body["parameters"] = params
 	}
+	body["txMetadata"] = map[string]any{"app": "neo4j-cli", "type": txType}
 	payload, err := json.Marshal(body)
 	if err != nil {
 		return nil, fmt.Errorf("query: encode request: %w", err)
@@ -272,6 +284,9 @@ func runStatement(ctx context.Context, c *conn, statement string, params map[str
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	req.SetBasicAuth(c.username, c.password)
+	if c.userAgent != "" {
+		req.Header.Set("User-Agent", c.userAgent)
+	}
 
 	resp, err := c.doer.Do(req)
 	if err != nil {

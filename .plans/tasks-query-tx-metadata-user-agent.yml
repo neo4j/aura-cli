@@ -18,7 +18,7 @@ tasks:
       argument through every existing runStatement call in tests so the
       package builds and existing assertions stay green. No new test
       coverage in this task — that lands in task-002.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "neo4j-cli/query/connect.go: conn struct has a `userAgent string` field; resolveConn sets it to `\"neo4j-cli/v\" + cfg.Version`, falling back to `\"neo4j-cli/vdev\"` when cfg.Version is empty."
@@ -28,7 +28,7 @@ tasks:
       - "No imports of github.com/neo4j/cli/neo4j-cli/app or github.com/neo4j/cli/neo4j-cli/aura from the query package — version flows via cfg.Version only."
       - "make test passes; make fmt-check passes; make lint passes; make license-check passes."
       - "No file under neo4j-cli/aura/, common/clicfg/, neo4j-cli/app/ or any other package outside neo4j-cli/query/ is modified."
-    completed_at: null
+    completed_at: 2026-05-05T11:30:00Z
 
   - id: task-002
     title: "Add header + tx metadata assertions and resolveConn UA tests"

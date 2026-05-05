@@ -72,7 +72,7 @@ func runQuery(cmd *cobra.Command, args []string, cfg *clicfg.Config) error {
 		c.password = pw
 	}
 
-	res, err := runStatement(cmd.Context(), c, cypher, params)
+	res, err := runStatement(cmd.Context(), c, cypher, params, "user-direct")
 	if err != nil {
 		return err
 	}
