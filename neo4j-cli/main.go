@@ -24,6 +24,11 @@ func main() {
 
 	cfg := clicfg.NewConfig(afero.NewOsFs(), app.Version, clicfg.GlobalScope)
 
+	// This is fake command that we use to emit startup.
+	// This event allows us to easily measure installation base
+
+	clievents.Emit(cfg.Events, []string{"startup"}, true)
+
 	cmd := app.NewCmd(cfg)
 	cmd.SetOut(os.Stdout)
 	cmd.SetErr(os.Stderr)

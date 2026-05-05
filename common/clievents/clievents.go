@@ -11,6 +11,12 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// commandEventProperties carries the command-specific fields
+type commandEventProperties struct {
+	Command string `json:"command"`
+	Success bool   `json:"success"`
+}
+
 // helpEventProperties carries properties for HELP events.
 // Command is omitted when help is invoked with no command (e.g. bare --help).
 type helpEventProperties struct {
@@ -24,6 +30,10 @@ type queryEventProperties struct {
 	Command string `json:"command"`
 	Success bool   `json:"success"`
 	IsAura  bool   `json:"is_aura"`
+}
+
+type startupEventProperties struct {
+	Command string `json:"command,omitempty"`
 }
 
 // Emit inspects args to determine which analytics event to fire.
@@ -58,11 +68,15 @@ func Emit(events analytics.Service, args []string, state bool) {
 	}
 
 	switch commandName {
+	case "startup":
+		events.EmitEvent("STARTUP", analytics.TrackEvent{
+			Properties: startupEventProperties{Command: "startup"},
+		})
 	case "aura":
 		// Full command string is safe — Aura commands contain no PII.
 		cliCommand := strings.Trim(fmt.Sprint(args), "[]")
 		events.EmitEvent("AURA", analytics.TrackEvent{
-			Properties: analytics.CommandEventProperties{Command: cliCommand, Success: state},
+			Properties: commandEventProperties{Command: cliCommand, Success: state},
 		})
 
 	case "query":
@@ -80,13 +94,13 @@ func Emit(events analytics.Service, args []string, state bool) {
 		// Full command string is safe — skill commands contain no PII.
 		cliCommand := strings.Trim(fmt.Sprint(args), "[]")
 		events.EmitEvent("SKILL", analytics.TrackEvent{
-			Properties: analytics.CommandEventProperties{Command: cliCommand, Success: state},
+			Properties: commandEventProperties{Command: cliCommand, Success: state},
 		})
 
 	default:
 		cliCommand := strings.Trim(fmt.Sprint(args), "[]")
 		events.EmitEvent("COMMAND", analytics.TrackEvent{
-			Properties: analytics.CommandEventProperties{Command: cliCommand, Success: state},
+			Properties: commandEventProperties{Command: cliCommand, Success: state},
 		})
 	}
 }
