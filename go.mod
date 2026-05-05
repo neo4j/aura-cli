@@ -3,8 +3,11 @@ module github.com/neo4j/cli
 go 1.25.0
 
 require (
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/google/go-cmp v0.7.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/google/uuid v1.6.0
+	github.com/mixpanel/mixpanel-go v1.2.1
 	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -12,6 +15,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/toon-format/toon-go v0.0.0-20251202084852-7ca0e27c4e8c
+	go.uber.org/mock v0.6.0
 	golang.org/x/sys v0.43.0
 	golang.org/x/term v0.29.0
 )
@@ -23,6 +27,9 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
 )
 
 require (
@@ -40,3 +47,5 @@ require (
 	golang.org/x/text v0.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+tool go.uber.org/mock/mockgen

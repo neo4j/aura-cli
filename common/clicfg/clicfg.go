@@ -6,11 +6,13 @@ package clicfg
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"path/filepath"
 	"slices"
 	"strings"
 
+	"github.com/neo4j/cli/common/analytics"
 	"github.com/neo4j/cli/common/clicfg/credentials"
 	"github.com/neo4j/cli/common/clicfg/fileutils"
 	"github.com/neo4j/cli/common/clicfg/projects"
@@ -24,9 +26,11 @@ import (
 var ConfigPrefix string
 
 const (
-	DefaultAuraBaseUrl     = "https://api.neo4j.io"
-	DefaultAuraAuthUrl     = "https://api.neo4j.io/oauth/token"
-	DefaultAuraBetaEnabled = false
+	DefaultAuraBaseUrl      = "https://api.neo4j.io"
+	DefaultAuraAuthUrl      = "https://api.neo4j.io/oauth/token"
+	DefaultAuraBetaEnabled  = false
+	DefaultmixpanelEndpoint = "https://api.mixpanel.com"
+	DefaultmixpanelToken    = "4bfb2414ab973c741b6f067bf06d5575"
 )
 
 var ValidFormatValues = [4]string{"default", "json", "table", "toon"}
@@ -45,6 +49,7 @@ type Config struct {
 	Aura        *AuraConfig
 	Global      *GlobalConfig
 	Credentials *credentials.Credentials
+	Events      analytics.Service // Look to refactor this in the future , pull this into an application struct
 	scope       ConfigScope
 }
 
@@ -122,6 +127,9 @@ func NewConfig(fs afero.Fs, version string, scope ConfigScope) *Config {
 	credentials := credentials.NewCredentials(fs, ConfigPrefix)
 	projects := projects.NewAuraConfigProjects(fs, fullConfigPath)
 
+	logger := slog.Default()
+
+	events := analytics.NewAnalytics(DefaultmixpanelToken, DefaultmixpanelEndpoint, "NEO4J-CLI", version, logger)
 	globalConfig := &GlobalConfig{
 		fs:              fs,
 		viper:           Viper,
@@ -147,6 +155,7 @@ func NewConfig(fs afero.Fs, version string, scope ConfigScope) *Config {
 		},
 		Global:      globalConfig,
 		Credentials: credentials,
+		Events:      events,
 		scope:       scope,
 	}
 }
