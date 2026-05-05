@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clievents"
 	"github.com/neo4j/cli/neo4j-cli/app"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -24,21 +24,20 @@ func main() {
 
 	cfg := clicfg.NewConfig(afero.NewOsFs(), app.Version)
 
+	// Send start up event
+	cfg.Events.EmitStartupEvent()
+
 	cmd := app.NewCmd(cfg)
 	cmd.SetOut(os.Stdout)
 	cmd.SetErr(os.Stderr)
 
-	origHelp := cmd.HelpFunc()
-	cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
-		fmt.Printf("[neo4j-cli] help displayed: %s\n", c.CommandPath()) // TODO: remove this log in favour of real metrics on help displayed
-		origHelp(c, args)
-	})
-
 	// cobra prints the error itself; we only add the hook for errors that bypassed
 	// both RunE and HelpFunc (e.g. unknown top-level command via legacyArgs in Find).
 	if err := cmd.Execute(); err != nil {
-		fmt.Printf("[neo4j-cli] invalid command with args %s: %v\n", os.Args[1:], err) // TODO: remove this log in favour of real metrics in case of invalid command
-		os.Exit(1)
+		clievents.Emit(cfg.Events, os.Args[1:], false)
+	} else {
+		clievents.Emit(cfg.Events, os.Args[1:], true)
 	}
-	fmt.Printf("[neo4j-cli] command executed successfully with args %s\n", os.Args[1:]) // TODO: remove this log in favour of real metrics on successful command execution
+	cfg.Events.Flush() // Send out any remaining events
+
 }
