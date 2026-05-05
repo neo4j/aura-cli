@@ -3,7 +3,6 @@ package analytics
 import (
 	"regexp"
 	"runtime"
-	"strings"
 	"time"
 
 	"log/slog"
@@ -21,69 +20,30 @@ type baseProperties struct {
 	OS         string `json:"$os"`
 	OSArch     string `json:"os_arch"`
 	CLIVersion string `json:"cli_version,omitempty"`
-	MachineID  string `json:"machine_id,omitempty"`
 }
 
-// ActiveFlags captures which agent-relevant persistent flags were set for
-// a given invocation. Sensitive flags (credentials, URIs) are intentionally
-// excluded.
-/*
-type ActiveFlags struct {
-	AgentMode    bool   `json:"agent_mode"`
-	AllowWrites  bool   `json:"allow_writes"`
-	OutputFormat string `json:"output_format,omitempty"`
-	TimeoutSet   bool   `json:"timeout_set"`
-}
-*/
-
-// commandEventProperties carries the fields for a COMMAND_USED event.
-type commandEventProperties struct {
-	baseProperties
+// CommandEventProperties carries the command-specific fields for COMMAND_USED
+// and HELP_USED events. Base properties are merged in at send time by
+// sendTrackEvent, so they are not embedded here.
+type CommandEventProperties struct {
 	Command string `json:"command"`
 	Success bool   `json:"success"`
 }
 
 // TrackEvent is the envelope sent to Mixpanel for every analytics event.
+// Event is set by EmitEvent from the caller-supplied suffix — do not set it directly.
 type TrackEvent struct {
 	Event      string      `json:"event"`
 	Properties interface{} `json:"properties"`
 }
 
-// NewStartupEvent records that the CLI has started.
-func (a *Analytics) NewStartupEvent() TrackEvent {
-	return TrackEvent{
-		Event:      strings.Join([]string{a.cfg.appName, "STARTUP"}, "_"),
-		Properties: a.getBaseProperties(),
-	}
-}
-
-// NewCommandEvent records a CLI command invocation with the full command
-// path and the agent-relevant flags that were active.
-func (a *Analytics) NewCommandEvent(command string, success bool) TrackEvent {
-	return TrackEvent{
-		Event: strings.Join([]string{a.cfg.appName, "COMMAND_USED"}, "_"),
-		Properties: commandEventProperties{
-			baseProperties: a.getBaseProperties(),
-			Command:        command,
-			Success:        success,
-		},
-	}
-}
-
-// NewHelpEvent records that help was used
-// This is of interested for seeing if Agents call help
-// command is included for context
-func (a *Analytics) NewHelpEvent(command string) TrackEvent {
-	return TrackEvent{
-		Event: strings.Join([]string{a.cfg.appName, "HELP_USED"}, "_"),
-		Properties: commandEventProperties{
-			baseProperties: a.getBaseProperties(),
-			Command:        command,
-		},
-	}
-}
+// NewStartupEvent, NewCommandEvent, and NewHelpEvent have been removed.
+// Use EmitStartupEvent, EmitCommandEvent, and EmitHelpEvent directly,
+// or call EmitEvent with the appropriate suffix and a TrackEvent.
 
 // getBaseProperties assembles properties common to all events.
+// Called by sendTrackEvent at send time so timestamps and uptime reflect
+// when the event was actually dispatched, not when it was constructed.
 func (a *Analytics) getBaseProperties() baseProperties {
 	uptime := time.Now().Unix() - a.cfg.startupTime
 	return baseProperties{

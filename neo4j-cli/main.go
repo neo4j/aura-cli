@@ -24,9 +24,6 @@ func main() {
 
 	cfg := clicfg.NewConfig(afero.NewOsFs(), app.Version)
 
-	// Send start up event
-	cfg.Events.EmitStartupEvent()
-
 	cmd := app.NewCmd(cfg)
 	cmd.SetOut(os.Stdout)
 	cmd.SetErr(os.Stderr)

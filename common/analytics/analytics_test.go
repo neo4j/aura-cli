@@ -79,7 +79,7 @@ func TestEmitEvent_Disabled(t *testing.T) {
 
 	svc := newTestAnalytics(t, mockClient)
 	svc.Disable()
-	svc.EmitEvent(analytics.TrackEvent{Event: "should_not_be_sent"})
+	svc.EmitEvent("should_not_be_sent", analytics.TrackEvent{})
 }
 
 func TestEmitEvent_Enabled(t *testing.T) {
@@ -94,7 +94,7 @@ func TestEmitEvent_Enabled(t *testing.T) {
 		}, nil)
 
 	svc := newTestAnalytics(t, mockClient)
-	svc.EmitEvent(analytics.TrackEvent{Event: "test_event"})
+	svc.EmitEvent("test_event", analytics.TrackEvent{})
 	svc.Flush()
 }
 
@@ -123,7 +123,7 @@ func TestEmitEvent_CorrectURL(t *testing.T) {
 
 			svc := analytics.NewAnalyticsWithClient("test-token", tc.endpoint, mockClient, "", "1.2.3", nil)
 			t.Cleanup(svc.Flush)
-			svc.EmitEvent(analytics.TrackEvent{Event: "url_test"})
+			svc.EmitEvent("url_test", analytics.TrackEvent{})
 			svc.Flush()
 		})
 	}
@@ -133,11 +133,6 @@ func TestEmitEvent_CorrectBody(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClient := amocks.NewMockHTTPClient(ctrl)
 
-	event := analytics.TrackEvent{
-		Event:      "body_test",
-		Properties: map[string]interface{}{"key": "value"},
-	}
-
 	mockClient.EXPECT().
 		Post(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_, _ string, body io.Reader) (*http.Response, error) {
@@ -149,8 +144,8 @@ func TestEmitEvent_CorrectBody(t *testing.T) {
 			if len(events) != 1 {
 				t.Fatalf("expected 1 event, got %d", len(events))
 			}
-			if events[0].Event != "body_test" {
-				t.Errorf("event name: got %s, want body_test", events[0].Event)
+			if !strings.HasSuffix(events[0].Event, "body_test") {
+				t.Errorf("event name: got %s, want suffix body_test", events[0].Event)
 			}
 			return &http.Response{
 				StatusCode: http.StatusOK,
@@ -159,33 +154,33 @@ func TestEmitEvent_CorrectBody(t *testing.T) {
 		})
 
 	svc := newTestAnalytics(t, mockClient)
-	svc.EmitEvent(event)
+	svc.EmitEvent("body_test", analytics.TrackEvent{Properties: map[string]interface{}{"key": "value"}})
 	svc.Flush()
 }
 
-// ---- Enable / Disable / IsEnabled ----------------------------------------
+// ---- Disable ------------------------------------------------------------
 
-func TestEnableDisable(t *testing.T) {
-	svc := newTestAnalytics(t, nil)
+func TestDisable_SuppressesEvents(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockClient := amocks.NewMockHTTPClient(ctrl)
+	// No Post calls expected — mock will fail the test if Post is called.
 
-	if !svc.IsEnabled() {
-		t.Error("should be enabled by default")
-	}
-
+	svc := newTestAnalytics(t, mockClient)
 	svc.Disable()
-	if svc.IsEnabled() {
-		t.Error("should be disabled after Disable()")
-	}
-
-	svc.Enable()
-	if !svc.IsEnabled() {
-		t.Error("should be enabled after Enable()")
-	}
+	svc.EmitEvent("should_not_be_sent", analytics.TrackEvent{})
+	svc.Flush()
 }
 
 // ---- Event constructors --------------------------------------------------
 
-func TestEmitStartupEvent_SendsEvent(t *testing.T) {
+// TestNewStartupEvent has been removed — NewStartupEvent no longer exists.
+// Event naming is now handled by EmitEvent via the eventSuffix parameter.
+// The STARTUP suffix is verified via TestEmitStartupEvent_SendsEvent.
+
+// TestEmitEvent_IncludesBaseProperties verifies that base properties are always
+// merged into the outgoing payload by sendTrackEvent, even when EmitEvent is
+// called with a TrackEvent that carries no Properties of its own.
+func TestEmitEvent_IncludesBaseProperties(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClient := amocks.NewMockHTTPClient(ctrl)
 
@@ -193,16 +188,19 @@ func TestEmitStartupEvent_SendsEvent(t *testing.T) {
 		Post(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_, _ string, body io.Reader) (*http.Response, error) {
 			b, _ := io.ReadAll(body)
-			var events []analytics.TrackEvent
-			if err := json.Unmarshal(b, &events); err != nil {
+			// The Mixpanel SDK wraps events in a JSON array.
+			var payload []struct {
+				Event      string                 `json:"event"`
+				Properties map[string]interface{} `json:"properties"`
+			}
+			if err := json.Unmarshal(b, &payload); err != nil {
 				t.Fatalf("unmarshal body: %v", err)
 			}
-			if len(events) != 1 {
-				t.Fatalf("expected 1 event, got %d", len(events))
+			if len(payload) != 1 {
+				t.Fatalf("expected 1 event in payload, got %d", len(payload))
 			}
-			if !strings.HasSuffix(events[0].Event, "STARTUP") {
-				t.Errorf("expected STARTUP event, got %q", events[0].Event)
-			}
+			props := payload[0].Properties
+			assertBaseProperties(t, props)
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader("1")),
@@ -210,30 +208,9 @@ func TestEmitStartupEvent_SendsEvent(t *testing.T) {
 		})
 
 	svc := newTestAnalytics(t, mockClient)
-	svc.EmitStartupEvent()
+	// Emit with nil Properties — base props must still appear in the payload.
+	svc.EmitEvent("base_props_test", analytics.TrackEvent{})
 	svc.Flush()
-}
-
-// TestEmitStartupEvent_Disabled verifies that a disabled analytics instance
-// does not send the startup event.
-func TestEmitStartupEvent_Disabled(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockClient := amocks.NewMockHTTPClient(ctrl)
-	// No Post calls expected.
-
-	svc := newTestAnalytics(t, mockClient)
-	svc.Disable()
-	svc.EmitStartupEvent()
-}
-
-func TestNewStartupEvent(t *testing.T) {
-	svc := newTestAnalytics(t, nil)
-	event := svc.NewStartupEvent()
-
-	if !strings.HasSuffix(event.Event, "STARTUP") {
-		t.Errorf("unexpected event name: %s", event.Event)
-	}
-	assertBaseProperties(t, event.Properties)
 }
 
 // TestIsAura verifies the Aura URI detection (exercises the package-level

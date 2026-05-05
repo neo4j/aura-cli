@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
-	"github.com/google/uuid"
 	mixpanel "github.com/mixpanel/mixpanel-go"
 )
 
@@ -120,35 +119,18 @@ func NewAnalyticsWithClient(mixPanelToken string, mixpanelEndpoint string, clien
 	return a
 }
 
-// EmitStartupEvent queues a startup event with all standard base properties.
-func (a *Analytics) EmitStartupEvent() {
-	a.logInfo("Startup event sent")
-	a.EmitEvent(a.NewStartupEvent())
-}
-
-// EmitCommandEvent queues a command invocation event with the full command
-// path, success flag, and active persistent flags.
-func (a *Analytics) EmitCommandEvent(command string, success bool) {
-	a.EmitEvent(a.NewCommandEvent(command, success))
-}
-
-// EmitHelpEvent queues a help invocation event with the full command
-// path for context
-func (a *Analytics) EmitHelpEvent(command string) {
-	a.EmitEvent(a.NewHelpEvent(command))
-}
-
 // EmitEvent queues an analytics event for the background worker.
+// The full event name is constructed as "<appName>_<eventSuffix>".
 // It never blocks: if the internal buffer is full the event is dropped
 // and a warning is logged. Safe to call after Flush() — it is a no-op.
-func (a *Analytics) EmitEvent(event TrackEvent) {
+func (a *Analytics) EmitEvent(eventSuffix string, event TrackEvent) {
 	if a.disabled || a.closed.Load() {
 		return
 	}
+	event.Event = strings.Join([]string{a.cfg.appName, eventSuffix}, "_")
 	select {
 	case a.eventCh <- event:
 		a.logDebug("queued analytics event", "event", slog.StringValue(event.Event))
-		a.logInfo("queued analytics event", "event", slog.StringValue(event.Event))
 	default:
 		a.logWarn("analytics buffer full — dropping event", "event", slog.StringValue(event.Event), "buffer_size", slog.Int64Value(eventBufferSize))
 
@@ -176,22 +158,36 @@ func (a *Analytics) worker() {
 		if err := a.sendTrackEvent([]TrackEvent{event}); err != nil {
 			a.logError("error sending analytics event", "event", slog.StringValue(event.Event), "error", err.Error())
 		}
-		a.logInfo("Event worker sent event", "event", slog.AnyValue(event))
 	}
 }
 
-func (a *Analytics) Enable()         { a.disabled = false }
-func (a *Analytics) Disable()        { a.disabled = true }
-func (a *Analytics) IsEnabled() bool { return !a.disabled }
+func (a *Analytics) Disable() { a.disabled = true }
 
 func (a *Analytics) sendTrackEvent(events []TrackEvent) error {
+	// Build the base property map once per batch — timestamps and uptime are
+	// captured here so they reflect actual send time rather than construction time.
+	baseProps, err := toPropertiesMap(a.getBaseProperties())
+	if err != nil {
+		return fmt.Errorf("marshal base properties: %w", err)
+	}
+
 	sdkEvents := make([]*mixpanel.Event, 0, len(events))
 	for _, e := range events {
-		props, err := toPropertiesMap(e.Properties)
-		if err != nil {
-			return fmt.Errorf("marshal properties for event %q: %w", e.Event, err)
+		// Start with base properties, then let event-specific fields override.
+		merged := make(map[string]any, len(baseProps))
+		for k, v := range baseProps {
+			merged[k] = v
 		}
-		sdkEvents = append(sdkEvents, a.cfg.mp.NewEvent(e.Event, a.cfg.distinctID, props))
+		if e.Properties != nil {
+			eventProps, err := toPropertiesMap(e.Properties)
+			if err != nil {
+				return fmt.Errorf("marshal properties for event %q: %w", e.Event, err)
+			}
+			for k, v := range eventProps {
+				merged[k] = v
+			}
+		}
+		sdkEvents = append(sdkEvents, a.cfg.mp.NewEvent(e.Event, a.cfg.distinctID, merged))
 	}
 
 	if err := a.cfg.mp.Track(context.Background(), sdkEvents); err != nil {
@@ -254,13 +250,4 @@ func GetMachineID(appName string) string {
 		return ""
 	}
 	return id
-}
-
-func GetDistinctID() string {
-	id, err := uuid.NewV6()
-	if err != nil {
-		slog.Error("Error generating distinct ID for analytics", "error", err.Error())
-		return ""
-	}
-	return id.String()
 }

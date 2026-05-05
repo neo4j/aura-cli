@@ -78,52 +78,16 @@ func (c *MockServiceDisableCall) DoAndReturn(f func()) *MockServiceDisableCall {
 	return c
 }
 
-// EmitCommandEvent mocks base method.
-func (m *MockService) EmitCommandEvent(command string, success bool) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "EmitCommandEvent", command, success)
-}
-
-// EmitCommandEvent indicates an expected call of EmitCommandEvent.
-func (mr *MockServiceMockRecorder) EmitCommandEvent(command, success any) *MockServiceEmitCommandEventCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EmitCommandEvent", reflect.TypeOf((*MockService)(nil).EmitCommandEvent), command, success)
-	return &MockServiceEmitCommandEventCall{Call: call}
-}
-
-// MockServiceEmitCommandEventCall wrap *gomock.Call
-type MockServiceEmitCommandEventCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *MockServiceEmitCommandEventCall) Return() *MockServiceEmitCommandEventCall {
-	c.Call = c.Call.Return()
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *MockServiceEmitCommandEventCall) Do(f func(string, bool)) *MockServiceEmitCommandEventCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockServiceEmitCommandEventCall) DoAndReturn(f func(string, bool)) *MockServiceEmitCommandEventCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
 // EmitEvent mocks base method.
-func (m *MockService) EmitEvent(event analytics.TrackEvent) {
+func (m *MockService) EmitEvent(eventSuffix string, event analytics.TrackEvent) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "EmitEvent", event)
+	m.ctrl.Call(m, "EmitEvent", eventSuffix, event)
 }
 
 // EmitEvent indicates an expected call of EmitEvent.
-func (mr *MockServiceMockRecorder) EmitEvent(event any) *MockServiceEmitEventCall {
+func (mr *MockServiceMockRecorder) EmitEvent(eventSuffix, event any) *MockServiceEmitEventCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EmitEvent", reflect.TypeOf((*MockService)(nil).EmitEvent), event)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EmitEvent", reflect.TypeOf((*MockService)(nil).EmitEvent), eventSuffix, event)
 	return &MockServiceEmitEventCall{Call: call}
 }
 
@@ -139,85 +103,13 @@ func (c *MockServiceEmitEventCall) Return() *MockServiceEmitEventCall {
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockServiceEmitEventCall) Do(f func(analytics.TrackEvent)) *MockServiceEmitEventCall {
+func (c *MockServiceEmitEventCall) Do(f func(string, analytics.TrackEvent)) *MockServiceEmitEventCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockServiceEmitEventCall) DoAndReturn(f func(analytics.TrackEvent)) *MockServiceEmitEventCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
-// EmitStartupEvent mocks base method.
-func (m *MockService) EmitStartupEvent() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "EmitStartupEvent")
-}
-
-// EmitStartupEvent indicates an expected call of EmitStartupEvent.
-func (mr *MockServiceMockRecorder) EmitStartupEvent() *MockServiceEmitStartupEventCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EmitStartupEvent", reflect.TypeOf((*MockService)(nil).EmitStartupEvent))
-	return &MockServiceEmitStartupEventCall{Call: call}
-}
-
-// MockServiceEmitStartupEventCall wrap *gomock.Call
-type MockServiceEmitStartupEventCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *MockServiceEmitStartupEventCall) Return() *MockServiceEmitStartupEventCall {
-	c.Call = c.Call.Return()
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *MockServiceEmitStartupEventCall) Do(f func()) *MockServiceEmitStartupEventCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockServiceEmitStartupEventCall) DoAndReturn(f func()) *MockServiceEmitStartupEventCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
-// Enable mocks base method.
-func (m *MockService) Enable() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Enable")
-}
-
-// Enable indicates an expected call of Enable.
-func (mr *MockServiceMockRecorder) Enable() *MockServiceEnableCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enable", reflect.TypeOf((*MockService)(nil).Enable))
-	return &MockServiceEnableCall{Call: call}
-}
-
-// MockServiceEnableCall wrap *gomock.Call
-type MockServiceEnableCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *MockServiceEnableCall) Return() *MockServiceEnableCall {
-	c.Call = c.Call.Return()
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *MockServiceEnableCall) Do(f func()) *MockServiceEnableCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockServiceEnableCall) DoAndReturn(f func()) *MockServiceEnableCall {
+func (c *MockServiceEmitEventCall) DoAndReturn(f func(string, analytics.TrackEvent)) *MockServiceEmitEventCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -254,44 +146,6 @@ func (c *MockServiceFlushCall) Do(f func()) *MockServiceFlushCall {
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockServiceFlushCall) DoAndReturn(f func()) *MockServiceFlushCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
-// IsEnabled mocks base method.
-func (m *MockService) IsEnabled() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsEnabled")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// IsEnabled indicates an expected call of IsEnabled.
-func (mr *MockServiceMockRecorder) IsEnabled() *MockServiceIsEnabledCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsEnabled", reflect.TypeOf((*MockService)(nil).IsEnabled))
-	return &MockServiceIsEnabledCall{Call: call}
-}
-
-// MockServiceIsEnabledCall wrap *gomock.Call
-type MockServiceIsEnabledCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *MockServiceIsEnabledCall) Return(arg0 bool) *MockServiceIsEnabledCall {
-	c.Call = c.Call.Return(arg0)
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *MockServiceIsEnabledCall) Do(f func() bool) *MockServiceIsEnabledCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockServiceIsEnabledCall) DoAndReturn(f func() bool) *MockServiceIsEnabledCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -358,3 +212,5 @@ func (c *MockHTTPClientPostCall) DoAndReturn(f func(string, string, io.Reader) (
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
+
+
