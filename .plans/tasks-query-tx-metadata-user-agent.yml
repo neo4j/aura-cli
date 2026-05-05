@@ -54,22 +54,25 @@ tasks:
     completed_at: 2026-05-05T12:00:00Z
 
   - id: task-003
-    title: "Add changelog entry and verify against real Neo4j"
+    title: "Drop txMetadata, document min version, add User-Agent-only changelog"
     description: |
-      User-facing change — server logs now identify the CLI. Create a
-      Minor changelog entry for neo4j-cli, then verify end-to-end against
-      a real Neo4j: run the existing HTTPS smoke test under
-      NEO4J_HTTPS_TEST=1 to confirm the server accepts the new
-      txMetadata body field, and (manually) run a `query` and
-      `query :schema` against a local Neo4j 5 while tailing query.log to
-      observe the User-Agent and the {app, type} metadata.
-    status: pending
+      Verification against real Neo4j 5.x and 2025.x revealed the v2 endpoint
+      rejects requests carrying a `txMetadata` body field with HTTP 400 — the
+      field is only accepted from Neo4j 2026.04 onward. To keep the CLI
+      compatible with current production servers, drop the txMetadata send
+      site (and the test assertions added in task-002 that pinned its shape),
+      leave a comment on runStatement explaining the deferral and minimum
+      server version, and ship a User-Agent-only changelog entry. The
+      User-Agent header is harmless on every server version, so it stays.
+    status: completed
     dependencies:
       - task-001
       - task-002
     acceptance_criteria:
-      - "A new file at .changes/unreleased/neo4j-cli-Minor-*.yaml exists with project: neo4j-cli, kind: Minor, body equivalent to \"query/:schema: send User-Agent header and txMetadata so server logs identify the CLI\". Created via `changie new --projects neo4j-cli --kind Minor --body \"...\"` (or hand-authored per AGENTS.md if changie isn't installed)."
-      - "`NEO4J_HTTPS_TEST=1 go test -run TestHTTPS_Smoke -v ./neo4j-cli/query/...` passes against a local Docker neo4j:latest — confirms the v2 endpoint accepts the new body field."
-      - "Manual: `make run-neo4j -- query \"RETURN 1\"` against a local Neo4j 5 produces a query.log line containing app=neo4j-cli and type=user-direct; `make run-neo4j -- query :schema` produces lines with type=schema."
-      - "make test, make fmt-check, make lint, make license-check all green."
-    completed_at: null
+      - "neo4j-cli/query/connect.go: runStatement signature reverts to `runStatement(ctx, c, statement, params)` (no txType arg). Body no longer sets `txMetadata`. A comment on runStatement explains why and names the minimum server version (Neo4j 2026.04+) so a future re-enable lands with a server-version probe."
+      - "neo4j-cli/query/run.go and schema.go drop the `\"user-direct\"` / `\"schema\"` arguments threaded in task-001."
+      - "neo4j-cli/query/connect_test.go: TestRunStatement_HappyPath drops the txMetadata equality assertion and instead asserts the body does NOT contain `txMetadata` (locks in the deferral). TestRunStatement_SchemaTxType is removed. Other tests drop the txType arg from their runStatement calls."
+      - "TestResolveConn_UserAgent and the User-Agent header assertion stay — the header is shipping unchanged."
+      - "A new file at .changes/unreleased/neo4j-cli-Minor-*.yaml exists with project: neo4j-cli, kind: Minor, body equivalent to \"query/:schema: send User-Agent header so server logs identify the CLI\" (no mention of txMetadata)."
+      - "make test, make fmt-check, make license-check all green."
+    completed_at: 2026-05-05T13:00:00Z

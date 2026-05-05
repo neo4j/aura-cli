@@ -203,7 +203,7 @@ func TestRunStatement_HappyPath(t *testing.T) {
 		doer:      srv.Client(),
 	}
 
-	res, err := runStatement(context.Background(), c, "RETURN 1 AS n", map[string]any{"k": 5}, "user-direct")
+	res, err := runStatement(context.Background(), c, "RETURN 1 AS n", map[string]any{"k": 5})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	assert.Equal(t, []string{"n"}, res.Columns)
@@ -221,29 +221,9 @@ func TestRunStatement_HappyPath(t *testing.T) {
 	assert.Equal(t, "RETURN 1 AS n", gotBody["statement"])
 	require.Contains(t, gotBody, "parameters")
 	assert.Equal(t, map[string]any{"k": float64(5)}, gotBody["parameters"])
-	assert.Equal(t,
-		map[string]any{"app": "neo4j-cli", "type": "user-direct"},
-		gotBody["txMetadata"])
-}
-
-func TestRunStatement_SchemaTxType(t *testing.T) {
-	var gotBody map[string]any
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		_ = json.Unmarshal(body, &gotBody)
-		_, _ = w.Write([]byte(`{"data":{"fields":[],"values":[]}}`))
-	}))
-	defer srv.Close()
-
-	c := &conn{uri: srv.URL, username: "u", password: "p", database: "neo4j", userAgent: "neo4j-cli/vtest", doer: srv.Client()}
-	_, err := runStatement(context.Background(), c, "CALL db.labels()", nil, "schema")
-	require.NoError(t, err)
-
-	require.Contains(t, gotBody, "txMetadata")
-	meta, ok := gotBody["txMetadata"].(map[string]any)
-	require.True(t, ok, "txMetadata should be an object, got %T", gotBody["txMetadata"])
-	assert.Equal(t, "neo4j-cli", meta["app"])
-	assert.Equal(t, "schema", meta["type"])
+	// txMetadata is intentionally NOT sent — see runStatement doc comment for
+	// the Neo4j 2026.04+ minimum-version constraint that defers it.
+	assert.NotContains(t, gotBody, "txMetadata")
 }
 
 func TestResolveConn_UserAgent(t *testing.T) {
@@ -285,7 +265,7 @@ func TestRunStatement_NoParamsOmitsField(t *testing.T) {
 	defer srv.Close()
 
 	c := &conn{uri: srv.URL, username: "u", password: "p", database: "neo4j", userAgent: "neo4j-cli/vtest", doer: srv.Client()}
-	_, err := runStatement(context.Background(), c, "RETURN 1", nil, "user-direct")
+	_, err := runStatement(context.Background(), c, "RETURN 1", nil)
 	require.NoError(t, err)
 	_, hasParams := gotBody["parameters"]
 	assert.False(t, hasParams, "omit parameters when nil")
@@ -299,7 +279,7 @@ func TestRunStatement_ServerErrorSurfacesCodeAndMessage(t *testing.T) {
 	defer srv.Close()
 
 	c := &conn{uri: srv.URL, username: "u", password: "p", database: "neo4j", userAgent: "neo4j-cli/vtest", doer: srv.Client()}
-	_, err := runStatement(context.Background(), c, "BAD CYPHER", nil, "user-direct")
+	_, err := runStatement(context.Background(), c, "BAD CYPHER", nil)
 	require.Error(t, err)
 	msg := err.Error()
 	assert.Contains(t, msg, "Neo.ClientError.Statement.SyntaxError")
@@ -314,7 +294,7 @@ func TestRunStatement_Non2xxWithoutErrorsField(t *testing.T) {
 	defer srv.Close()
 
 	c := &conn{uri: srv.URL, username: "u", password: "p", database: "neo4j", userAgent: "neo4j-cli/vtest", doer: srv.Client()}
-	_, err := runStatement(context.Background(), c, "RETURN 1", nil, "user-direct")
+	_, err := runStatement(context.Background(), c, "RETURN 1", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "500")
 }
@@ -328,7 +308,7 @@ func TestRunStatement_DatabaseInPath(t *testing.T) {
 	defer srv.Close()
 
 	c := &conn{uri: srv.URL, username: "u", password: "p", database: "movies", userAgent: "neo4j-cli/vtest", doer: srv.Client()}
-	_, err := runStatement(context.Background(), c, "RETURN 1", nil, "user-direct")
+	_, err := runStatement(context.Background(), c, "RETURN 1", nil)
 	require.NoError(t, err)
 	assert.Equal(t, "/db/movies/query/v2", gotPath)
 }
@@ -355,7 +335,7 @@ func TestRunStatement_TLSWithoutInsecureFails(t *testing.T) {
 	// Use the secure default client (no skip-verify); httptest's self-signed
 	// cert should fail verification.
 	c := &conn{uri: srv.URL, username: "u", password: "p", database: "neo4j", userAgent: "neo4j-cli/vtest", doer: newHTTPClient(false)}
-	_, err := runStatement(context.Background(), c, "RETURN 1", nil, "user-direct")
+	_, err := runStatement(context.Background(), c, "RETURN 1", nil)
 	require.Error(t, err)
 	// The exact error wording depends on Go version but always references TLS/cert.
 	low := strings.ToLower(err.Error())
@@ -373,7 +353,7 @@ func TestRunStatement_TLSWithInsecureSucceeds(t *testing.T) {
 	defer srv.Close()
 
 	c := &conn{uri: srv.URL, username: "u", password: "p", database: "neo4j", userAgent: "neo4j-cli/vtest", doer: newHTTPClient(true)}
-	res, err := runStatement(context.Background(), c, "RETURN 1", nil, "user-direct")
+	res, err := runStatement(context.Background(), c, "RETURN 1", nil)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"n"}, res.Columns)
 }

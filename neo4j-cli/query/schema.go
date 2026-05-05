@@ -156,7 +156,7 @@ func runSchema(cmd *cobra.Command, cfg *clicfg.Config) error {
 // fetchNodeProperties runs query (1) and shapes the rows into nodeProperty.
 func fetchNodeProperties(ctx context.Context, c *conn) ([]nodeProperty, error) {
 	res, err := runStatement(ctx, c,
-		"CALL db.schema.nodeTypeProperties() YIELD nodeType, nodeLabels, propertyName, propertyTypes, mandatory", nil, "schema")
+		"CALL db.schema.nodeTypeProperties() YIELD nodeType, nodeLabels, propertyName, propertyTypes, mandatory", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func fetchNodeProperties(ctx context.Context, c *conn) ([]nodeProperty, error) {
 // fetchRelProperties runs query (2) and shapes rows into relProperty.
 func fetchRelProperties(ctx context.Context, c *conn) ([]relProperty, error) {
 	res, err := runStatement(ctx, c,
-		"CALL db.schema.relTypeProperties() YIELD relType, propertyName, propertyTypes, mandatory", nil, "schema")
+		"CALL db.schema.relTypeProperties() YIELD relType, propertyName, propertyTypes, mandatory", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func fetchRelPaths(ctx context.Context, c *conn, relTypes []string) ([]relPath, 
 		stmt := fmt.Sprintf(
 			"MATCH (n)-[r:`%s`]->(m) WITH DISTINCT labels(n) AS from, labels(m) AS to RETURN from, to",
 			stripped)
-		res, err := runStatement(ctx, c, stmt, nil, "schema")
+		res, err := runStatement(ctx, c, stmt, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -227,7 +227,7 @@ func fetchRelPaths(ctx context.Context, c *conn, relTypes []string) ([]relPath, 
 // each row into a column→value map. Maps preserve column order for table
 // rendering via the result's Columns slice (kept on the side via a closure).
 func fetchTabular(ctx context.Context, c *conn, stmt string) ([]map[string]any, error) {
-	res, err := runStatement(ctx, c, stmt, nil, "schema")
+	res, err := runStatement(ctx, c, stmt, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func fetchDatabaseInfo(ctx context.Context, c *conn) *databaseInfo {
 	info := &databaseInfo{}
 	gotAny := false
 
-	if res, err := runStatement(ctx, c, "CALL dbms.components()", nil, "schema"); err == nil && len(res.Rows) > 0 {
+	if res, err := runStatement(ctx, c, "CALL dbms.components()", nil); err == nil && len(res.Rows) > 0 {
 		idx := indexBy(res.Columns)
 		row := res.Rows[0]
 		info.Versions = asStringSlice(rowGet(row, idx, "versions"))
@@ -250,7 +250,7 @@ func fetchDatabaseInfo(ctx context.Context, c *conn) *databaseInfo {
 	}
 
 	if res, err := runStatement(ctx, c,
-		"SHOW SETTINGS YIELD name, value WHERE name = 'db.query.default_language' RETURN value", nil, "schema"); err == nil && len(res.Rows) > 0 {
+		"SHOW SETTINGS YIELD name, value WHERE name = 'db.query.default_language' RETURN value", nil); err == nil && len(res.Rows) > 0 {
 		idx := indexBy(res.Columns)
 		info.DefaultLanguage = asString(rowGet(res.Rows[0], idx, "value"))
 		gotAny = true
