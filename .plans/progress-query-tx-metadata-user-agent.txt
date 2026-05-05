@@ -39,3 +39,39 @@ Feedback Loops:
   will gate)
 
 Next Task: task-002
+
+================================================================================
+TASK-002: Add header + tx metadata assertions and resolveConn UA tests
+Date: 2026-05-05T12:00:00Z
+================================================================================
+
+Summary:
+Locked the task-001 contract with three test additions in connect_test.go:
+TestRunStatement_HappyPath now captures the User-Agent header (asserts
+"neo4j-cli/vtest") and the txMetadata body field (asserts {app: "neo4j-cli",
+type: "user-direct"}). New TestRunStatement_SchemaTxType drives runStatement
+with "schema" and verifies txMetadata.app/type. New table-driven
+TestResolveConn_UserAgent covers cfg.Version="1.2.3" → "neo4j-cli/v1.2.3" and
+empty version → "neo4j-cli/vdev" fallback, using clicfg.NewConfig +
+afero.NewMemMapFs (matches the existing newTestCmd pattern).
+
+Files Changed:
+- neo4j-cli/query/connect_test.go (test additions only)
+- .plans/tasks-query-tx-metadata-user-agent.yml (status update)
+
+Key Decisions:
+- Reuse the in-line server stub style of the surrounding tests rather than
+  introducing a helper — three tests, low duplication, easier to read.
+- TestResolveConn_UserAgent leans on afero.NewMemMapFs directly (per
+  TestResolveConn_Defaults) instead of pulling in test/utils/testfs to keep
+  imports minimal. AGENTS.md mentions both patterns are valid.
+- Used a top-level type-assert + require.True for txMetadata in the schema
+  test so a wrong-type body fails loudly with %T context.
+
+Feedback Loops:
+- make test: PASS
+- make fmt-check: PASS (no output)
+- make license-check: PASS
+- make lint: SKIPPED (golangci-lint not installed locally; go vet clean)
+
+Next Task: task-003

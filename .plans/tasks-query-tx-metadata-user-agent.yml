@@ -42,7 +42,7 @@ tasks:
       "schema". Add a new table-driven TestResolveConn_UserAgent covering
       a populated cfg.Version (e.g. "1.2.3" → "neo4j-cli/v1.2.3") and the
       empty-version fallback ("" → "neo4j-cli/vdev").
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -51,7 +51,7 @@ tasks:
       - "New TestResolveConn_UserAgent in connect_test.go is table-driven (per AGENTS.md preference) with at least these rows: cfg.Version=\"1.2.3\" → \"neo4j-cli/v1.2.3\"; cfg.Version=\"\" → \"neo4j-cli/vdev\". Uses clicfg.NewConfig with testfs.GetTestFs(...) per the existing pattern."
       - "make test passes; make fmt-check passes; make lint passes."
       - "No production code changes in this task — only test additions and the targeted assertion extension in TestRunStatement_HappyPath."
-    completed_at: null
+    completed_at: 2026-05-05T12:00:00Z
 
   - id: task-003
     title: "Add changelog entry and verify against real Neo4j"

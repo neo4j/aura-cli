@@ -175,7 +175,7 @@ func TestResolveConn_InsecureFlagOverridesEnv(t *testing.T) {
 }
 
 func TestRunStatement_HappyPath(t *testing.T) {
-	var gotPath, gotAuth, gotMethod, gotCT string
+	var gotPath, gotAuth, gotMethod, gotCT, gotUA string
 	var gotBody map[string]any
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -183,6 +183,7 @@ func TestRunStatement_HappyPath(t *testing.T) {
 		gotAuth = r.Header.Get("Authorization")
 		gotMethod = r.Method
 		gotCT = r.Header.Get("Content-Type")
+		gotUA = r.Header.Get("User-Agent")
 
 		body, _ := io.ReadAll(r.Body)
 		_ = json.Unmarshal(body, &gotBody)
@@ -212,6 +213,7 @@ func TestRunStatement_HappyPath(t *testing.T) {
 	assert.Equal(t, "/db/neo4j/query/v2", gotPath)
 	assert.Equal(t, http.MethodPost, gotMethod)
 	assert.Equal(t, "application/json", gotCT)
+	assert.Equal(t, "neo4j-cli/vtest", gotUA)
 
 	wantAuth := "Basic " + base64.StdEncoding.EncodeToString([]byte("neo4j:secret"))
 	assert.Equal(t, wantAuth, gotAuth)
@@ -219,6 +221,58 @@ func TestRunStatement_HappyPath(t *testing.T) {
 	assert.Equal(t, "RETURN 1 AS n", gotBody["statement"])
 	require.Contains(t, gotBody, "parameters")
 	assert.Equal(t, map[string]any{"k": float64(5)}, gotBody["parameters"])
+	assert.Equal(t,
+		map[string]any{"app": "neo4j-cli", "type": "user-direct"},
+		gotBody["txMetadata"])
+}
+
+func TestRunStatement_SchemaTxType(t *testing.T) {
+	var gotBody map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &gotBody)
+		_, _ = w.Write([]byte(`{"data":{"fields":[],"values":[]}}`))
+	}))
+	defer srv.Close()
+
+	c := &conn{uri: srv.URL, username: "u", password: "p", database: "neo4j", userAgent: "neo4j-cli/vtest", doer: srv.Client()}
+	_, err := runStatement(context.Background(), c, "CALL db.labels()", nil, "schema")
+	require.NoError(t, err)
+
+	require.Contains(t, gotBody, "txMetadata")
+	meta, ok := gotBody["txMetadata"].(map[string]any)
+	require.True(t, ok, "txMetadata should be an object, got %T", gotBody["txMetadata"])
+	assert.Equal(t, "neo4j-cli", meta["app"])
+	assert.Equal(t, "schema", meta["type"])
+}
+
+func TestResolveConn_UserAgent(t *testing.T) {
+	tests := []struct {
+		name    string
+		version string
+		want    string
+	}{
+		{"populated version", "1.2.3", "neo4j-cli/v1.2.3"},
+		{"empty falls back to dev", "", "neo4j-cli/vdev"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv(envURI, "")
+			t.Setenv(envUsername, "")
+			t.Setenv(envPassword, "")
+			t.Setenv(envDatabase, "")
+			t.Setenv(envInsecure, "")
+			t.Chdir(t.TempDir())
+
+			fs := afero.NewMemMapFs()
+			cfg := clicfg.NewConfig(fs, tc.version)
+			cmd := NewCmd(cfg)
+
+			c, err := resolveConn(cmd, cfg)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, c.userAgent)
+		})
+	}
 }
 
 func TestRunStatement_NoParamsOmitsField(t *testing.T) {
