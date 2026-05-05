@@ -17,7 +17,7 @@ func TestGetConfig(t *testing.T) {
 
 	helper.ExecuteCommand("config get auth-url")
 
-	helper.AssertOut("test")
+	helper.AssertOutJson(`{"auth-url": "test"}`)
 }
 
 func TestGetConfigDefault(t *testing.T) {
@@ -28,7 +28,9 @@ func TestGetConfigDefault(t *testing.T) {
 
 	helper.ExecuteCommand("config get output")
 
-	helper.AssertOut("default")
+	// output is a global key; default value is "default"
+	// "default" auto-detects: non-TTY test stdout → JSON rendering
+	helper.AssertOutJson(`{"output": "default"}`)
 }
 
 func TestGetConfigBetaEnabled(t *testing.T) {
