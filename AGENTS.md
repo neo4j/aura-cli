@@ -120,6 +120,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `license-check` requires a Unix shell (`find` + `xargs`); won't work natively on Windows
 - `make generate` runs `go generate ./...`; `make generate-check` runs generate then `git diff --exit-code` (CI gate). Wired in `.github/workflows/test.yml` between Build and Lint, runs on full OS matrix.
 - Drift sim: editing a bundle file directly to test generate-check is futile — `go generate` overwrites it. Mutate a real cobra-tree input (e.g. a Short string in `app.go`) to simulate stale-bundle detection.
+- Changing `ValidFormatValues` in `common/clicfg/clicfg.go` affects the `--format` flag help text, which is embedded in skill bundle reference docs. Run `go generate ./neo4j-cli/internal/skill/... ./neo4j-cli/aura/internal/skill/...` after any such change; `TestGenerator_RoundTrip` is the gate that catches stale bundles.
 
 ## Changie Multi-Project Notes
 
@@ -246,10 +247,24 @@ See [`distribution/npm/README.md`](distribution/npm/README.md).
 - `cmd.Flags().GetString("foo")` only sees LOCAL flags until `mergePersistentFlags()` runs (during `Execute` or `ParseFlags`). Calling it from a unit test that drives a function directly (without Execute) will fail with `flag accessed but not defined`. Use `cmd.Flag("foo").Value.String()` instead — `Flag()` falls through to persistent flags + parents' persistent flags via `persistentFlag()`/`updateParentsPflags()`. Same applies to GetBool — for bool defaults that overlap with "unset" (e.g. `--insecure` defaults false), gate on `cmd.Flag("name").Changed` to disambiguate.
 - For first-non-empty-wins precedence pass values to a helper that picks the FIRST non-empty. For lowest→highest precedence (`.env` < env < flag) use a `last-non-empty-wins` helper instead — easy to swap accidentally; query/connect.go calls this `overlay()`.
 
+## toon-go Notes
+
+- Module: `github.com/toon-format/toon-go` — imported as `toon "github.com/toon-format/toon-go"` in Go source
+- Key API: `toon.Marshal(v any, opts ...toon.EncoderOption) ([]byte, error)` and `toon.WithLengthMarkers(bool) toon.EncoderOption`
+- `printToon` in `common/output/output.go` uses a JSON round-trip (marshal → unmarshal to `any` → toon.Marshal) to honour custom MarshalJSON implementations on concrete ResponseData types before encoding to TOON
+- `go mod tidy` promotes toon-go from `// indirect` to a direct dependency automatically once the import is added
+
 ## Local Verification Scripts
 
 - `TestHTTPS_Smoke` (`neo4j-cli/query/query_https_smoke_test.go`) — real-Neo4j HTTPS smoke for `query --insecure` (asserts positive + negative TLS paths). Pure Go: stdlib cert gen, boots `neo4j:latest` via `os/exec`, binds two random free TCP ports on 127.0.0.1. Gated by `NEO4J_HTTPS_TEST=1`; run via `NEO4J_HTTPS_TEST=1 go test -run TestHTTPS_Smoke -v ./neo4j-cli/query/...`. Requires `docker`. Skipped by default in `go test ./...`.
 - Neo4j docker HTTPS env-vars use single-underscore for `.` and double for `_`: `NEO4J_server_https_enabled`, `NEO4J_dbms_ssl_policy_https_{enabled,base__directory,private__key,public__certificate,client__auth}`. Bind-mount cert dir at `<base_directory>` (e.g. `/ssl`) containing `private.key` + `public.crt` plus empty `trusted/` and `revoked/` subdirs (Neo4j requires both even when `client__auth=NONE`). Cert files must be world-readable (0644) — container user is uid 7474.
+
+## common/output Testing Notes
+
+- `common/output` has no pre-existing test files — new tests live in `common/output/output_test.go` using `package output` (not `output_test`) so they can access the `StdoutIsTerminal` seam directly.
+- Use `testfs.GetTestFs(`{"format":"toon"}`, "{}")` + `clicfg.NewConfig(fs, "test", clicfg.GlobalScope)` to build a config that returns "toon" from `cfg.Global.Format()`.
+- To assert toon encoding: check that `json.Unmarshal([]byte(out), &v)` returns an error — toon uses `key: value` syntax, not JSON, so valid toon is invalid JSON.
+- The json→any→toon round-trip in `printToon` honours custom `MarshalJSON` on the concrete `ResponseData` type. Test helpers that implement `MarshalJSON` (e.g. wrapping rows in `{"data": ...}`) let you verify the top-level envelope key appears in both toon and json output.
 
 ---
 
