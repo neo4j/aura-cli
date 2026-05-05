@@ -178,6 +178,7 @@ See [`.agents/repo-layout.md`](.agents/repo-layout.md) — gotchas around skill 
 - `go-pretty/v6/table` upper-cases header text by default — assertions on table output should compare against `strings.ToLower(...)` for header columns, exact case for body cells.
 - Lightweight cobra command tests can wire `clicfg.NewConfig(testfs.GetTestFs(...), version)` directly without the heavier `testutils.NewAuraTestHelper` — the latter pulls in API mocking and credential setup that `skill` doesn't need.
 - For repo-wide gate tests that must auto-discover content (e.g. `common/skill/bundles_test.go` walking every `<bin>/internal/skill/bundle/SKILL.md`), resolve repo root via `runtime.Caller(0)` then `filepath.Walk` from there. Suffix-match paths after `filepath.ToSlash` so Windows runs match. Prune `.git`, `node_modules`, `bin`, `.changes` to keep the walk fast.
+- `os.OpenFile(..., 0o644)` mode bits are masked by umask on create — if downstream readers (e.g. a docker container running as a different uid) need a specific perm, follow up with `os.Chmod` rather than relying on the OpenFile mode. Same applies to `t.TempDir()` which creates with 0700; a read-only bind mount into a container needs `os.Chmod(dir, 0o755)` for the in-container user to traverse.
 
 ## Windows CI Gotchas
 
@@ -205,8 +206,8 @@ See [`distribution/npm/README.md`](distribution/npm/README.md).
 
 ## Local Verification Scripts
 
-- `scripts/test-https.sh` — real-Neo4j HTTPS smoke for `query --insecure` (boots `neo4j:5` with self-signed cert, asserts positive + negative TLS paths). Runnable directly or via `NEO4J_HTTPS_TEST=1 go test ./neo4j-cli/query/ -run TestHTTPS_Smoke -v`. Requires docker + openssl + curl; ports 7473/7474 free. Skipped by default in `go test ./...`.
-- Neo4j 5 docker HTTPS env-vars use single-underscore for `.` and double for `_`: `NEO4J_server_https_enabled`, `NEO4J_dbms_ssl_policy_https_{enabled,base__directory,private__key,public__certificate,client__auth}`. Bind-mount cert dir at `<base_directory>` (e.g. `/ssl`) containing `private.key` + `public.crt` plus empty `trusted/` and `revoked/` subdirs (Neo4j requires both even when `client__auth=NONE`). Cert files must be world-readable (0644) — container user is uid 7474.
+- `TestHTTPS_Smoke` (`neo4j-cli/query/query_https_smoke_test.go`) — real-Neo4j HTTPS smoke for `query --insecure` (asserts positive + negative TLS paths). Pure Go: stdlib cert gen, boots `neo4j:latest` via `os/exec`, binds two random free TCP ports on 127.0.0.1. Gated by `NEO4J_HTTPS_TEST=1`; run via `NEO4J_HTTPS_TEST=1 go test -run TestHTTPS_Smoke -v ./neo4j-cli/query/...`. Requires `docker`. Skipped by default in `go test ./...`.
+- Neo4j docker HTTPS env-vars use single-underscore for `.` and double for `_`: `NEO4J_server_https_enabled`, `NEO4J_dbms_ssl_policy_https_{enabled,base__directory,private__key,public__certificate,client__auth}`. Bind-mount cert dir at `<base_directory>` (e.g. `/ssl`) containing `private.key` + `public.crt` plus empty `trusted/` and `revoked/` subdirs (Neo4j requires both even when `client__auth=NONE`). Cert files must be world-readable (0644) — container user is uid 7474.
 
 ---
 
