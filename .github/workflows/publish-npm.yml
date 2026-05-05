@@ -111,10 +111,28 @@ jobs:
           github.event_name == 'workflow_run' &&
           steps.meta.outputs.include_neo4j == 'true'
         run: |
+          # The dist artifact carries GoReleaser's full working dir: archives
+          # (.tar.gz / .zip) + raw build dirs + metadata. publish.sh reads from
+          # dist/<archive_basename>/<binary>, which only exists once the
+          # archives are extracted — so unpack them here, matching the layout
+          # the workflow_dispatch path produces via `gh release download`.
           rm -rf dist
           mkdir -p dist
           test -d "${{ runner.temp }}/downloaded-dist"
           cp -a "${{ runner.temp }}/downloaded-dist"/. dist/
+          shopt -s nullglob
+          for archive in dist/neo4j-cli_*.tar.gz; do
+            base=$(basename "$archive" .tar.gz)
+            mkdir -p "dist/${base}"
+            tar -xzf "$archive" -C "dist/${base}"
+            echo "[publish-npm] extracted ${archive} -> dist/${base}/"
+          done
+          for archive in dist/neo4j-cli_*.zip; do
+            base=$(basename "$archive" .zip)
+            mkdir -p "dist/${base}"
+            unzip -q "$archive" -d "dist/${base}"
+            echo "[publish-npm] extracted ${archive} -> dist/${base}/"
+          done
 
       # ----- workflow_dispatch path: rebuild dist/ from existing GH release -----
 
