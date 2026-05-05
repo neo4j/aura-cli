@@ -155,6 +155,7 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - `workflow_run` events do NOT have `inputs.*` populated; `workflow_dispatch` events do not have `github.event.workflow_run.*`. To pick a value cleanly across both triggers use the ternary pattern `${{ github.event_name == 'workflow_dispatch' && inputs.x || steps.<auto>.outputs.x }}` — short-circuit makes the unset side empty and `||` falls back.
 - A `workflow_run`-triggered workflow's job-level `if:` cannot read artifact contents (artifacts haven't been downloaded yet). Gate the JOB on `github.event.workflow_run.conclusion == 'success'`, then download the meta artifact, parse with `jq`, and apply per-step `if:` gates on the parsed value.
 - npm Trusted Publishers (OIDC) auth in `publish-npm.yml`: requires `permissions: id-token: write`, `actions/setup-node` with `registry-url`, and Node ≥ 20 (npm ≥ 11.5.1). setup-node writes a placeholder `~/.npmrc`; npm swaps in a short-lived OIDC token at publish time — no NPM_TOKEN secret needed. publish.sh stays auth-agnostic. Re-enabling the disabled `workflow_run` trigger requires re-adding `actions: read` to `permissions:` for cross-workflow `actions/download-artifact`.
+- Cross-repo write from `release.yml` (e.g. push Homebrew formula to `neo4j-labs/homebrew-tap`) uses the GitHub App pattern via `actions/create-github-app-token` (SHA-pinned, `# v<major>`). Inputs: `app-id` + `private-key` from secrets, `owner` + `repositories` to scope the installation token. Output `steps.<id>.outputs.token` is plumbed into the consumer step's `env:` block — no long-lived PAT, token is per-run.
 
 ## GoReleaser Notes
 
@@ -163,6 +164,8 @@ See [`.agents/deployment.md`](.agents/deployment.md) for full details.
 - Each `archives` entry must have a unique `id`; omitting it defaults to `"default"` and causes errors when there are multiple archive blocks
 - Use `{{ .Binary }}` in `name_template` (not `{{ .ProjectName }}`) when building multiple binaries so archives are named per binary
 - `-X "<importpath>.Version=..."` ldflag must match the actual package path of the Version var. If you move Version from `package main` to e.g. `neo4j-cli/app`, update the ldflag to `-X "github.com/neo4j/cli/neo4j-cli/app.Version=..."` — a stale path silently no-ops and ships `dev`.
+- `make snapshot` runs `goreleaser build --snapshot --single-target` which does NOT exercise the `brews:` step. To verify brew formula generation locally use `goreleaser release --snapshot --clean --skip=publish,sign,notarize` with `HOMEBREW_TAP_GITHUB_TOKEN=<anything>` set (the env var is referenced via template; value can be a stub for snapshot since `--skip=publish` short-circuits the push). Output appears at `dist/homebrew/Formula/neo4j-cli.rb`.
+- GoReleaser v2.x emits a deprecation notice "brews is being phased out in favor of homebrew_casks" — informational only; `brews:` still works and is the documented path for non-cask formulas. Migration to `homebrew_casks:` is a separate decision.
 
 ## Repo Doc Notes
 
