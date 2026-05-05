@@ -98,7 +98,7 @@ Key CLI conventions (see `CONTRIBUTING.md`):
 - Singular nouns for commands (`instance`, not `instances`)
 - `<resource> <action>` form (`instance list`, not `list-instance`)
 - One positional argument max; extras become flags
-- `--output json|table` for all read commands
+- `--format json|table` (shorthand `-f`) for all read commands
 - `--await` flag for async operations
 - Follow CLI best practices from https://clig.dev/ — source at https://github.com/cli-guidelines/cli-guidelines/blob/main/content/_index.md (fetch the raw markdown for token-efficient reference)
 
@@ -205,16 +205,17 @@ See [`distribution/npm/README.md`](distribution/npm/README.md).
 ## Config Architecture Notes
 
 - `Config.Global` (`*GlobalConfig`) holds top-level (non-namespaced) viper keys; `Config.Aura` holds `aura.*`-prefixed keys
-- The `output` setting lives at the top-level viper key `"output"`, not `"aura.output"` — always read/write via `cfg.Global.Output()` and `cfg.Global.BindOutput()`
-- Migration from old `aura.output` to `output` is **commented out** in `NewConfig` — this experimental release never shipped so the migration has never run; re-enable it (alongside the paired tests in `config_test.go`) for the first stable-release upgrade path
+- The `format` setting lives at the top-level viper key `"format"`, not `"aura.format"` — always read/write via `cfg.Global.Format()` and `cfg.Global.BindFormat()`
+- Migration from old `aura.output`/`output` to `format` is **commented out** in `NewConfig` — this experimental release never shipped so the migration has never run; re-enable it for the first stable-release upgrade path (two source clauses: `"aura.output"` and `"output"`)
 - When migration code is commented out, remove any imports it uniquely used (e.g. `gjson` was removed from `clicfg.go` when the migration block was commented out) to avoid unused-import compilation errors
 - `Viper.IsSet()` returns `true` for keys set via `SetDefault` — use `gjson.GetBytes(data, key).Exists()` to distinguish file-backed values from viper defaults when writing migration conditions
-- `cfg.Global.BindOutput(flag)` binds viper's `"output"` key to the pflag value; passing `--output json` overrides both the rendering format AND the config value returned by `cfg.Global.Get("output")` — they are the same viper key
+- `cfg.Global.BindFormat(flag)` binds viper's `"format"` key to the pflag value; passing `--format json` overrides both the rendering format AND the config value returned by `cfg.Global.Get("format")` — they are the same viper key
 - go-pretty renders table header rows in **uppercase** with `table.StyleLight` — assert for `"KEY"` and `"VALUE"` (not lowercase) in table output tests
-- Test helpers default to `"output": "json"` at the JSON root; set output overrides with `helper.SetConfigValue("output", "table")` (not `"aura.output"`)
+- Test helpers default to `"format": "json"` at the JSON root; set format overrides with `helper.SetConfigValue("format", "table")` (not `"aura.format"`)
 - Removing methods from `AuraConfig` that have call sites across the codebase requires updating all callers in the same task for `make test` to pass
 - `cobra.EnableTraverseRunHooks = true` is a package-level global — set it in `main()` before `Execute()`, not in `NewCmd()`, since it affects all cobra executions in the process; in test helpers set it once in the constructor (`NewAuraTestHelper`), not on each `ExecuteCommand` call
 - `pflag.AddFlagSet` silently ignores duplicate-named flags (the flag already present in the target set wins); child `PersistentFlags` shadow a parent's `PersistentFlags` with the same name — the root's `PersistentPreRunE` still finds the resolved flag via `cmd.Flags().Lookup()`
+- When renaming a flag that is used in many test files, complete clicfg core changes AND all callers AND all test fixtures in the same iteration — otherwise the build or test suite is broken between tasks and feedback loops cannot gate completion
 
 ## Command Tree Restructuring Notes
 
@@ -231,7 +232,7 @@ See [`distribution/npm/README.md`](distribution/npm/README.md).
 - `api.ParseBody` stays in `aura/internal/api/response.go` since it is tightly coupled to the Aura HTTP response format
 - Adding a type alias (`type X = pkg.X`) in an existing package is the zero-change way to move an interface while keeping all callers compiling — prefer this over updating all call sites
 - `ConfigEntry` and `ConfigData` in `common/output` let config commands use `PrintBodyMap` without `ParseBody` — import `common/output` directly (not `aura/internal/output`) in config packages
-- `ConfigData.MarshalJSON()` returns a flat `{key: value}` map so JSON output is `{"output": "json"}` rather than `[{"key": "output", "value": "json"}]`; the `AsArray()` method returns the `[{"key":k, "value":v}]` form used only for table rendering
+- `ConfigData.MarshalJSON()` returns a flat `{key: value}` map so JSON output is `{"format": "json"}` rather than `[{"key": "format", "value": "json"}]`; the `AsArray()` method returns the `[{"key":k, "value":v}]` form used only for table rendering
 - `PrintBodyMap` routes both `"table"` and `"default"` to table rendering — config commands in default mode now render as tables, matching all other commands. Tests must assert for `"KEY"` / `"VALUE"` column headers for default-mode output cases
 - `cobra.NoArgs` on a leaf command with no subcommands produces a "unknown command" error (not "accepts 0 arg(s)") when a positional arg is passed — Cobra treats the arg as an unknown subcommand. The error format is `Error: unknown command "<arg>" for "<full-cmd-path>"`.
 - `PrintableAuraCredentials.AsArray()` in `common/clicfg/credentials/aura.go` is the single source of truth for credential output shape; changing field names there requires updating all callers (`neo4j-cli/aura/credential.go`, `neo4j-cli/aura/internal/subcommands/credential/list.go`) to use the new keys in their `fields []string` slice.
