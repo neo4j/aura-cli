@@ -107,3 +107,63 @@ Key Decisions:
 Next Task: task-004 (Remove aura-cli logic from release.yml workflow) —
 task-005 also unblocked by this task but additionally depends on task-001;
 order follows the lowest-id-with-deps-met rule.
+
+================================================================================
+TASK-004: Remove aura-cli logic from release.yml workflow
+Date: 2026-05-06T00:00:00Z
+================================================================================
+
+Summary:
+Edited .github/workflows/release.yml to drop all aura-cli logic from the
+release pipeline. Removed CHANGELOG-aura.md from on.push.paths so the
+workflow now triggers only on CHANGELOG-neo4j.md. Deleted the
+`Get aura-cli latest version` step and the AURA_VERSION extraction line
+from `Extract version numbers`. Removed INCLUDE_AURA detection from
+`Detect changed changelogs`. Trimmed `Generate release notes` so it
+renders only the neo4j-cli version + body (no `## Versions` aura line,
+no `### aura-cli` body section). Removed the AURA_CLI_VERSION echo from
+`Add env vars` and the `AURA_CLI_VERSION:` line from the GoReleaser
+action's `env:` block. Per the PRD, the job-level `include_neo4j` output
+and the three downstream `if: steps.changed.outputs.include_neo4j ==
+'true'` gates are left in place for defensive minimalism — they remain
+correct (always true) but the smaller diff carries less risk.
+
+Validation:
+- `grep -niE 'aura|AURA|INCLUDE_AURA|AURA_CLI_VERSION|latest-aura|CHANGELOG-aura'`
+  on the file returns NO AURA REFERENCES FOUND (case-insensitive sweep).
+- YAML parses cleanly via `ruby -ryaml`; `on.push.paths` is exactly
+  `["CHANGELOG-neo4j.md"]`; job outputs are `["version", "include_neo4j"]`.
+- `make fmt-check` exits 0 (no output), `make lint` reports `0 issues`,
+  `make test` is fully green — workflow-only edits don't affect Go code,
+  but the gates ran cleanly as expected.
+
+Files Changed:
+- .github/workflows/release.yml (modified: aura-cli logic stripped per
+  REQ-F-002)
+- .plans/tasks-remove-aura-cli-binary.yml (modified: task-004 status
+  pending -> in_progress -> completed, completed_at set)
+- .plans/progress-remove-aura-cli-binary.txt (appended: this entry)
+
+Key Decisions:
+- The hone-reviewer subagent is not exposed as a callable tool in this
+  environment; performed a self-review against the task acceptance
+  criteria and proceeded to finalize, matching the pattern established
+  in task-002 and task-003.
+- Kept `include_neo4j` job output, the three `if: ... include_neo4j
+  == 'true'` step gates, and the `INCLUDE_NEO4J` detection block in
+  `Detect changed changelogs` per the PRD's defensive-minimalism
+  guidance, even though the trigger now only fires on CHANGELOG-neo4j.md
+  (so include_neo4j is always true at runtime). This is the smaller,
+  lower-risk diff per the "Workflow gate cleanup" technical note in the
+  PRD.
+- Did not touch the job-level `outputs:` block beyond removing aura
+  entries (none were there) — `version` and `include_neo4j` remain so
+  publish-npm.yml's workflow_run consumer keeps working unchanged.
+- No AGENTS.md edit needed: nothing about defensive minimalism on
+  workflow gates was non-obvious enough to warrant a permanent note;
+  task-009 owns the broader AGENTS.md rewrite for the single-binary
+  state.
+
+Next Task: task-005 (Remove aura-cli logic from changie.yml workflow).
+task-006/007/008 are also unblocked (each depends only on task-001) and
+can be picked up in parallel branches if iteration order allows.

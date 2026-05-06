@@ -70,7 +70,7 @@ tasks:
       from `Add env vars` and from the GoReleaser action's `env:` block.
       Leave `include_neo4j` job output and the downstream gate as-is for
       defensive minimalism. Satisfies REQ-F-002.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -79,7 +79,7 @@ tasks:
       - "`Generate release notes` step produces release notes containing only the neo4j-cli version and changelog body"
       - "GoReleaser action's `env:` block has no `AURA_CLI_VERSION` line"
       - "File parses as valid YAML and is accepted by `actionlint` (if available locally) without new errors"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-005
     title: "Remove aura-cli logic from changie.yml workflow"
