@@ -91,7 +91,7 @@ tasks:
       `AURA_VERSION` extraction; collapse the three-branch PR metadata
       logic in `Compute PR metadata` to a single neo4j-cli release path.
       Satisfies REQ-F-003.
-    status: pending
+    status: completed
     dependencies:
       - task-001
       - task-003
@@ -101,7 +101,7 @@ tasks:
       - "`Detect unreleased changes per project` gates only on `has_neo4j`"
       - "`Compute PR metadata` has a single, unconditional neo4j-cli branch (no if/elif chain over aura/neo4j)"
       - "File parses as valid YAML"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-006
     title: "Remove aura-cli targets and snapshot copy line from Makefile"
