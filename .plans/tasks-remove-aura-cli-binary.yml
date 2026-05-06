@@ -230,7 +230,7 @@ tasks:
       description links the PRD. No aura-cli changie entry is created
       (the project entry was removed in task-003). Closes the work loop
       per REQ-NF-006.
-    status: pending
+    status: completed
     dependencies:
       - task-010
     acceptance_criteria:
@@ -239,4 +239,4 @@ tasks:
       - "Branch is pushed to origin with upstream tracking set"
       - "PR is opened against `main`; description references `.plans/prd-remove-aura-cli-binary.md`"
       - "CI matrix (ubuntu, windows, macos) reports green on the PR"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
