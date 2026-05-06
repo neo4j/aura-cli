@@ -291,3 +291,67 @@ also remains unblocked. task-009 (AGENTS.md) now has all its dependencies
 (tasks 001-006) complete EXCEPT it still depends on task-005 which is also
 complete — so task-009 is unblocked too, but the lowest-id-with-deps-met
 ordering picks task-007 next.
+
+================================================================================
+TASK-007: Prepend deprecation note to CHANGELOG-aura.md
+Date: 2026-05-06T00:00:00Z
+================================================================================
+
+Summary:
+Prepended a hand-authored deprecation note to CHANGELOG-aura.md, inserted
+between the file header preamble (Keep-a-Changelog / Changie boilerplate)
+and the most recent version entry (## v2.0.0-alpha.4 - 2026-05-06). The
+note uses a `## Deprecated - 2026-05-06` header consistent with surrounding
+version-block headers and a 2-sentence prose body stating that aura-cli is
+no longer being released as a standalone binary, directing readers to the
+`neo4j-cli aura ...` subcommand, and noting that pre-existing GitHub
+Releases for aura-cli remain available. All historical version entries
+(v2.0.0-alpha.4 down to v0.1.0) below the new note are byte-identical to
+the prior file content — diff confirms a pure insertion (no removed lines
+inside any existing version block).
+
+Validation:
+- `git diff CHANGELOG-aura.md` shows only additions: 4 new lines inserted
+  between the preamble's trailing blank line and `## v2.0.0-alpha.4`. No
+  removals other than the diff hunk markers themselves; all existing
+  version entries are unchanged.
+- `make fmt-check` exits 0 (no output), `make lint` reports `0 issues`,
+  `make test` is fully green — markdown-only edit doesn't affect Go gates,
+  but the AGENTS.md gate set ran cleanly as required.
+
+Files Changed:
+- CHANGELOG-aura.md (modified: 4-line deprecation block prepended above
+  the most recent version entry per REQ-F-009)
+- .plans/tasks-remove-aura-cli-binary.yml (modified: task-007 status
+  pending -> in_progress -> completed, completed_at set)
+- .plans/progress-remove-aura-cli-binary.txt (appended: this entry)
+
+Key Decisions:
+- Used `## Deprecated - 2026-05-06` as the section header rather than
+  alternatives like `## DEPRECATION NOTICE` or a bold-text block. The
+  task description suggests `## Deprecated - <date>` as the canonical
+  form and it matches the `## vX.Y.Z - DATE` shape of every surrounding
+  block, so a future reader scanning the changelog sees a consistent
+  H2 rhythm.
+- Wrote 2 sentences of plain prose (not bulleted under ### Patch /
+  ### Minor) because this block is not a version release — bullets
+  would imply a list of changes that don't exist. Plain prose matches
+  the iteration's style guidance ("terse — 2-4 sentences max").
+- Mentioned that pre-existing aura-cli archives on prior GitHub Releases
+  remain available, even though the task description marks this as
+  optional. It directly addresses the most likely user question ("can
+  I still download the old binary?") and costs one short clause.
+- Did NOT add migration guidance, install instructions, or a "what
+  changed" section — task-008 explicitly forbids that prose in README/
+  CONTRIBUTING and the same minimalism applies here for consistency.
+- The hone-reviewer subagent is not exposed as a callable tool in this
+  environment; performed a self-review against the task acceptance
+  criteria and proceeded to finalize, matching the pattern established
+  in tasks 002-006.
+- No AGENTS.md edit needed: nothing about prepending a deprecation
+  note to a changelog is a non-obvious learning future agents need.
+  task-009 owns the broader AGENTS.md rewrite.
+
+Next Task: task-008 (Scrub standalone aura-cli references from README.md
+and CONTRIBUTING.md). task-009 still gates on task-008. task-010 depends
+on the entire chain through task-009.
