@@ -175,7 +175,7 @@ tasks:
       `make build-aura` / `make run-aura` references. Sections that no
       longer apply (e.g., dual-project changie multi-project notes) may
       be deleted rather than updated. Satisfies REQ-F-008.
-    status: pending
+    status: completed
     dependencies:
       - task-001
       - task-002
@@ -189,7 +189,7 @@ tasks:
       - "Dual-project changie / multi-project release sections are updated or removed; remaining content is factually correct"
       - "`CLAUDE.md` still resolves to the updated `AGENTS.md` via symlink (`ls -la CLAUDE.md` confirms)"
       - "File renders correctly as Markdown"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-010
     title: "Verify all build/test/lint gates and goreleaser snapshot pass"
