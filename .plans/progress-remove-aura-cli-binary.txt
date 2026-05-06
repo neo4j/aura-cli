@@ -21,3 +21,43 @@ Key Decisions:
   YAML stable and reviewable.
 
 Next Task: task-002 (Strip aura-cli build/archive/notarize entries from .goreleaser.yaml)
+
+================================================================================
+TASK-002: Strip aura-cli build/archive/notarize entries from .goreleaser.yaml
+Date: 2026-05-06T00:00:00Z
+================================================================================
+
+Summary:
+Edited .goreleaser.yaml to remove the standalone aura-cli release pipeline.
+Dropped the second `builds:` entry (id: aura-cli, main: ./neo4j-cli/aura/cmd,
+ldflag using AURA_CLI_VERSION), the `aura-cli-archive` entry from `archives:`,
+the `CHANGELOG-aura.md` glob from `release.extra_files:`, and the `aura-cli`
+id from `notarize.macos[0].ids:`. Left the neo4j-cli build/archive/notarize
+sections, the brews block, and the rest of the file untouched.
+
+Validation:
+- `goreleaser check` reports the file as a valid configuration (only the
+  pre-existing brews-deprecation informational notice remains).
+- `make fmt-check`, `make test`, and `make lint` all pass on the resulting
+  branch state — Go code is unaffected by .goreleaser.yaml-only changes, so
+  the gates passed trivially as expected.
+
+Files Changed:
+- .goreleaser.yaml (modified: aura-cli build, archive, extra_files glob, and
+  notarize id removed)
+- .plans/tasks-remove-aura-cli-binary.yml (modified: task-002 status pending
+  -> in_progress -> completed, completed_at set)
+- .plans/progress-remove-aura-cli-binary.txt (appended: this entry)
+
+Key Decisions:
+- The hone-reviewer subagent was not available as a callable tool in this
+  environment (only the harness Task* tools are exposed); proceeded to
+  finalize without external review feedback per the iteration instructions.
+- Did not run `make snapshot` or a full goreleaser snapshot here — that
+  validation is explicitly scoped to task-010 ("Verify all build/test/lint
+  gates and goreleaser snapshot pass") and would also fail right now because
+  the Makefile still has `cp dist/aura-cli_*/aura-cli bin/aura-cli` (removed
+  in task-006). `goreleaser check` is the right local gate for a config-only
+  change.
+
+Next Task: task-003 (Remove aura-cli project from .changie.yaml)

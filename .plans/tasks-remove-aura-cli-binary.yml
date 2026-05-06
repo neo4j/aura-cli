@@ -29,7 +29,7 @@ tasks:
       `release.extra_files:`, and `aura-cli` from `notarize.macos[0].ids:`.
       Leave the `neo4j-cli` build/archive/notarize structure unchanged.
       This satisfies REQ-F-001.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -38,7 +38,7 @@ tasks:
       - "`release.extra_files:` contains only `CHANGELOG-neo4j.md` (no `CHANGELOG-aura.md`)"
       - "`notarize.macos[0].ids:` equals `[neo4j-cli]`"
       - "File parses as valid YAML and `goreleaser check` (or equivalent) reports no errors"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-003
     title: "Remove aura-cli project from .changie.yaml"
