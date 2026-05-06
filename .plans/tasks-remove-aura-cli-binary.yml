@@ -49,7 +49,7 @@ tasks:
       changelog entries. Satisfies REQ-F-004. The historical
       `.changes/aura-cli/v*.md` files and `CHANGELOG-aura.md` are NOT
       touched in this task.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -57,7 +57,7 @@ tasks:
       - "File parses as valid YAML"
       - "`changie new` lists only `neo4j-cli` as a selectable project (verified locally if changie is installed)"
       - "`.changes/aura-cli/` directory and `CHANGELOG-aura.md` body content are unchanged on disk"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-004
     title: "Remove aura-cli logic from release.yml workflow"

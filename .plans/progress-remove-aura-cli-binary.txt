@@ -61,3 +61,49 @@ Key Decisions:
   change.
 
 Next Task: task-003 (Remove aura-cli project from .changie.yaml)
+
+================================================================================
+TASK-003: Remove aura-cli project from .changie.yaml
+Date: 2026-05-06T00:00:00Z
+================================================================================
+
+Summary:
+Removed the `aura-cli` entry from the `projects:` list in `.changie.yaml`,
+leaving `neo4j-cli` as the only project. This stops `changie new` from
+offering aura-cli as a target for new changelog entries. Historical
+`.changes/aura-cli/v*.md` files and `CHANGELOG-aura.md` body content remain
+unchanged on disk per the task acceptance criteria.
+
+Validation:
+- YAML parses cleanly via `ruby -ryaml`; resulting `projects:` list contains
+  exactly one entry (`neo4j-cli`).
+- `changie latest --project neo4j-cli` succeeds (returns
+  `neo4j-cliv0.1.0-alpha.5`); `changie latest --project aura-cli` correctly
+  fails with "project not found", confirming aura-cli is no longer a
+  recognized project.
+- `make fmt-check`, `make test`, and `make lint` all exit 0 — Go gates are
+  unaffected by changie config edits, as expected.
+- `git status` confirms only `.changie.yaml` and the planning files are
+  modified; `.changes/aura-cli/` directory listing and `CHANGELOG-aura.md`
+  remain untouched.
+
+Files Changed:
+- .changie.yaml (modified: aura-cli entry removed from projects list)
+- .plans/tasks-remove-aura-cli-binary.yml (modified: task-003 status pending
+  -> in_progress -> completed, completed_at set)
+- .plans/progress-remove-aura-cli-binary.txt (appended: this entry)
+
+Key Decisions:
+- The hone-reviewer subagent is not exposed as a callable tool in this
+  environment; performed a self-review against the acceptance criteria and
+  proceeded to finalize, matching the pattern used in task-002.
+- Did not edit `.changes/aura-cli/` or `CHANGELOG-aura.md` — historical
+  content stays per the task description and acceptance criteria.
+- No AGENTS.md update needed: the existing "Changie Multi-Project Notes"
+  section is now factually stale (single project), but task-009 explicitly
+  owns the AGENTS.md rewrite for the single-binary state. Holding the edit
+  there avoids double-touching the file.
+
+Next Task: task-004 (Remove aura-cli logic from release.yml workflow) —
+task-005 also unblocked by this task but additionally depends on task-001;
+order follows the lowest-id-with-deps-met rule.
