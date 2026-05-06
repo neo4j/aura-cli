@@ -12,7 +12,7 @@ LINT COMMANDS: [`make lint`]
 FORMAT COMMANDS: [`make fmt-check`] — runs `gofmt -l .` and fails on any output. `make fmt` rewrites silently and is NOT a gate; use `make fmt-check` to verify. CI's golangci-lint v2 includes `gofmt` as a formatter and will fail the build on unformatted code.
 LICENSE CHECK: [`make license-check`]
 
-**Always run `make test` AND `make fmt-check` as final gates before marking any task or plan complete.** All tests must pass and no file may need gofmt — a build that compiles but has failing tests or unformatted code is not done. `make fmt-check` is the local equivalent of CI's gofmt linter, so drift fails before the push instead of after.
+**Always run `make test`, `make fmt-check`, AND `make lint` as final gates before marking any task or plan complete.** All tests must pass, no file may need gofmt, and lint must be clean — a build that compiles but has failing tests, unformatted code, or lint errors is not done. `make fmt-check` is the local equivalent of CI's gofmt linter, so drift fails before the push instead of after.
 
 ## Cobra Command Layout
 
@@ -58,6 +58,7 @@ See [`.agents/testing.md`](.agents/testing.md) for full details.
 - `neo4j-cli/` (the super-CLI package) has no test files; this is a pre-existing gap
 - **Prefer table-driven tests** (`for _, tc := range []struct{...}{...}`) when writing new tests — they reduce duplication and make it easy to add cases later
 - **Name test files per command**, not per package — use `get_test.go`, `set_test.go`, `list_test.go` mirroring the source files; put shared helpers in `helpers_test.go`. Avoid aggregating all tests in a single `config_test.go`.
+- **Never use `afero.NewOsFs()` in query package tests** — the dev machine has real credentials at `~/Library/Preferences/neo4j/cli/credentials.json`. Tests using a real FS will fail if any database credential is stored. Always use `testfs.GetTestFs(`{"format":"json"}`, "{}")` (empty credentials) even when testing dotenv walk-up; write the dotenv into the memFs at `filepath.Join(t.TempDir(), ".env")` and `t.Chdir(tmp)` so `os.Getwd()`+`cfg.Aura.Fs()` finds it.
 
 ## Architecture
 

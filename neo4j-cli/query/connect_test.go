@@ -96,13 +96,6 @@ func TestResolveConn_Defaults(t *testing.T) {
 
 func TestResolveConn_PrecedenceFlagsBeatEnvBeatsDotenv(t *testing.T) {
 	tmp := t.TempDir()
-	require.NoError(t, afero.WriteFile(afero.NewOsFs(), filepath.Join(tmp, ".env"),
-		[]byte(strings.Join([]string{
-			"NEO4J_URI=http://from-dotenv:7474",
-			"NEO4J_USERNAME=fromdotenv",
-			"NEO4J_PASSWORD=dotenv-pw",
-			"NEO4J_DATABASE=dotenvdb",
-		}, "\n")+"\n"), 0644))
 	t.Chdir(tmp)
 
 	t.Setenv(envURI, "http://from-env:7474")
@@ -111,8 +104,18 @@ func TestResolveConn_PrecedenceFlagsBeatEnvBeatsDotenv(t *testing.T) {
 	t.Setenv(envDatabase, "envdb")
 	t.Setenv(envInsecure, "")
 
-	// Real OS fs so resolveConn's os.Getwd + .env walk-up land on this dir.
-	fs := afero.NewOsFs()
+	// Use a mem FS so the test is hermetic regardless of real credentials or
+	// dotenv files on the machine. Write the dotenv at the temp cwd path so
+	// the walk-up logic finds it via cfg.Aura.Fs().
+	fs, err := testfs.GetTestFs(`{"format":"json"}`, "{}")
+	require.NoError(t, err)
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(tmp, ".env"),
+		[]byte(strings.Join([]string{
+			"NEO4J_URI=http://from-dotenv:7474",
+			"NEO4J_USERNAME=fromdotenv",
+			"NEO4J_PASSWORD=dotenv-pw",
+			"NEO4J_DATABASE=dotenvdb",
+		}, "\n")+"\n"), 0644))
 	cfg := clicfg.NewConfig(fs, "test", clicfg.QueryScope)
 	cmd := NewCmd(cfg)
 	require.NoError(t, cmd.ParseFlags([]string{
@@ -133,8 +136,6 @@ func TestResolveConn_PrecedenceFlagsBeatEnvBeatsDotenv(t *testing.T) {
 
 func TestResolveConn_DotenvWinsWhenNoEnvOrFlag(t *testing.T) {
 	tmp := t.TempDir()
-	require.NoError(t, afero.WriteFile(afero.NewOsFs(), filepath.Join(tmp, ".env"),
-		[]byte("NEO4J_USERNAME=onlydotenv\nNEO4J_PASSWORD=onlydotenvpw\n"), 0644))
 	t.Chdir(tmp)
 
 	t.Setenv(envURI, "")
@@ -143,7 +144,13 @@ func TestResolveConn_DotenvWinsWhenNoEnvOrFlag(t *testing.T) {
 	t.Setenv(envDatabase, "")
 	t.Setenv(envInsecure, "")
 
-	fs := afero.NewOsFs()
+	// Use a mem FS so the test is hermetic regardless of real credentials on the
+	// machine. Write the dotenv at the temp cwd path so the walk-up logic finds
+	// it via cfg.Aura.Fs().
+	fs, err := testfs.GetTestFs(`{"format":"json"}`, "{}")
+	require.NoError(t, err)
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(tmp, ".env"),
+		[]byte("NEO4J_USERNAME=onlydotenv\nNEO4J_PASSWORD=onlydotenvpw\n"), 0644))
 	cfg := clicfg.NewConfig(fs, "test", clicfg.QueryScope)
 	cmd := NewCmd(cfg)
 
@@ -532,4 +539,130 @@ func TestResolveConn_NoStoredCredential_FallsBackToDefaults(t *testing.T) {
 	assert.Equal(t, "", c.password)
 	assert.Equal(t, defaultDatabase, c.database)
 	assert.False(t, c.insecure)
+}
+
+// namedCredJSON returns a credentials.json body with one named credential
+// (not necessarily set as the default).
+func namedCredJSON(name, uri, username, password, dbName string, insecure bool) string {
+	insecureStr := "false"
+	if insecure {
+		insecureStr = "true"
+	}
+	return `{"database":{"default-credential":"","credentials":[{"name":"` + name +
+		`","username":"` + username + `","password":"` + password +
+		`","database-name":"` + dbName + `","uri":"` + uri +
+		`","insecure":` + insecureStr + `}]}}`
+}
+
+func TestResolveConn_CredentialFlag(t *testing.T) {
+	twoCredsJSON := `{"database":{"default-credential":"default-cred","credentials":[` +
+		`{"name":"default-cred","username":"defaultUser","password":"defaultPass","database-name":"defaultDB","uri":"http://default:7474","insecure":false},` +
+		`{"name":"other-cred","username":"otherUser","password":"otherPass","database-name":"otherDB","uri":"http://other:7474","insecure":false}` +
+		`]}}`
+
+	tests := []struct {
+		name            string
+		credsJSON       string
+		flags           []string
+		wantErrContains []string
+		wantURI         string
+		wantUsername    string
+		wantPassword    string
+		wantDatabase    string
+		wantInsecure    bool
+	}{
+		{
+			name:         "resolves named credential",
+			credsJSON:    namedCredJSON("mydb", "http://named:7474", "namedUser", "namedPass", "namedDB", false),
+			flags:        []string{"--credential=mydb"},
+			wantURI:      "http://named:7474",
+			wantUsername: "namedUser",
+			wantPassword: "namedPass",
+			wantDatabase: "namedDB",
+			wantInsecure: false,
+		},
+		{
+			name:            "conflicts with --username",
+			credsJSON:       namedCredJSON("mydb", "http://named:7474", "namedUser", "namedPass", "namedDB", false),
+			flags:           []string{"--credential=mydb", "--username=other"},
+			wantErrContains: []string{"--credential", "--username"},
+		},
+		{
+			name:            "unknown credential errors with helpful message",
+			credsJSON:       "{}",
+			flags:           []string{"--credential=unknown"},
+			wantErrContains: []string{"unknown", "credential database list"},
+		},
+		{
+			name:         "--insecure=false overrides credential's insecure:true",
+			credsJSON:    namedCredJSON("mydb", "http://named:7474", "u", "p", "neo4j", true),
+			flags:        []string{"--credential=mydb", "--insecure=false"},
+			wantURI:      "http://named:7474",
+			wantUsername: "u",
+			wantPassword: "p",
+			wantDatabase: "neo4j",
+			wantInsecure: false,
+		},
+		{
+			name:         "credential's insecure:true applied when --insecure not set",
+			credsJSON:    namedCredJSON("mydb", "http://named:7474", "u", "p", "neo4j", true),
+			flags:        []string{"--credential=mydb"},
+			wantURI:      "http://named:7474",
+			wantUsername: "u",
+			wantPassword: "p",
+			wantDatabase: "neo4j",
+			wantInsecure: true,
+		},
+		{
+			name:         "no --credential flag uses stored default (existing behaviour unchanged)",
+			credsJSON:    storedCredJSON("http://stored:7474", "storedUser", "storedPass", "storedDB", false),
+			flags:        []string{},
+			wantURI:      "http://stored:7474",
+			wantUsername: "storedUser",
+			wantPassword: "storedPass",
+			wantDatabase: "storedDB",
+			wantInsecure: false,
+		},
+		{
+			name:         "overrides stored default credential",
+			credsJSON:    twoCredsJSON,
+			flags:        []string{"--credential=other-cred"},
+			wantURI:      "http://other:7474",
+			wantUsername: "otherUser",
+			wantPassword: "otherPass",
+			wantDatabase: "otherDB",
+			wantInsecure: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv(envURI, "")
+			t.Setenv(envUsername, "")
+			t.Setenv(envPassword, "")
+			t.Setenv(envDatabase, "")
+			t.Setenv(envInsecure, "")
+			t.Chdir(t.TempDir())
+
+			cmd, cfg := newTestCmdWithCreds(t, tc.credsJSON)
+			require.NoError(t, cmd.ParseFlags(tc.flags))
+
+			c, err := resolveConn(cmd, cfg)
+
+			if len(tc.wantErrContains) > 0 {
+				require.Error(t, err)
+				for _, s := range tc.wantErrContains {
+					assert.Contains(t, err.Error(), s)
+				}
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantURI, c.uri)
+			assert.Equal(t, tc.wantUsername, c.username)
+			assert.Equal(t, tc.wantPassword, c.password)
+			assert.Equal(t, tc.wantDatabase, c.database)
+			assert.Equal(t, tc.wantInsecure, c.insecure)
+		})
+	}
 }
