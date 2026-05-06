@@ -154,7 +154,7 @@ tasks:
       historical `.changes/aura-cli/` directory. Do NOT add migration
       guidance or "aura-cli has moved" sections. Satisfies REQ-F-006 and
       REQ-F-007.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -163,7 +163,7 @@ tasks:
       - "Mentions of the `neo4j-cli aura` subcommand are preserved where they appeared"
       - "No new migration / deprecation prose is added to either file"
       - "Both files render correctly as Markdown (no broken anchors or list formatting)"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-009
     title: "Update AGENTS.md to reflect single-binary state"
