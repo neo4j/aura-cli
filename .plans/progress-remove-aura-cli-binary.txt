@@ -567,3 +567,96 @@ Key Decisions:
 
 Next Task: task-010 (Verify all build/test/lint gates and goreleaser
 snapshot pass). All dependencies (tasks 002-009) are now satisfied.
+
+================================================================================
+TASK-010: Verify all build/test/lint gates and goreleaser snapshot pass
+Date: 2026-05-06T00:00:00Z
+================================================================================
+
+Summary:
+Ran the full local gate set against the branch state and confirmed the
+single-binary release pipeline produces only neo4j-cli artifacts. All
+seven required gates plus the deeper goreleaser-release snapshot pass.
+No source-code edits were required for this task — all prior tasks
+(002-009) had already produced a working state. Two environmental
+follow-ups were applied: installed `addlicense` via `go install` so
+`make license-check` could run; passed `GORELEASER_CURRENT_TAG=dev`
+to the goreleaser release invocation (matching how `make snapshot`
+already wires it) since `goreleaser release --snapshot` still requires
+a tag-resolvable env var even with `--snapshot`.
+
+Validation (gate-by-gate):
+- `make build` — exit 0; bin/ contains only `neo4j-cli` (no
+  `bin/aura-cli`).
+- `make test` — exit 0; full Go test suite green across all packages
+  (40+ packages reported `ok` or `[no test files]`).
+- `make fmt-check` — exit 0; gofmt clean.
+- `make lint` — exit 0; golangci-lint reports `0 issues`.
+- `make generate-check` — exit 0 once the in-progress YAML edit was
+  stashed (the gate's `git diff --exit-code` flagged my own task-status
+  edit, not stale generated files; with the stash the gate is clean).
+- `make license-check` — exit 0 after installing
+  `github.com/google/addlicense@latest` to `$(GOPATH)/bin/`.
+- `make snapshot` — exit 0; produces `bin/neo4j-cli` only and a
+  single `dist/neo4j-cli_darwin_arm64_v8.0/` build dir; NO
+  `bin/aura-cli` and NO `dist/aura-cli_*`.
+- `HOMEBREW_TAP_GITHUB_TOKEN=stub GORELEASER_CURRENT_TAG=dev
+  goreleaser release --snapshot --clean --skip=publish,sign,notarize`
+  — exit 0; "release succeeded after 30s".
+  - dist/ archives (8): Darwin_arm64.tar.gz, Darwin_x86_64.tar.gz,
+    Linux_arm64.tar.gz, Linux_i386.tar.gz, Linux_x86_64.tar.gz,
+    Windows_arm64.zip, Windows_i386.zip, Windows_x86_64.zip — all
+    prefixed `neo4j-cli_dev-SNAPSHOT-45d07d3_*`.
+  - `find dist/ -iname '*aura*'` returns no matches.
+  - `dist/homebrew/Formula/neo4j-cli.rb` exists; `grep -niE 'aura'`
+    returns no matches.
+
+Files Changed:
+- .plans/tasks-remove-aura-cli-binary.yml (modified: task-010 status
+  pending -> in_progress -> completed, completed_at set)
+- .plans/progress-remove-aura-cli-binary.txt (appended: this entry)
+- AGENTS.md (modified: added a goreleaser-release snapshot bullet
+  explaining the GORELEASER_CURRENT_TAG=dev requirement — see Key
+  Decisions for the rationale)
+
+Key Decisions:
+- Treated the `make generate-check` "diff" as a false positive caused
+  by my own `task-010 status: pending -> in_progress` YAML edit being
+  in the working tree at gate time. Verified by stashing only that
+  file and re-running: gate exits 0 cleanly. The actual
+  generate-check question (do bundles/templates need regeneration?)
+  is answered "no" — `go generate ./...` produced no diffs against
+  committed bundle files.
+- Installed `addlicense` rather than documenting a gap. The PRD's
+  REQ-NF-001 explicitly lists `make license-check` as a required
+  gate, and `go install github.com/google/addlicense@latest`
+  succeeds without ceremony, so taking the install path is the
+  cleaner answer than recording a partial verification.
+- Set `GORELEASER_CURRENT_TAG=dev` for the deeper goreleaser-release
+  snapshot run — this matches `make snapshot`'s recipe
+  (`GORELEASER_CURRENT_TAG=dev goreleaser build ...`) and is needed
+  because `goreleaser release --snapshot` still resolves the
+  `{{.Env.GORELEASER_CURRENT_TAG}}` template in the build's ldflags
+  even when validation is disabled. Without it the release fails at
+  build time with "map has no entry for key
+  GORELEASER_CURRENT_TAG".
+- Added one bullet to AGENTS.md's GoReleaser Notes section
+  documenting the `GORELEASER_CURRENT_TAG=dev` requirement for
+  `goreleaser release --snapshot`. This is a non-obvious gotcha that
+  bites future agents trying to reproduce the verification step:
+  `make snapshot` works without it (because the env var is wired in
+  the recipe), but a manual `goreleaser release --snapshot` call
+  fails confusingly. The note prevents anyone re-deriving this from
+  scratch.
+- Did not alter the make snapshot or goreleaser config to set the env
+  var implicitly — the build/release workflows already pass
+  `GORELEASER_CURRENT_TAG: ${{ github.ref_name }}` from CI, so this
+  is purely a local-reproducibility concern.
+- The hone-reviewer subagent is not exposed as a callable tool in
+  this environment; performed a self-review against the task
+  acceptance criteria and proceeded to finalize, matching the
+  pattern established in tasks 002-009.
+
+Next Task: task-011 (Add changie entry, push branch, and open PR).
+task-010 is the last verification gate; with it complete, the only
+remaining task is the changie+PR step.

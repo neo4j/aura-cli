@@ -202,7 +202,7 @@ tasks:
       `goreleaser release --snapshot --clean --skip=publish,sign,notarize`
       with `HOMEBREW_TAP_GITHUB_TOKEN=stub`. Satisfies REQ-NF-001 through
       REQ-NF-003.
-    status: pending
+    status: completed
     dependencies:
       - task-002
       - task-003
@@ -218,7 +218,7 @@ tasks:
       - "`goreleaser release --snapshot --clean --skip=publish,sign,notarize` (with `HOMEBREW_TAP_GITHUB_TOKEN=stub`) completes successfully"
       - "`dist/` after the goreleaser run contains only `neo4j-cli_*` archives — no `aura-cli_*` files anywhere under `dist/`"
       - "Generated Homebrew formula at `dist/homebrew/Formula/neo4j-cli.rb` is present and references only `neo4j-cli`"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-011
     title: "Add changie entry, push branch, and open PR"
