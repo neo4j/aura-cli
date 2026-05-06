@@ -111,7 +111,7 @@ tasks:
       single command), remove `cp dist/aura-cli_*/aura-cli bin/aura-cli`
       from `snapshot:`, and update the `.PHONY` list to omit `build-aura`
       and `run-aura`. Satisfies REQ-F-005.
-    status: pending
+    status: completed
     dependencies:
       - task-001
     acceptance_criteria:
@@ -120,7 +120,7 @@ tasks:
       - "`snapshot:` does not reference `dist/aura-cli_*` or `bin/aura-cli`"
       - "`.PHONY` line lists only the remaining targets (no `build-aura`/`run-aura`)"
       - "`make build` and `make snapshot` complete successfully on a clean checkout"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-007
     title: "Prepend deprecation note to CHANGELOG-aura.md"
