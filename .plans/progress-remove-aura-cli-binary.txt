@@ -1,0 +1,23 @@
+================================================================================
+TASK-001: Create feature branch off main
+Date: 2026-05-06T00:00:00Z
+================================================================================
+
+Summary:
+Verified the `remove-aura-cli-binary` feature branch is checked out off `main`
+with a clean working tree. The branch was already created and the PRD + tasks
+file committed (commit c12d5e9) prior to this iteration, so no git operations
+were required. Updated the task YAML to record the task as in_progress and
+then completed.
+
+Files Changed:
+- .plans/tasks-remove-aura-cli-binary.yml (modified: task-001 status pending -> completed, completed_at set)
+- .plans/progress-remove-aura-cli-binary.txt (created: progress log seeded)
+
+Key Decisions:
+- Treated task-001 as a verification-only step per the iteration guidance; no
+  feedback loops (build/test/lint) were run because no source code changed.
+- Used 2026-05-06T00:00:00Z (today's date per env) for completed_at to keep the
+  YAML stable and reviewable.
+
+Next Task: task-002 (Strip aura-cli build/archive/notarize entries from .goreleaser.yaml)

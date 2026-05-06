@@ -11,14 +11,14 @@ tasks:
       `remove-aura-cli-binary`) from a clean `main`. All subsequent edits
       land on this branch; no commits go directly to `main`. This task
       satisfies REQ-NF-006 and unblocks every other task.
-    status: pending
+    status: completed
     dependencies: []
     acceptance_criteria:
       - "A new branch named `remove-aura-cli-binary` (or similar) is created off the latest `main`"
       - "The branch is checked out as the working branch"
       - "`git status` reports a clean working tree before edits begin"
       - "`main` has no new commits added by this PRD's work"
-    completed_at: null
+    completed_at: 2026-05-06T00:00:00Z
 
   - id: task-002
     title: "Strip aura-cli build/archive/notarize entries from .goreleaser.yaml"
