@@ -6,6 +6,7 @@ package tenant
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -22,7 +23,7 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Long:  "This subcommand returns details about a specific Aura Tenant.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tenantId := args[0]
+			tenantId := strings.TrimSpace(args[0])
 			path := fmt.Sprintf("/tenants/%s", tenantId)
 
 			cmd.SilenceUsage = true
