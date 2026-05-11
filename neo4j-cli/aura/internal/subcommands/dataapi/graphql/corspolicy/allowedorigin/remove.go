@@ -38,7 +38,7 @@ Updating the CORS policy of a GraphQL Data API is an asynchronous operation. Use
 Removing an allowed origin from the CORS policy of a GraphQL Data API means that most browsers are no longer able to make requests to the GraphQL Data API from a web app that is served from the specified origin.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			originToRemove := args[0]
+			originToRemove := strings.TrimSpace(args[0])
 
 			existingOrigins, err := getExistingOrigins(cfg, dataApiId, instanceId)
 			if err != nil {

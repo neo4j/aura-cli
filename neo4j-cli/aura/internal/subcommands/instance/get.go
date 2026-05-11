@@ -6,6 +6,7 @@ package instance
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -21,7 +22,8 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Long:  "This endpoint returns details about a specific Aura Instance.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			instanceId := args[0]
+			instanceId := strings.TrimSpace(args[0])
+
 			path := fmt.Sprintf("/instances/%s", instanceId)
 
 			cmd.SilenceUsage = true
