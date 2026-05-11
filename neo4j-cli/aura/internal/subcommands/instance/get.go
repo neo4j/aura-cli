@@ -23,7 +23,6 @@ func NewGetCmd(cfg *clicfg.Config) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			instanceId := strings.TrimSpace(args[0])
-
 			path := fmt.Sprintf("/instances/%s", instanceId)
 
 			cmd.SilenceUsage = true
