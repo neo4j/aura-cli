@@ -6,6 +6,7 @@ package job
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
@@ -39,7 +40,7 @@ func NewCancelCommand(cfg *clicfg.Config) *cobra.Command {
 				return err
 			}
 
-			jobId = args[0]
+			jobId = strings.TrimSpace(args[0])
 			path := fmt.Sprintf("/organizations/%s/projects/%s/import/jobs/%s/cancellation", organizationId, projectId, jobId)
 			resBody, statusCode, err := api.MakeRequest(cfg, path, &api.RequestConfig{
 				Method:  http.MethodPost,

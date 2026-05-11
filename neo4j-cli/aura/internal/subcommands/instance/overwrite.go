@@ -6,6 +6,7 @@ package instance
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
@@ -36,7 +37,7 @@ If only --source-instance-id is provided, a new snapshot of that instance is cre
 		`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			instanceId := args[0]
+			instanceId := strings.TrimSpace(args[0])
 			path := fmt.Sprintf("/instances/%s/overwrite", instanceId)
 
 			cmd.SilenceUsage = true
