@@ -121,6 +121,13 @@ func (p *AuraConfigProjects) Default() (*AuraProject, error) {
 		return nil, err
 	}
 
+	// projects is nil when no aura-projects section exists in the config file
+	// (e.g. fresh install or config predating project support). Return an empty
+	// project so callers can proceed and rely on flag validation for required IDs.
+	if projects == nil {
+		return &AuraProject{}, nil
+	}
+
 	if project, ok := projects.Projects[projects.Default]; ok {
 		return project, nil
 	}
