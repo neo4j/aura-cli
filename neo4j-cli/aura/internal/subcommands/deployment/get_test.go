@@ -174,7 +174,7 @@ func TestGetDeploymentWithTrailingNewlineInId(t *testing.T) {
 
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetConfigValue("aura.output", "json")
-	helper.ExecuteCommand(fmt.Sprintf("deployment get --organization-id=%s --project-id=%s \"%s\n\"", organizationId, projectId, deploymentId))
+	helper.ExecuteCommand(fmt.Sprintf("deployment get --organization-id=%s --project-id=%s %s\"\n\"", organizationId, projectId, deploymentId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)

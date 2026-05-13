@@ -74,7 +74,7 @@ func TestOverwriteWithTrailingNewlineInId(t *testing.T) {
 		}
 	  }`)
 
-	helper.ExecuteCommand(fmt.Sprintf("instance overwrite --source-instance-id %s \"%s\n\"", sourceId, instanceId))
+	helper.ExecuteCommand(fmt.Sprintf("instance overwrite --source-instance-id %s %s\"\n\"", sourceId, instanceId))
 	postMock.AssertCalledTimes(1)
 	postMock.AssertCalledWithBody(`{
 		"source_instance_id": "191b0da2"

@@ -135,7 +135,7 @@ func TestGetTenantWithTrailingNewlineInId(t *testing.T) {
 			]
 		}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("tenant get \"%s\n\"", tenantId))
+	helper.ExecuteCommand(fmt.Sprintf("tenant get %s\"\n\"", tenantId))
 
 	getMockHandler.AssertCalledTimes(1)
 	getMockHandler.AssertCalledWithMethod(http.MethodGet)

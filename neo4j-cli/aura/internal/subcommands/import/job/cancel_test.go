@@ -83,7 +83,7 @@ func TestCancelImportJobWithTrailingNewlineInId(t *testing.T) {
 	`, jobId))
 
 	helper.SetConfigValue("aura.beta-enabled", true)
-	helper.ExecuteCommand(fmt.Sprintf("import job cancel --organization-id=%s --project-id=%s \"%s\n\"", organizationId, projectId, jobId))
+	helper.ExecuteCommand(fmt.Sprintf("import job cancel --organization-id=%s --project-id=%s %s\"\n\"", organizationId, projectId, jobId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)

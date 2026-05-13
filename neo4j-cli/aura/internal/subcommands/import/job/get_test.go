@@ -703,7 +703,7 @@ func TestGetImportJobWithTrailingNewlineInId(t *testing.T) {
     }}`)
 
 	helper.SetConfigValue("aura.beta-enabled", true)
-	helper.ExecuteCommand(fmt.Sprintf("import job get --organization-id=%s --project-id=%s --output=table \"%s\n\"", organizationId, projectId, jobId))
+	helper.ExecuteCommand(fmt.Sprintf("import job get --organization-id=%s --project-id=%s --output=table %s\"\n\"", organizationId, projectId, jobId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)

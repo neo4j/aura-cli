@@ -196,7 +196,7 @@ func TestRemoveAllowedOriginWithTrailingNewlineInOrigin(t *testing.T) {
 	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v1beta5/instances/%s/data-apis/graphql/%s", instanceId, dataApiId), http.StatusOK, mockGetResponse)
 	mockHandler.AddResponse(http.StatusAccepted, mockPatchResponse)
 
-	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove --instance-id %s --data-api-id %s \"%s\n\"", instanceId, dataApiId, allowedOrigin))
+	helper.ExecuteCommand(fmt.Sprintf("data-api graphql cors-policy allowed-origin remove --instance-id %s --data-api-id %s %s\"\n\"", instanceId, dataApiId, allowedOrigin))
 
 	mockHandler.AssertCalledTimes(2)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)

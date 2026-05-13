@@ -80,7 +80,7 @@ func TestGetInstanceWithTrailingNewlineInId(t *testing.T) {
 			}
 		}`)
 
-	helper.ExecuteCommand(fmt.Sprintf("instance get \"%s\n\"", instanceId))
+	helper.ExecuteCommand(fmt.Sprintf("instance get %s\"\n\"", instanceId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodGet)
