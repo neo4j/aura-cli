@@ -309,6 +309,19 @@ func NewListResponseData(data []map[string]any) ResponseData {
 	}
 }
 
+// ParseRawBody parses a bare JSON array or object (no {"data":...} envelope).
+func ParseRawBody(body []byte) ResponseData {
+	var rawArray []map[string]any
+	if err := json.Unmarshal(body, &rawArray); err == nil {
+		return NewListResponseData(rawArray)
+	}
+	var rawObj map[string]any
+	if err := json.Unmarshal(body, &rawObj); err == nil {
+		return NewSingleValueResponseData(rawObj)
+	}
+	panic("could not parse raw response body")
+}
+
 func ParseBody(body []byte) ResponseData {
 	var listResponseData ListResponseData
 	err := json.Unmarshal(body, &listResponseData)
