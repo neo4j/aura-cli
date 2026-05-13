@@ -26,7 +26,6 @@ func TestCancelImportJob(t *testing.T) {
 	`, jobId))
 
 	helper.SetConfigValue("aura.beta-enabled", true)
-
 	helper.ExecuteCommand(fmt.Sprintf("import job cancel --organization-id=%s --project-id=%s %s", organizationId, projectId, jobId))
 
 	mockHandler.AssertCalledTimes(1)
@@ -57,6 +56,34 @@ func TestCancelImportJobWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetDefaultProjectInConfig(organizationId, projectId)
 	helper.ExecuteCommand(fmt.Sprintf("import job cancel %s", jobId))
+
+	mockHandler.AssertCalledTimes(1)
+	mockHandler.AssertCalledWithMethod(http.MethodPost)
+
+	helper.AssertErr("")
+	helper.AssertOutJson(fmt.Sprintf(`
+		{
+			"data": {"id": "%s"}
+		}
+	`, jobId))
+}
+
+func TestCancelImportJobWithTrailingNewlineInId(t *testing.T) {
+	organizationId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	projectId := "f607bebe-0cc0-4166-b60c-b4eed69ee7ee"
+	jobId := "87d485b4-73fc-4a7f-bb03-720f4672947e"
+
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/import/jobs/%s/cancellation", organizationId, projectId, jobId), http.StatusOK, fmt.Sprintf(`
+		{
+			"data": {"id": "%s"}
+		}
+	`, jobId))
+
+	helper.SetConfigValue("aura.beta-enabled", true)
+	helper.ExecuteCommand(fmt.Sprintf("import job cancel --organization-id=%s --project-id=%s \"%s\n\"", organizationId, projectId, jobId))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
@@ -141,7 +168,6 @@ func TestCancelImportJobError(t *testing.T) {
 			mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/import/jobs/%s/cancellation", organizationId, projectId, jobId), testCase.statusCode, testCase.returnBody)
 
 			helper.SetConfigValue("aura.beta-enabled", true)
-
 			helper.ExecuteCommand(testCase.executeCommand)
 
 			mockHandler.AssertCalledTimes(testCase.expectedCalledTimes)
