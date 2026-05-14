@@ -1,3 +1,0 @@
-kind: Patch
-body: 'Fix for issue #112 where a new line at the end of some commands causes a panic'
-time: 2026-05-14T10:45:16.980848+01:00
