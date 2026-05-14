@@ -1,3 +1,0 @@
-kind: Minor
-body: Add agent commands (list, get, create, update, replace, delete, invoke) for Aura Agent API (beta)
-time: 2026-05-07T00:00:00Z
