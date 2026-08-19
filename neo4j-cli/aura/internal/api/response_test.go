@@ -12,20 +12,21 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clicfg/credentials"
+	"github.com/neo4j/cli/common/redact"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestF01_UnrecognisedStatusDoesNotLeakSecretIntoPanicMessage(t *testing.T) {
-	origArgs := os.Args
-	os.Args = []string{"aura-cli", "credential", "add", "--name", "demo", "--client-id", "abc", "--client-secret", "S3cr3t-Value"}
-	defer func() { os.Args = origArgs }()
+	rawArgs := []string{"credential", "add", "--name", "demo", "--client-id", "abc", "--client-secret", "S3cr3t-Value"}
+	redactedArgs := redact.Args(rawArgs)
+	redact.SetCapturedArgs(redactedArgs)
+	defer redact.SetCapturedArgs(nil)
 
 	res := &http.Response{
 		StatusCode: http.StatusUnprocessableEntity, // 422 — not one of the explicitly handled codes
@@ -48,6 +49,10 @@ func TestF01_UnrecognisedStatusDoesNotLeakSecretIntoPanicMessage(t *testing.T) {
 	assert.NotEmpty(t, panicMessage, "expected handleResponseError to panic on an unrecognised status code")
 	assert.NotContains(t, panicMessage, "S3cr3t-Value",
 		"the client secret from the command line must never appear in a panic/error message that tells the user to file a public GitHub issue")
+	assert.Contains(t, panicMessage, "****",
+		"the client secret should be masked with **** in the panic message")
+	assert.Contains(t, panicMessage, "demo",
+		"safe flag values like 'demo' should appear unmasked in the panic message")
 	assert.True(t, strings.Contains(panicMessage, "please report an issue"),
 		"sanity check that this is indeed the finding-01 code path")
 }
