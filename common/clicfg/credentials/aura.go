@@ -179,7 +179,6 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 // by explicitly controlling the marshaling of the embedded AuraCredential fields
 // with the shadowed ClientSecret field in the correct position.
 func (c auraCredentialOnDisk) MarshalJSON() ([]byte, error) {
-	type Alias auraCredentialOnDisk
 	if c.AuraCredential == nil {
 		return json.Marshal(struct {
 			Name         string `json:"name"`
