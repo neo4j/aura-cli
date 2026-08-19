@@ -144,7 +144,7 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 
 		return clierr.NewUpstreamError("%s", messages)
 	default:
-		panic(unexpectedStatusError(statusCode, fmt.Sprintf("%s", resBody)))
+		panic(unexpectedStatusError(statusCode, string(resBody)))
 	}
 }
 
