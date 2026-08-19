@@ -55,8 +55,26 @@ func (c *Credentials) load() {
 }
 
 func (c *Credentials) save() {
-	data, err := json.Marshal(CredentialsFile{
-		Aura: c.Aura,
+	// Build a structure with secrets revealed for on-disk storage.
+	// The stored file must contain the real, unredacted secrets,
+	// while display/print paths mask them via Secret.MarshalJSON().
+	data, err := json.Marshal(map[string]interface{}{
+		"aura": map[string]interface{}{
+			"default-credential": c.Aura.DefaultCredential,
+			"credentials": func() []map[string]interface{} {
+				result := make([]map[string]interface{}, len(c.Aura.Credentials))
+				for i, cred := range c.Aura.Credentials {
+					result[i] = map[string]interface{}{
+						"name":              cred.Name,
+						"client-id":         cred.ClientId,
+						"client-secret":     cred.ClientSecret.Reveal(),
+						"access-token":      cred.AccessToken,
+						"token-expiry":      cred.TokenExpiry,
+					}
+				}
+				return result
+			}(),
+		},
 	})
 	if err != nil {
 		panic(err)

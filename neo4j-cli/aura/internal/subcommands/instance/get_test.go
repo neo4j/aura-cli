@@ -245,15 +245,12 @@ func TestUnauthorizedAccessTokenRefresh(t *testing.T) {
 			mockHandler.AssertCalledTimes(1)
 			mockHandler.AssertCalledWithMethod(http.MethodGet)
 
-			helper.AssertCredentialsValue("aura.credentials", `[
-	{
-		"name": "test-cred",
-		"client-id": "",
-		"client-secret": "",
-		"access-token": "",
-		"token-expiry": 0
-	}
-]`)
+			// Verify credentials are cleared (order-independent check)
+			helper.AssertCredentialsValue("aura.credentials.0.name", "test-cred")
+			helper.AssertCredentialsValue("aura.credentials.0.client-id", "")
+			helper.AssertCredentialsValue("aura.credentials.0.client-secret", "")
+			helper.AssertCredentialsValue("aura.credentials.0.access-token", "")
+			helper.AssertCredentialsValue("aura.credentials.0.token-expiry", "0")
 
 			helper.AssertErr(`Error: [
 	string,
