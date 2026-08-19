@@ -5,8 +5,10 @@ package credentials
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
+	"github.com/neo4j/cli/common/redact"
 	"github.com/spf13/afero"
 )
 
@@ -150,50 +152,87 @@ func TestJSONMarshalingPreservesSecretMasking(t *testing.T) {
 
 // TestConversionMethods verifies the conversion methods work correctly.
 func TestConversionMethods(t *testing.T) {
-	// Create an on-disk representation
-	onDisk := auraCredentialsOnDisk{
+	// Create an in-memory credential and convert to on-disk
+	cred := &AuraCredential{
+		Name:         "cred1",
+		ClientId:     "id1",
+		ClientSecret: redact.NewSecret("secret1"),
+		AccessToken:  "token1",
+		TokenExpiry:  1234567890,
+	}
+
+	auraCredentials := &AuraCredentials{
 		DefaultCredential: "default",
-		Credentials: []auraCredentialOnDisk{
-			{
-				Name:         "cred1",
-				ClientId:     "id1",
-				ClientSecret: "secret1",
-				AccessToken:  "token1",
-				TokenExpiry:  1234567890,
-			},
-		},
+		Credentials:       []*AuraCredential{cred},
+		onUpdate:          func() {},
 	}
 
-	// Convert to in-memory format
-	auraCredentials := onDisk.toAuraCredentials(func() {})
+	// Convert to on-disk format
+	onDisk := auraCredentials.toOnDisk()
 
-	if auraCredentials.DefaultCredential != "default" {
-		t.Errorf("expected default 'default', got '%s'", auraCredentials.DefaultCredential)
+	if onDisk.DefaultCredential != "default" {
+		t.Errorf("expected default 'default', got '%s'", onDisk.DefaultCredential)
 	}
-	if len(auraCredentials.Credentials) != 1 {
-		t.Fatalf("expected 1 credential, got %d", len(auraCredentials.Credentials))
-	}
-
-	cred := auraCredentials.Credentials[0]
-	if cred.Name != "cred1" {
-		t.Errorf("expected name 'cred1', got '%s'", cred.Name)
-	}
-	if cred.ClientSecret.Reveal() != "secret1" {
-		t.Errorf("expected secret 'secret1', got '%s'", cred.ClientSecret.Reveal())
+	if len(onDisk.Credentials) != 1 {
+		t.Fatalf("expected 1 credential, got %d", len(onDisk.Credentials))
 	}
 
-	// Convert back to on-disk format
-	backToDisk := auraCredentials.toOnDisk()
-
-	if backToDisk.DefaultCredential != "default" {
-		t.Errorf("expected default 'default' after round-trip, got '%s'", backToDisk.DefaultCredential)
-	}
-	if len(backToDisk.Credentials) != 1 {
-		t.Fatalf("expected 1 credential after round-trip, got %d", len(backToDisk.Credentials))
+	if onDisk.Credentials[0].ClientSecret != "secret1" {
+		t.Errorf("expected secret 'secret1' on disk, got '%s'", onDisk.Credentials[0].ClientSecret)
 	}
 
-	credDisk := backToDisk.Credentials[0]
-	if credDisk.ClientSecret != "secret1" {
-		t.Errorf("expected secret 'secret1' after round-trip, got '%s'", credDisk.ClientSecret)
+	// Convert back to in-memory format
+	backToMemory := onDisk.toAuraCredentials(func() {})
+
+	if backToMemory.DefaultCredential != "default" {
+		t.Errorf("expected default 'default' after round-trip, got '%s'", backToMemory.DefaultCredential)
+	}
+	if len(backToMemory.Credentials) != 1 {
+		t.Fatalf("expected 1 credential after round-trip, got %d", len(backToMemory.Credentials))
+	}
+
+	credBack := backToMemory.Credentials[0]
+	if credBack.Name != "cred1" {
+		t.Errorf("expected name 'cred1' after round-trip, got '%s'", credBack.Name)
+	}
+	if credBack.ClientSecret.Reveal() != "secret1" {
+		t.Errorf("expected secret 'secret1' after round-trip, got '%s'", credBack.ClientSecret.Reveal())
+	}
+}
+
+// TestEmbeddingPreservesNewFields verifies that all fields on AuraCredential
+// (except those without JSON tags) are present in the on-disk JSON representation.
+// This test uses reflection to ensure that future fields added to AuraCredential
+// won't silently vanish from the on-disk file - they'll be automatically preserved
+// due to the embedding approach.
+func TestEmbeddingPreservesNewFields(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	c := NewCredentials(fs, "/test")
+
+	c.Aura.Add("test-cred", "test-client-id", "test-secret")
+	c.Aura.SetDefault("test-cred")
+
+	// Get the raw JSON from disk
+	data, _ := afero.ReadFile(fs, "/test/neo4j/cli/credentials.json")
+	var parsed map[string]interface{}
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("failed to parse saved JSON: %v", err)
+	}
+
+	auraData, _ := parsed["aura"].(map[string]interface{})
+	credentialsData, _ := auraData["credentials"].([]interface{})
+	credentialMap, _ := credentialsData[0].(map[string]interface{})
+
+	// Reflect over AuraCredential to get all fields with JSON tags
+	credType := reflect.TypeOf((*AuraCredential)(nil)).Elem()
+	for i := 0; i < credType.NumField(); i++ {
+		field := credType.Field(i)
+		// Only check fields that have JSON tags
+		if tag, ok := field.Tag.Lookup("json"); ok {
+			if _, present := credentialMap[tag]; !present {
+				t.Errorf("field '%s' (JSON tag '%s') missing from on-disk JSON - would be silently dropped!",
+					field.Name, tag)
+			}
+		}
 	}
 }
