@@ -354,6 +354,12 @@ func TestArgs(t *testing.T) {
 			want:     []string{"--client-secret", "****"},
 			testName: "unsafe flag value starting with dash is masked",
 		},
+		{
+			name:     "unsafe boolean flag followed by safe named flag",
+			args:     []string{"--enabled", "--name", "my-api"},
+			want:     []string{"--enabled", "--name", "my-api"},
+			testName: "boolean flag doesn't consume next flag as its value",
+		},
 	}
 
 	for _, tt := range tests {

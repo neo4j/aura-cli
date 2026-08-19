@@ -79,6 +79,20 @@ var safeFlags = map[string]bool{
 	"import-type":              true,
 }
 
+// booleanFlags is a set of flag names that don't take a value (boolean flags).
+// These flags should never have their following argument consumed as a value.
+var booleanFlags = map[string]bool{
+	"await":                    true,
+	"enabled":                  true,
+	"disabled":                 true,
+	"is-private":               true,
+	"is-mcp-enabled":           true,
+	"vector-optimized":         true,
+	"graph-analytics-plugin":   true,
+	"progress":                 true,
+	"show-progress":            true,
+}
+
 func Args(args []string) []string {
 	if len(args) == 0 {
 		return args
@@ -99,8 +113,9 @@ func Args(args []string) []string {
 				value := parts[1]
 
 				result[len(result)-1] = arg[:strings.Index(arg, "=")+1] + maskIfUnsafe(flagName, value)
-			} else if i+1 < len(args) {
-				// For unsafe flags, mask the next argument regardless of whether it starts with dash.
+			} else if i+1 < len(args) && !booleanFlags[flagName] {
+				// Boolean flags don't take values, so never consume the next argument.
+				// For other unsafe flags, mask the next argument.
 				// For safe flags, only consume the next argument if it doesn't look like a flag.
 				isSafeFlag := safeFlags[flagName]
 				nextLooksLikeFlag := strings.HasPrefix(args[i+1], "-")
