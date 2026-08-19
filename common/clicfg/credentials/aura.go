@@ -160,7 +160,7 @@ func (credential *AuraCredential) HasValidAccessToken() bool {
 	return true
 }
 
-// toOnDisk calls Reveal() once on the secret for storage.
+// toOnDisk converts AuraCredentials to the on-disk format with plain-string secrets.
 func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	result := auraCredentialsOnDisk{
 		DefaultCredential: c.DefaultCredential,
@@ -168,17 +168,43 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	}
 	for i, cred := range c.Credentials {
 		result.Credentials[i] = auraCredentialOnDisk{
-			Name:         cred.Name,
-			ClientId:     cred.ClientId,
-			ClientSecret: cred.ClientSecret.Reveal(),
-			AccessToken:  cred.AccessToken,
-			TokenExpiry:  cred.TokenExpiry,
+			AuraCredential: cred,
+			ClientSecret:   cred.ClientSecret.Reveal(),
 		}
 	}
 	return result
 }
 
-// toAuraCredentials wraps the secret in redact.Secret.
+// MarshalJSON ensures the on-disk JSON representation has the correct field order
+// by explicitly controlling the marshaling of the embedded AuraCredential fields
+// with the shadowed ClientSecret field in the correct position.
+func (c auraCredentialOnDisk) MarshalJSON() ([]byte, error) {
+	type Alias auraCredentialOnDisk
+	if c.AuraCredential == nil {
+		return json.Marshal(struct {
+			Name         string `json:"name"`
+			ClientId     string `json:"client-id"`
+			ClientSecret string `json:"client-secret"`
+			AccessToken  string `json:"access-token"`
+			TokenExpiry  int64  `json:"token-expiry"`
+		}{})
+	}
+	return json.Marshal(struct {
+		Name         string `json:"name"`
+		ClientId     string `json:"client-id"`
+		ClientSecret string `json:"client-secret"`
+		AccessToken  string `json:"access-token"`
+		TokenExpiry  int64  `json:"token-expiry"`
+	}{
+		Name:         c.AuraCredential.Name,
+		ClientId:     c.AuraCredential.ClientId,
+		ClientSecret: c.ClientSecret,
+		AccessToken:  c.AuraCredential.AccessToken,
+		TokenExpiry:  c.AuraCredential.TokenExpiry,
+	})
+}
+
+// toAuraCredentials converts from the on-disk format back to in-memory format with redact.Secret.
 func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredentials {
 	result := &AuraCredentials{
 		DefaultCredential: od.DefaultCredential,
@@ -186,13 +212,9 @@ func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredenti
 		onUpdate:          onUpdate,
 	}
 	for i, cred := range od.Credentials {
-		result.Credentials[i] = &AuraCredential{
-			Name:         cred.Name,
-			ClientId:     cred.ClientId,
-			ClientSecret: redact.NewSecret(cred.ClientSecret),
-			AccessToken:  cred.AccessToken,
-			TokenExpiry:  cred.TokenExpiry,
-		}
+		newCred := *cred.AuraCredential
+		newCred.ClientSecret = redact.NewSecret(cred.ClientSecret)
+		result.Credentials[i] = &newCred
 	}
 	return result
 }
