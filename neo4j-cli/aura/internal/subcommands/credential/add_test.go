@@ -17,12 +17,7 @@ func TestAddFirstCredential(t *testing.T) {
 
 	helper.ExecuteCommand("credential add --name test --client-id testclientid --client-secret testclientsecret")
 
-	// Verify the values are present (order-independent check)
-	helper.AssertCredentialsValue("aura.credentials.0.name", "test")
-	helper.AssertCredentialsValue("aura.credentials.0.client-id", "testclientid")
-	helper.AssertCredentialsValue("aura.credentials.0.client-secret", "testclientsecret")
-	helper.AssertCredentialsValue("aura.credentials.0.access-token", "")
-	helper.AssertCredentialsValue("aura.credentials.0.token-expiry", "0")
+	helper.AssertCredentialsValue("aura.credentials", `[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret","access-token":"","token-expiry":0}]`)
 	helper.AssertCredentialsValue("aura.default-credential", "test")
 }
 
@@ -45,12 +40,6 @@ func TestAddAditionalCredentials(t *testing.T) {
 
 	helper.ExecuteCommand("credential add --name test-new --client-id testclientid2 --client-secret testclientsecret2")
 
-	// Check that both credentials exist with correct values
-	helper.AssertCredentialsValue("aura.credentials.0.name", "test")
-	helper.AssertCredentialsValue("aura.credentials.0.client-id", "testclientid")
-	helper.AssertCredentialsValue("aura.credentials.0.client-secret", "testclientsecret")
-	helper.AssertCredentialsValue("aura.credentials.1.name", "test-new")
-	helper.AssertCredentialsValue("aura.credentials.1.client-id", "testclientid2")
-	helper.AssertCredentialsValue("aura.credentials.1.client-secret", "testclientsecret2")
+	helper.AssertCredentialsValue("aura.credentials", `[{"name":"test","client-id":"testclientid","client-secret":"testclientsecret","access-token":"","token-expiry":0},{"name":"test-new","client-id":"testclientid2","client-secret":"testclientsecret2","access-token":"","token-expiry":0}]`)
 	helper.AssertCredentialsValue("aura.default-credential", "test")
 }

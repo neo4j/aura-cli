@@ -146,23 +146,6 @@ type AuraCredential struct {
 	TokenExpiry  int64          `json:"token-expiry"`
 }
 
-// UnmarshalJSON unmarshals JSON into a credential, wrapping the client secret
-// in a redact.Secret for automatic masking in display contexts.
-func (credential *AuraCredential) UnmarshalJSON(data []byte) error {
-	type Alias AuraCredential
-	aux := &struct {
-		ClientSecret string `json:"client-secret"`
-		*Alias
-	}{
-		Alias: (*Alias)(credential),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	credential.ClientSecret = redact.NewSecret(aux.ClientSecret)
-	return nil
-}
-
 func (credential *AuraCredential) HasValidAccessToken() bool {
 	now := time.Now().UnixMilli()
 
@@ -175,4 +158,46 @@ func (credential *AuraCredential) HasValidAccessToken() bool {
 	}
 
 	return true
+}
+
+// Conversion methods for on-disk serialization.
+// These methods are defined in aura.go (not credentials.go) to keep all credential-related logic together.
+
+// toOnDisk converts AuraCredentials to its on-disk representation,
+// calling Reveal() once on the secret.
+func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
+	result := auraCredentialsOnDisk{
+		DefaultCredential: c.DefaultCredential,
+		Credentials:       make([]auraCredentialOnDisk, len(c.Credentials)),
+	}
+	for i, cred := range c.Credentials {
+		result.Credentials[i] = auraCredentialOnDisk{
+			Name:         cred.Name,
+			ClientId:     cred.ClientId,
+			ClientSecret: cred.ClientSecret.Reveal(),
+			AccessToken:  cred.AccessToken,
+			TokenExpiry:  cred.TokenExpiry,
+		}
+	}
+	return result
+}
+
+// toAuraCredentials converts the on-disk representation to AuraCredentials,
+// wrapping the secret in redact.Secret.
+func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredentials {
+	result := &AuraCredentials{
+		DefaultCredential: od.DefaultCredential,
+		Credentials:       make([]*AuraCredential, len(od.Credentials)),
+		onUpdate:          onUpdate,
+	}
+	for i, cred := range od.Credentials {
+		result.Credentials[i] = &AuraCredential{
+			Name:         cred.Name,
+			ClientId:     cred.ClientId,
+			ClientSecret: redact.NewSecret(cred.ClientSecret),
+			AccessToken:  cred.AccessToken,
+			TokenExpiry:  cred.TokenExpiry,
+		}
+	}
+	return result
 }

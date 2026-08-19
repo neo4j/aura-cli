@@ -11,6 +11,23 @@ import (
 	"github.com/spf13/afero"
 )
 
+// auraCredentialsOnDisk is the on-disk JSON representation of AuraCredentials.
+// It uses plain strings so the file can store the real, unredacted secrets,
+// while AuraCredentials.Print() masks them via Secret.MarshalJSON().
+type auraCredentialsOnDisk struct {
+	DefaultCredential string                     `json:"default-credential"`
+	Credentials       []auraCredentialOnDisk     `json:"credentials"`
+}
+
+// auraCredentialOnDisk is the on-disk JSON representation of AuraCredential.
+type auraCredentialOnDisk struct {
+	Name            string `json:"name"`
+	ClientId        string `json:"client-id"`
+	ClientSecret    string `json:"client-secret"`
+	AccessToken     string `json:"access-token"`
+	TokenExpiry     int64  `json:"token-expiry"`
+}
+
 type CredentialsFile struct {
 	Aura *AuraCredentials `json:"aura"`
 }
@@ -42,9 +59,14 @@ func (c *Credentials) load() {
 		},
 	}
 	if fileHasData {
-		if err := json.Unmarshal(data, &credentials); err != nil {
+		// Unmarshal into the on-disk representation, then convert to the in-memory type
+		var onDisk struct {
+			Aura auraCredentialsOnDisk `json:"aura"`
+		}
+		if err := json.Unmarshal(data, &onDisk); err != nil {
 			panic(err)
 		}
+		credentials.Aura = onDisk.Aura.toAuraCredentials(c.save)
 	}
 
 	c.Aura = credentials.Aura
@@ -55,27 +77,14 @@ func (c *Credentials) load() {
 }
 
 func (c *Credentials) save() {
-	// Build a structure with secrets revealed for on-disk storage.
-	// The stored file must contain the real, unredacted secrets,
-	// while display/print paths mask them via Secret.MarshalJSON().
-	data, err := json.Marshal(map[string]interface{}{
-		"aura": map[string]interface{}{
-			"default-credential": c.Aura.DefaultCredential,
-			"credentials": func() []map[string]interface{} {
-				result := make([]map[string]interface{}, len(c.Aura.Credentials))
-				for i, cred := range c.Aura.Credentials {
-					result[i] = map[string]interface{}{
-						"name":              cred.Name,
-						"client-id":         cred.ClientId,
-						"client-secret":     cred.ClientSecret.Reveal(),
-						"access-token":      cred.AccessToken,
-						"token-expiry":      cred.TokenExpiry,
-					}
-				}
-				return result
-			}(),
-		},
-	})
+	// Convert the in-memory representation to the on-disk representation
+	onDisk := struct {
+		Aura auraCredentialsOnDisk `json:"aura"`
+	}{
+		Aura: c.Aura.toOnDisk(),
+	}
+
+	data, err := json.Marshal(onDisk)
 	if err != nil {
 		panic(err)
 	}
