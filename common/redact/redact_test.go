@@ -142,9 +142,9 @@ func TestSecretReveal(t *testing.T) {
 
 func TestSecretInJSON(t *testing.T) {
 	tests := []struct {
-		name          string
-		secretValue   string
-		expectMasked  bool
+		name         string
+		secretValue  string
+		expectMasked bool
 	}{
 		{
 			name:         "secret in struct",
@@ -385,9 +385,9 @@ func TestArgs(t *testing.T) {
 func TestArgsMasksSecrets(t *testing.T) {
 	// Test that common secret-bearing flags are properly masked
 	tests := []struct {
-		name         string
-		flagName     string
-		shouldMask   bool
+		name       string
+		flagName   string
+		shouldMask bool
 	}{
 		{"client-secret", "client-secret", true},
 		{"password", "password", true},

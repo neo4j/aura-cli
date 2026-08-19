@@ -139,11 +139,11 @@ func (c *AuraCredentials) credentialExists(name string) bool {
 }
 
 type AuraCredential struct {
-	Name         string         `json:"name"`
-	ClientId     string         `json:"client-id"`
-	ClientSecret redact.Secret  `json:"client-secret"`
-	AccessToken  string         `json:"access-token"`
-	TokenExpiry  int64          `json:"token-expiry"`
+	Name         string        `json:"name"`
+	ClientId     string        `json:"client-id"`
+	ClientSecret redact.Secret `json:"client-secret"`
+	AccessToken  string        `json:"access-token"`
+	TokenExpiry  int64         `json:"token-expiry"`
 }
 
 func (credential *AuraCredential) HasValidAccessToken() bool {

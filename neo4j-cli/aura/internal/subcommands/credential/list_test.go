@@ -17,9 +17,9 @@ func TestCredentialListMasksClientSecret(t *testing.T) {
 
 	secretValue := "S3cr3t-Value-12345"
 	helper.SetCredentialsValue("aura.credentials", []map[string]string{{
-		"name":            "demo",
-		"client-id":       "abc",
-		"client-secret":   secretValue,
+		"name":          "demo",
+		"client-id":     "abc",
+		"client-secret": secretValue,
 	}})
 
 	// Execute the list command
@@ -52,9 +52,9 @@ func TestCredentialListFileStillContainsRealSecret(t *testing.T) {
 
 	secretValue := "RealSecretValue-98765"
 	helper.SetCredentialsValue("aura.credentials", []map[string]string{{
-		"name":            "prod",
-		"client-id":       "xyz",
-		"client-secret":   secretValue,
+		"name":          "prod",
+		"client-id":     "xyz",
+		"client-secret": secretValue,
 	}})
 
 	// Execute the list command

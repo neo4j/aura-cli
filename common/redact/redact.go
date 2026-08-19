@@ -34,63 +34,63 @@ func (s Secret) Reveal() string {
 // Any flag not in this map is considered unsafe and will be masked by Args().
 var safeFlags = map[string]bool{
 	// Identifiers and names
-	"name":                     true,
-	"instance-id":              true,
-	"tenant-id":                true,
-	"customer-managed-key-id":  true,
-	"db-id":                    true,
-	"data-api-id":              true,
-	"type":                     true,
-	"deployment-id":            true,
-	"key-id":                   true,
-	"server-id":                true,
-	"source-instance-id":       true,
-	"source-snapshot-id":       true,
-	"description":              true,
-	"project-id":               true,
-	"organization-id":          true,
-	"import-model-id":          true,
+	"name":                    true,
+	"instance-id":             true,
+	"tenant-id":               true,
+	"customer-managed-key-id": true,
+	"db-id":                   true,
+	"data-api-id":             true,
+	"type":                    true,
+	"deployment-id":           true,
+	"key-id":                  true,
+	"server-id":               true,
+	"source-instance-id":      true,
+	"source-snapshot-id":      true,
+	"description":             true,
+	"project-id":              true,
+	"organization-id":         true,
+	"import-model-id":         true,
 
 	// Output and format options
-	"output":                   true,
+	"output": true,
 
 	// Configuration endpoints (not secrets themselves)
-	"auth-url":                 true,
-	"base-url":                 true,
+	"auth-url": true,
+	"base-url": true,
 
 	// Feature flags and non-secret toggles
-	"await":                    true,
-	"graph-analytics-plugin":   true,
+	"await":                  true,
+	"graph-analytics-plugin": true,
 
 	// Instance configuration (non-secret metadata)
-	"version":                  true,
-	"region":                   true,
-	"memory":                   true,
-	"cloud-provider":           true,
+	"version":        true,
+	"region":         true,
+	"memory":         true,
+	"cloud-provider": true,
 
 	// Usernames (not secret by themselves, but paired with passwords)
-	"instance-username":        true,
+	"instance-username": true,
 
 	// Data/Time related
-	"date":                     true,
-	"ttl":                      true,
+	"date": true,
+	"ttl":  true,
 
 	// Data import
-	"import-type":              true,
+	"import-type": true,
 }
 
 // booleanFlags is a set of flag names that don't take a value (boolean flags).
 // These flags should never have their following argument consumed as a value.
 var booleanFlags = map[string]bool{
-	"await":                    true,
-	"enabled":                  true,
-	"disabled":                 true,
-	"is-private":               true,
-	"is-mcp-enabled":           true,
-	"vector-optimized":         true,
-	"graph-analytics-plugin":   true,
-	"progress":                 true,
-	"show-progress":            true,
+	"await":                  true,
+	"enabled":                true,
+	"disabled":               true,
+	"is-private":             true,
+	"is-mcp-enabled":         true,
+	"vector-optimized":       true,
+	"graph-analytics-plugin": true,
+	"progress":               true,
+	"show-progress":          true,
 }
 
 func Args(args []string) []string {

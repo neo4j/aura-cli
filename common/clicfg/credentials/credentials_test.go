@@ -54,11 +54,11 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	}
 
 	expectedFields := map[string]bool{
-		"name":            true,
-		"client-id":       true,
-		"client-secret":   true,
-		"access-token":    true,
-		"token-expiry":    true,
+		"name":          true,
+		"client-id":     true,
+		"client-secret": true,
+		"access-token":  true,
+		"token-expiry":  true,
 	}
 
 	for field := range credentialMap {

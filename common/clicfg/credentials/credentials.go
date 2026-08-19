@@ -15,8 +15,8 @@ import (
 // It uses plain strings so the file can store the real, unredacted secrets,
 // while AuraCredentials.Print() masks them via Secret.MarshalJSON().
 type auraCredentialsOnDisk struct {
-	DefaultCredential string                     `json:"default-credential"`
-	Credentials       []auraCredentialOnDisk     `json:"credentials"`
+	DefaultCredential string                 `json:"default-credential"`
+	Credentials       []auraCredentialOnDisk `json:"credentials"`
 }
 
 // auraCredentialOnDisk embeds *AuraCredential and shadows only the ClientSecret field
