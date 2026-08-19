@@ -15,21 +15,18 @@ import (
 )
 
 // TestArgScopeRegression ensures that raw os.Args[1:] reads are confined to
-// the sanctioned capture point in neo4j-cli/aura/cmd/main.go (added via task-003)
+// the sanctioned capture points in neo4j-cli/aura/cmd/main.go and neo4j-cli/main.go (added via task-003)
 // and never leak elsewhere in the codebase. This guards against regressions where
 // unredacted argument slices reach panic/error output paths.
-//
-// Expected to FAIL while task-003's sanctioned capture point doesn't exist yet.
-// Will turn green as a side-effect of task-003's fix.
 func TestArgScopeRegression(t *testing.T) {
 	// Sanctioned locations where os.Args[1:] (or os.Args slicing) is permitted.
-	// Task-003 will introduce the actual capture point in main.go;
-	// until then, only this test file is in the allow-list.
+	// Task-003 introduced capture points in both main() entrypoints.
 	sanctionedLocations := map[string]bool{
 		// This test file itself (guard definition)
 		"common/redact/argscope_test.go": true,
-		// Task-003 will add: "neo4j-cli/aura/cmd/main.go" (sanctioned capture point)
-		// Don't add it yet — it doesn't exist, and the test should fail until task-003 adds it.
+		// Sanctioned capture points (task-003)
+		"neo4j-cli/aura/cmd/main.go": true,
+		"neo4j-cli/main.go":           true,
 	}
 
 	// Pattern to find raw os.Args reads: os.Args[...] where ... is any slice/index expression
@@ -113,7 +110,7 @@ func TestArgScopeRegression(t *testing.T) {
 
 	// If violations were found, fail with a detailed report
 	if len(violations) > 0 {
-		t.Errorf("Found raw os.Args reads outside sanctioned locations (task-003 will add the capture point):\n%s",
+		t.Errorf("Found raw os.Args reads outside sanctioned locations:\n%s",
 			strings.Join(violations, "\n"))
 	}
 }

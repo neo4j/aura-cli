@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/redact"
 	"github.com/neo4j/cli/neo4j-cli/aura"
 	"github.com/spf13/afero"
 )
@@ -15,9 +16,12 @@ import (
 var Version = "dev"
 
 func main() {
+	redactedArgs := redact.Args(os.Args[1:])
+	aura.SetRedactedArgs(redactedArgs)
+
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("Unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli\n\n", os.Args[1:])
+			fmt.Printf("Unexpected error running CLI with args %s, please report an issue in https://github.com/neo4j/cli\n\n", redactedArgs)
 
 			panic(r)
 		}
