@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/neo4j/cli/common/clierr"
+	"github.com/neo4j/cli/common/redact"
 )
 
 type AuraCredentials struct {
@@ -40,7 +41,11 @@ func (c *AuraCredentials) Add(name string, clientId string, clientSecret string)
 		}
 	}
 
-	c.Credentials = append(c.Credentials, &AuraCredential{Name: name, ClientId: clientId, ClientSecret: clientSecret})
+	c.Credentials = append(c.Credentials, &AuraCredential{
+		Name:         name,
+		ClientId:     clientId,
+		ClientSecret: redact.NewSecret(clientSecret),
+	})
 	if len(c.Credentials) == 1 {
 		c.SetDefault(name)
 	}
@@ -134,11 +139,28 @@ func (c *AuraCredentials) credentialExists(name string) bool {
 }
 
 type AuraCredential struct {
-	Name         string `json:"name"`
-	ClientId     string `json:"client-id"`
-	ClientSecret string `json:"client-secret"`
-	AccessToken  string `json:"access-token"`
-	TokenExpiry  int64  `json:"token-expiry"`
+	Name         string         `json:"name"`
+	ClientId     string         `json:"client-id"`
+	ClientSecret redact.Secret  `json:"client-secret"`
+	AccessToken  string         `json:"access-token"`
+	TokenExpiry  int64          `json:"token-expiry"`
+}
+
+// UnmarshalJSON unmarshals JSON into a credential, wrapping the client secret
+// in a redact.Secret for automatic masking in display contexts.
+func (credential *AuraCredential) UnmarshalJSON(data []byte) error {
+	type Alias AuraCredential
+	aux := &struct {
+		ClientSecret string `json:"client-secret"`
+		*Alias
+	}{
+		Alias: (*Alias)(credential),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	credential.ClientSecret = redact.NewSecret(aux.ClientSecret)
+	return nil
 }
 
 func (credential *AuraCredential) HasValidAccessToken() bool {

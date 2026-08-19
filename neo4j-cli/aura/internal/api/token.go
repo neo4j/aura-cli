@@ -38,7 +38,7 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 		"Content-Type": {"application/x-www-form-urlencoded"},
 		"User-Agent":   {fmt.Sprintf(userAgent, version)},
 	}
-	req.SetBasicAuth(credential.ClientId, credential.ClientSecret)
+	req.SetBasicAuth(credential.ClientId, credential.ClientSecret.Reveal())
 
 	client := http.Client{}
 
