@@ -9,7 +9,7 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/redact"
-	"github.com/neo4j/cli/neo4j-cli/aura"
+	aura "github.com/neo4j/cli/neo4j-cli/aura"
 	"github.com/spf13/afero"
 )
 
@@ -17,7 +17,7 @@ var Version = "dev"
 
 func main() {
 	redactedArgs := redact.Args(os.Args[1:])
-	aura.SetRedactedArgs(redactedArgs)
+	redact.SetCapturedArgs(redactedArgs)
 
 	defer func() {
 		if r := recover(); r != nil {

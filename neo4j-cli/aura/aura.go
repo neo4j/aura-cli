@@ -4,7 +4,6 @@
 package aura
 
 import (
-	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/agent"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/deployment"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/graphanalytics"
@@ -19,11 +18,6 @@ import (
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/instance"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/subcommands/tenant"
 )
-
-// SetRedactedArgs stores the redacted command-line arguments for access by error handlers.
-func SetRedactedArgs(args []string) {
-	api.RedactedArgs = args
-}
 
 func NewCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd := &cobra.Command{
