@@ -11,16 +11,13 @@ import (
 	"github.com/spf13/afero"
 )
 
-// auraCredentialsOnDisk is the on-disk JSON representation of AuraCredentials.
-// It uses plain strings so the file can store the real, unredacted secrets,
-// while AuraCredentials.Print() masks them via Secret.MarshalJSON().
 type auraCredentialsOnDisk struct {
 	DefaultCredential string                 `json:"default-credential"`
 	Credentials       []auraCredentialOnDisk `json:"credentials"`
 }
 
 type auraCredentialOnDisk struct {
-	*AuraCredential
+	AuraCredential
 	ClientSecret string `json:"client-secret"`
 }
 

@@ -7,8 +7,8 @@ package redact
 // This is set by main() at the top of each CLI entrypoint and read by error/panic handlers.
 var capturedArgs []string
 
-func SetCapturedArgs(args []string) {
-	capturedArgs = args
+func CaptureArgs(args []string) {
+	capturedArgs = Args(args)
 }
 
 func CapturedArgs() []string {

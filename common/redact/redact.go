@@ -30,8 +30,6 @@ func (s Secret) Reveal() string {
 	return s.value
 }
 
-// safeFlags is a map of flag names that are safe to echo verbatim in diagnostic output.
-// Any flag not in this map is considered unsafe and will be masked by Args().
 var safeFlags = map[string]bool{
 	// Identifiers and names
 	"name":                    true,
@@ -79,8 +77,6 @@ var safeFlags = map[string]bool{
 	"import-type": true,
 }
 
-// booleanFlags is a set of flag names that don't take a value (boolean flags).
-// These flags should never have their following argument consumed as a value.
 var booleanFlags = map[string]bool{
 	"await":                  true,
 	"enabled":                true,
@@ -91,7 +87,6 @@ var booleanFlags = map[string]bool{
 	"graph-analytics-plugin": true,
 	"progress":               true,
 	"help":                   true,
-	"version":                true,
 }
 
 func Args(args []string) []string {
@@ -115,9 +110,6 @@ func Args(args []string) []string {
 
 				result[len(result)-1] = arg[:strings.Index(arg, "=")+1] + maskIfUnsafe(flagName, value)
 			} else if i+1 < len(args) && !booleanFlags[flagName] {
-				// Boolean flags don't take values, so never consume the next argument.
-				// For other unsafe flags, mask the next argument.
-				// For safe flags, only consume the next argument if it doesn't look like a flag.
 				isSafeFlag := safeFlags[flagName]
 				nextLooksLikeFlag := strings.HasPrefix(args[i+1], "-")
 				if !isSafeFlag || !nextLooksLikeFlag {

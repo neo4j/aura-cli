@@ -64,12 +64,6 @@ func TestArgScopeRegression(t *testing.T) {
 		for scanner.Scan() {
 			lineNum++
 			line := scanner.Text()
-			trimmedLine := strings.TrimSpace(line)
-
-			if strings.HasPrefix(trimmedLine, "//") {
-				continue
-			}
-
 			codePart := line
 			if idx := strings.Index(line, "//"); idx >= 0 {
 				codePart = line[:idx]

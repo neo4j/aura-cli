@@ -19,9 +19,8 @@ import (
 
 func TestUnrecognisedStatusDoesNotLeakSecretIntoPanicMessage(t *testing.T) {
 	rawArgs := []string{"credential", "add", "--name", "demo", "--client-id", "abc", "--client-secret", "S3cr3t-Value"}
-	redactedArgs := redact.Args(rawArgs)
-	redact.SetCapturedArgs(redactedArgs)
-	defer redact.SetCapturedArgs(nil)
+	redact.CaptureArgs(rawArgs)
+	defer redact.CaptureArgs(nil)
 
 	res := &http.Response{
 		StatusCode: http.StatusUnprocessableEntity, // 422 — not one of the explicitly handled codes

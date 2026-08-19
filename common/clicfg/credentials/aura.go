@@ -160,7 +160,6 @@ func (credential *AuraCredential) HasValidAccessToken() bool {
 	return true
 }
 
-// toOnDisk converts AuraCredentials to the on-disk format with plain-string secrets.
 func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	result := auraCredentialsOnDisk{
 		DefaultCredential: c.DefaultCredential,
@@ -168,14 +167,13 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	}
 	for i, cred := range c.Credentials {
 		result.Credentials[i] = auraCredentialOnDisk{
-			AuraCredential: cred,
+			AuraCredential: *cred,
 			ClientSecret:   cred.ClientSecret.Reveal(),
 		}
 	}
 	return result
 }
 
-// toAuraCredentials converts from the on-disk format back to in-memory format with redact.Secret.
 func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredentials {
 	result := &AuraCredentials{
 		DefaultCredential: od.DefaultCredential,
@@ -183,10 +181,7 @@ func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredenti
 		onUpdate:          onUpdate,
 	}
 	for i, cred := range od.Credentials {
-		newCred := AuraCredential{}
-		if cred.AuraCredential != nil {
-			newCred = *cred.AuraCredential
-		}
+		newCred := cred.AuraCredential
 		newCred.ClientSecret = redact.NewSecret(cred.ClientSecret)
 		result.Credentials[i] = &newCred
 	}
