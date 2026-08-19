@@ -139,4 +139,3 @@ func TestJSONMarshalingPreservesSecretMasking(t *testing.T) {
 		t.Errorf("expected masked secret '****' in JSON output, got '%v'", secret)
 	}
 }
-
