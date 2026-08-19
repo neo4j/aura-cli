@@ -22,21 +22,16 @@ func TestCredentialListMasksClientSecret(t *testing.T) {
 		"client-secret": secretValue,
 	}})
 
-	// Execute the list command
 	helper.ExecuteCommand("credential list")
 
-	// Get the printed output
 	out := helper.PrintOut()
 
-	// The output should NOT contain the real secret
 	assert.NotContains(t, out, secretValue,
 		"credential list should not print the real client secret")
 
-	// The output SHOULD contain the masked marker
 	assert.Contains(t, out, "****",
 		"credential list should contain the mask marker for secrets")
 
-	// Parse the JSON to verify the structure is correct with masked value
 	var credentials []map[string]interface{}
 	err := json.Unmarshal([]byte(out), &credentials)
 	assert.NoError(t, err, "output should be valid JSON")
@@ -57,10 +52,7 @@ func TestCredentialListFileStillContainsRealSecret(t *testing.T) {
 		"client-secret": secretValue,
 	}})
 
-	// Execute the list command
 	helper.ExecuteCommand("credential list")
 
-	// Verify the on-disk credentials file still contains the real secret
-	// (not masked in storage, only in display output)
 	helper.AssertCredentialsValue("aura.credentials.0.client-secret", secretValue)
 }

@@ -292,7 +292,7 @@ func TestArgs(t *testing.T) {
 			name:     "graph-analytics-plugin safe",
 			args:     []string{"--graph-analytics-plugin", "true"},
 			want:     []string{"--graph-analytics-plugin", "true"},
-			testName: "graph-analytics-plugin boolean treated as flag with value",
+			testName: "graph-analytics-plugin is a safe flag, value left untouched",
 		},
 		{
 			name:     "version safe",
@@ -449,15 +449,13 @@ func TestArgsPreservesStructure(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := Args(tt.args)
 
-			// Verify no unexpected changes to structure
 			if len(result) != len(tt.args) {
-				t.Errorf("Args() changed argument count: got %d, want %d", len(result), len(tt.args))
+				t.Fatalf("Args() changed argument count: got %d, want %d", len(result), len(tt.args))
 			}
 
-			// Verify flag names are preserved
 			for i, arg := range tt.args {
-				if i < len(result) && arg == tt.args[i] {
-					// Keep going, flag names should match
+				if strings.HasPrefix(arg, "--") && result[i] != arg {
+					t.Errorf("flag name at index %d changed: got %q, want %q", i, result[i], arg)
 				}
 			}
 		})

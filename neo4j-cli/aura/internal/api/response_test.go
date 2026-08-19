@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/neo4j/cli/common/clicfg"
@@ -18,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestF01_UnrecognisedStatusDoesNotLeakSecretIntoPanicMessage(t *testing.T) {
+func TestUnrecognisedStatusDoesNotLeakSecretIntoPanicMessage(t *testing.T) {
 	rawArgs := []string{"credential", "add", "--name", "demo", "--client-id", "abc", "--client-secret", "S3cr3t-Value"}
 	redactedArgs := redact.Args(rawArgs)
 	redact.SetCapturedArgs(redactedArgs)
@@ -49,6 +48,5 @@ func TestF01_UnrecognisedStatusDoesNotLeakSecretIntoPanicMessage(t *testing.T) {
 		"the client secret should be masked with **** in the panic message")
 	assert.Contains(t, panicMessage, "demo",
 		"safe flag values like 'demo' should appear unmasked in the panic message")
-	assert.True(t, strings.Contains(panicMessage, "please report an issue"),
-		"sanity check that this is indeed the finding-01 code path")
+	assert.Contains(t, panicMessage, "please report an issue")
 }

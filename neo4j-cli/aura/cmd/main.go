@@ -9,7 +9,7 @@ import (
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/redact"
-	aura "github.com/neo4j/cli/neo4j-cli/aura"
+	"github.com/neo4j/cli/neo4j-cli/aura"
 	"github.com/spf13/afero"
 )
 

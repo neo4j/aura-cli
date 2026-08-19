@@ -30,12 +30,12 @@ type ServerError struct {
 	Error string `json:"error"`
 }
 
-func unexpectedStatusError(statusCode int, resBody ...string) error {
-	var bodyStr string
-	if len(resBody) > 0 && resBody[0] != "" {
-		bodyStr = " and body " + resBody[0]
-	}
-	return clierr.NewFatalError("unexpected error [status %d]%s running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, bodyStr, redact.CapturedArgs())
+func unexpectedStatusError(statusCode int) error {
+	return clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, redact.CapturedArgs())
+}
+
+func unexpectedStatusErrorWithBody(statusCode int, body string) error {
+	return clierr.NewFatalError("unexpected error [status %d] and body %s running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, body, redact.CapturedArgs())
 }
 
 func handleResponseError(res *http.Response, credential *credentials.AuraCredential, cfg *clicfg.Config) error {
@@ -144,7 +144,7 @@ func handleResponseError(res *http.Response, credential *credentials.AuraCredent
 
 		return clierr.NewUpstreamError("%s", messages)
 	default:
-		panic(unexpectedStatusError(statusCode, string(resBody)))
+		panic(unexpectedStatusErrorWithBody(statusCode, string(resBody)))
 	}
 }
 

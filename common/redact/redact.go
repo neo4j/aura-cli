@@ -90,7 +90,8 @@ var booleanFlags = map[string]bool{
 	"vector-optimized":       true,
 	"graph-analytics-plugin": true,
 	"progress":               true,
-	"show-progress":          true,
+	"help":                   true,
+	"version":                true,
 }
 
 func Args(args []string) []string {

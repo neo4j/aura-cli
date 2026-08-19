@@ -19,10 +19,6 @@ type auraCredentialsOnDisk struct {
 	Credentials       []auraCredentialOnDisk `json:"credentials"`
 }
 
-// auraCredentialOnDisk embeds *AuraCredential and shadows only the ClientSecret field
-// with a plain string type. This ensures that new fields added to AuraCredential
-// are automatically included in the on-disk representation without requiring
-// manual edits to this mirror struct.
 type auraCredentialOnDisk struct {
 	*AuraCredential
 	ClientSecret string `json:"client-secret"`

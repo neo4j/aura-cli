@@ -249,9 +249,9 @@ func TestUnauthorizedAccessTokenRefresh(t *testing.T) {
 	{
 		"name": "test-cred",
 		"client-id": "",
-		"client-secret": "",
 		"access-token": "",
-		"token-expiry": 0
+		"token-expiry": 0,
+		"client-secret": ""
 	}
 ]`)
 

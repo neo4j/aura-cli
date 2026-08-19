@@ -121,6 +121,20 @@ func TestRoundTripSaveAndLoad(t *testing.T) {
 	}
 }
 
+func TestLoadPartialCredentialObjectDoesNotPanic(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	afero.WriteFile(fs, "/test/neo4j/cli/credentials.json", []byte(`{"aura":{"credentials":[{"client-secret":"s"}]}}`), 0o644)
+
+	c := NewCredentials(fs, "/test")
+
+	if len(c.Aura.Credentials) != 1 {
+		t.Fatalf("expected 1 credential after load, got %d", len(c.Aura.Credentials))
+	}
+	if c.Aura.Credentials[0].ClientSecret.Reveal() != "s" {
+		t.Errorf("expected secret 's', got '%s'", c.Aura.Credentials[0].ClientSecret.Reveal())
+	}
+}
+
 // TestJSONMarshalingPreservesSecretMasking verifies that when AuraCredentials
 // are marshaled to JSON (e.g., for display), the secret is masked.
 func TestJSONMarshalingPreservesSecretMasking(t *testing.T) {

@@ -175,34 +175,6 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	return result
 }
 
-// MarshalJSON ensures the on-disk JSON representation has the correct field order
-// by explicitly controlling the marshaling of the embedded AuraCredential fields
-// with the shadowed ClientSecret field in the correct position.
-func (c auraCredentialOnDisk) MarshalJSON() ([]byte, error) {
-	if c.AuraCredential == nil {
-		return json.Marshal(struct {
-			Name         string `json:"name"`
-			ClientId     string `json:"client-id"`
-			ClientSecret string `json:"client-secret"`
-			AccessToken  string `json:"access-token"`
-			TokenExpiry  int64  `json:"token-expiry"`
-		}{})
-	}
-	return json.Marshal(struct {
-		Name         string `json:"name"`
-		ClientId     string `json:"client-id"`
-		ClientSecret string `json:"client-secret"`
-		AccessToken  string `json:"access-token"`
-		TokenExpiry  int64  `json:"token-expiry"`
-	}{
-		Name:         c.AuraCredential.Name,
-		ClientId:     c.AuraCredential.ClientId,
-		ClientSecret: c.ClientSecret,
-		AccessToken:  c.AuraCredential.AccessToken,
-		TokenExpiry:  c.AuraCredential.TokenExpiry,
-	})
-}
-
 // toAuraCredentials converts from the on-disk format back to in-memory format with redact.Secret.
 func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredentials {
 	result := &AuraCredentials{
@@ -211,7 +183,10 @@ func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredenti
 		onUpdate:          onUpdate,
 	}
 	for i, cred := range od.Credentials {
-		newCred := *cred.AuraCredential
+		newCred := AuraCredential{}
+		if cred.AuraCredential != nil {
+			newCred = *cred.AuraCredential
+		}
 		newCred.ClientSecret = redact.NewSecret(cred.ClientSecret)
 		result.Credentials[i] = &newCred
 	}
