@@ -247,9 +247,9 @@ func TestArgs(t *testing.T) {
 			testName: "tenant ID not masked",
 		},
 		{
-			name:     "dbid safe",
-			args:     []string{"--dbid", "db-12345"},
-			want:     []string{"--dbid", "db-12345"},
+			name:     "db-id safe",
+			args:     []string{"--db-id", "db-12345"},
+			want:     []string{"--db-id", "db-12345"},
 			testName: "database ID not masked",
 		},
 		{
@@ -348,6 +348,12 @@ func TestArgs(t *testing.T) {
 			want:     []string{"--customer-managed-key-id", "key-abc-123"},
 			testName: "customer managed key ID not masked",
 		},
+		{
+			name:     "unsafe flag with dash-prefixed secret",
+			args:     []string{"--client-secret", "-generated-secret-starting-with-dash"},
+			want:     []string{"--client-secret", "****"},
+			testName: "unsafe flag value starting with dash is masked",
+		},
 	}
 
 	for _, tt := range tests {
@@ -382,7 +388,7 @@ func TestArgsMasksSecrets(t *testing.T) {
 		{"instance-password", "instance-password", true},
 		{"instance-username", "instance-username", false},
 		{"name", "name", false},
-		{"id", "id", false},
+		{"instance-id", "instance-id", false},
 		{"tenant-id", "tenant-id", false},
 		{"output", "output", false},
 	}
