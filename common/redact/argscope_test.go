@@ -14,24 +14,20 @@ import (
 	"testing"
 )
 
-// TestArgScopeRegression ensures that raw os.Args[1:] reads are confined to
-// the sanctioned capture points in neo4j-cli/aura/cmd/main.go and neo4j-cli/main.go (added via task-003)
-// and never leak elsewhere in the codebase. This guards against regressions where
-// unredacted argument slices reach panic/error output paths.
+// TestArgScopeRegression ensures that raw os.Args reads are confined to
+// the sanctioned capture points in neo4j-cli/aura/cmd/main.go and neo4j-cli/main.go.
+// This guards against regressions where unredacted argument slices leak elsewhere.
 func TestArgScopeRegression(t *testing.T) {
-	// Sanctioned locations where os.Args[1:] (or os.Args slicing) is permitted.
-	// Task-003 introduced capture points in both main() entrypoints.
+	// Sanctioned locations where os.Args access is permitted.
 	sanctionedLocations := map[string]bool{
-		// This test file itself (guard definition)
 		"common/redact/argscope_test.go": true,
-		// Sanctioned capture points (task-003)
-		"neo4j-cli/aura/cmd/main.go": true,
-		"neo4j-cli/main.go":           true,
+		"neo4j-cli/aura/cmd/main.go":     true,
+		"neo4j-cli/main.go":              true,
 	}
 
-	// Pattern to find raw os.Args reads: os.Args[...] where ... is any slice/index expression
-	// This catches: os.Args[1:], os.Args[0], os.Args[1:], etc.
-	osArgsPattern := regexp.MustCompile(`\bos\.Args\s*\[`)
+	// Pattern to find raw os.Args reads: matches any reference to os.Args
+	// This catches: os.Args[1:], args := os.Args, fmt.Print(os.Args), etc.
+	osArgsPattern := regexp.MustCompile(`\bos\.Args\b`)
 
 	repoRoot := findRepoRoot(t)
 	violations := []string{}
@@ -55,21 +51,17 @@ func TestArgScopeRegression(t *testing.T) {
 			return nil
 		}
 
-		// Get the relative path from repo root for checking against sanctioned locations
 		relPath, err := filepath.Rel(repoRoot, path)
 		if err != nil {
 			return err
 		}
 
-		// Normalize path separators to forward slashes for consistency
 		relPath = filepath.ToSlash(relPath)
 
-		// Check if this file is in a sanctioned location
 		if sanctionedLocations[relPath] {
 			return nil
 		}
 
-		// Examine the file line by line for os.Args[ patterns
 		file, err := os.Open(path)
 		if err != nil {
 			return err
@@ -88,9 +80,13 @@ func TestArgScopeRegression(t *testing.T) {
 				continue
 			}
 
-			// Check for os.Args[ pattern (catches all slice/index operations)
-			if osArgsPattern.MatchString(line) {
-				// Found a raw os.Args read outside a sanctioned location
+			// Strip inline comments for checking
+			codePart := line
+			if idx := strings.Index(line, "//"); idx >= 0 {
+				codePart = line[:idx]
+			}
+
+			if osArgsPattern.MatchString(codePart) {
 				violations = append(violations,
 					fmt.Sprintf("%s:%d: raw os.Args read: %s",
 						relPath, lineNum, strings.TrimSpace(line)))
@@ -115,39 +111,21 @@ func TestArgScopeRegression(t *testing.T) {
 	}
 }
 
-// findRepoRoot finds the root of the aura-cli repository by walking up from the test file.
 func findRepoRoot(t *testing.T) string {
-	// Get the directory of this test file
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("Unable to determine test file location")
 	}
 
 	current := filepath.Dir(filename)
-
-	// Walk up until we find a go.mod file
 	for {
-		gomod := filepath.Join(current, "go.mod")
-		if _, err := os.Stat(gomod); err == nil {
-			// Found the go.mod, this should be our repo root
-			// But we want the parent if we're in a subdirectory with go.mod
-			// For aura-cli, the root should have go.mod at the top level
-			// Let's verify by checking for typical repo markers
-			if fileExists(filepath.Join(current, ".git")) {
-				return current
-			}
+		if _, err := os.Stat(filepath.Join(current, ".git")); err == nil {
+			return current
 		}
-
 		parent := filepath.Dir(current)
 		if parent == current {
-			// Reached filesystem root without finding .git
 			t.Fatalf("Could not find repository root")
 		}
 		current = parent
 	}
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
 }

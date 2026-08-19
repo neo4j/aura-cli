@@ -36,44 +36,53 @@ func (s Secret) Reveal() string {
 	return s.value
 }
 
-// SafeFlags is a map of flag names that are safe to echo verbatim in diagnostic output.
+// safeFlags is a map of flag names that are safe to echo verbatim in diagnostic output.
 // Any flag not in this map is considered unsafe and will be masked by Args().
-var SafeFlags = map[string]bool{
+var safeFlags = map[string]bool{
 	// Identifiers and names
-	"name":                  true,
-	"id":                    true,
-	"instance-id":           true,
-	"tenant-id":             true,
-	"customer-managed-key-id": true,
-	"dbid":                  true,
-	"data-api-id":           true,
-	"type":                  true,
+	"name":                     true,
+	"instance-id":              true,
+	"tenant-id":                true,
+	"customer-managed-key-id":  true,
+	"db-id":                    true,
+	"data-api-id":              true,
+	"type":                     true,
+	"deployment-id":            true,
+	"key-id":                   true,
+	"server-id":                true,
+	"source-instance-id":       true,
+	"source-snapshot-id":       true,
+	"description":              true,
+	"project-id":               true,
+	"organization-id":          true,
+	"import-model-id":          true,
 
 	// Output and format options
-	"output":                true,
-	"format":                true,
+	"output":                   true,
 
 	// Configuration endpoints (not secrets themselves)
-	"auth-url":              true,
-	"base-url":              true,
+	"auth-url":                 true,
+	"base-url":                 true,
 
 	// Feature flags and non-secret toggles
-	"await":                 true,
-	"graph-analytics-plugin": true,
+	"await":                    true,
+	"graph-analytics-plugin":   true,
 
 	// Instance configuration (non-secret metadata)
-	"version":               true,
-	"region":                true,
-	"memory":                true,
-	"cloud-provider":        true,
+	"version":                  true,
+	"region":                   true,
+	"memory":                   true,
+	"cloud-provider":           true,
 
 	// Usernames (not secret by themselves, but paired with passwords)
-	"instance-username":     true,
+	"instance-username":        true,
 
-	// Additional identifiers
-	"credential-id":         true,
-	"project-id":            true,
-	"origin":                true,
+	// Data/Time related
+	"date":                     true,
+	"ttl":                      true,
+
+	// Data import
+	"import-type":              true,
 }
 
 // Args takes a slice of command-line arguments (as os.Args[1:] is shaped)
@@ -103,14 +112,19 @@ func Args(args []string) []string {
 
 				// Remove the old arg and replace with masked version if needed
 				result[len(result)-1] = arg[:strings.Index(arg, "=")+1] + maskIfUnsafe(flagName, value)
-			} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				// The next argument is the value for this flag
-				i++
-				value := args[i]
-				if SafeFlags[flagName] {
-					result = append(result, value)
-				} else {
-					result = append(result, mask)
+			} else if i+1 < len(args) {
+				// For unsafe flags, mask the next argument regardless of whether it starts with dash.
+				// For safe flags, only consume the next argument if it doesn't look like a flag.
+				isSafeFlag := safeFlags[flagName]
+				nextLooksLikeFlag := strings.HasPrefix(args[i+1], "-")
+				if !isSafeFlag || !nextLooksLikeFlag {
+					i++
+					value := args[i]
+					if isSafeFlag {
+						result = append(result, value)
+					} else {
+						result = append(result, mask)
+					}
 				}
 			}
 		}
@@ -120,7 +134,7 @@ func Args(args []string) []string {
 }
 
 func maskIfUnsafe(flagName, value string) string {
-	if SafeFlags[flagName] {
+	if safeFlags[flagName] {
 		return value
 	}
 	return mask
