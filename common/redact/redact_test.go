@@ -5,6 +5,7 @@ package redact
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
