@@ -3,8 +3,6 @@
 
 package redact
 
-// capturedArgs stores the redacted command-line arguments.
-// This is set by main() at the top of each CLI entrypoint and read by error/panic handlers.
 var capturedArgs []string
 
 func CaptureArgs(args []string) {

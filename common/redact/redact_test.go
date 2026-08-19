@@ -384,7 +384,6 @@ func TestArgs(t *testing.T) {
 }
 
 func TestArgsMasksSecrets(t *testing.T) {
-	// Test that common secret-bearing flags are properly masked
 	tests := []struct {
 		name       string
 		flagName   string
