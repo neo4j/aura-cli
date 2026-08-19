@@ -19,7 +19,6 @@ type auraCredentialsOnDisk struct {
 	Credentials       []auraCredentialOnDisk     `json:"credentials"`
 }
 
-// auraCredentialOnDisk is the on-disk JSON representation of AuraCredential.
 type auraCredentialOnDisk struct {
 	Name            string `json:"name"`
 	ClientId        string `json:"client-id"`
@@ -59,7 +58,6 @@ func (c *Credentials) load() {
 		},
 	}
 	if fileHasData {
-		// Unmarshal into the on-disk representation, then convert to the in-memory type
 		var onDisk struct {
 			Aura auraCredentialsOnDisk `json:"aura"`
 		}
@@ -77,7 +75,6 @@ func (c *Credentials) load() {
 }
 
 func (c *Credentials) save() {
-	// Convert the in-memory representation to the on-disk representation
 	onDisk := struct {
 		Aura auraCredentialsOnDisk `json:"aura"`
 	}{

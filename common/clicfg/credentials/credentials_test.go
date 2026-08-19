@@ -16,26 +16,22 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	c := NewCredentials(fs, "/test")
 
-	// Add a credential
 	err := c.Aura.Add("test-cred", "test-client-id", "test-secret")
 	if err != nil {
 		t.Fatalf("failed to add credential: %v", err)
 	}
 
-	// Set the default
 	err = c.Aura.SetDefault("test-cred")
 	if err != nil {
 		t.Fatalf("failed to set default: %v", err)
 	}
 
-	// Read the saved JSON
 	data, _ := afero.ReadFile(fs, "/test/neo4j/cli/credentials.json")
 	var parsed map[string]interface{}
 	if err := json.Unmarshal(data, &parsed); err != nil {
 		t.Fatalf("failed to parse saved JSON: %v", err)
 	}
 
-	// Verify the structure uses a typed representation
 	auraData, ok := parsed["aura"].(map[string]interface{})
 	if !ok {
 		t.Fatal("aura field is not a map")
@@ -55,7 +51,6 @@ func TestOnDiskJSONStructure(t *testing.T) {
 		t.Fatal("credential is not a map")
 	}
 
-	// Verify all expected fields are present
 	expectedFields := map[string]bool{
 		"name":            true,
 		"client-id":       true,

@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestCredentialListMasksClientSecret verifies that the JSON output from
-// `credential list` masks the client_secret field, not exposing the real value.
 func TestCredentialListMasksClientSecret(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
@@ -48,9 +46,6 @@ func TestCredentialListMasksClientSecret(t *testing.T) {
 	assert.Equal(t, "****", credentials[0]["client-secret"], "client-secret should be masked in JSON")
 }
 
-// TestCredentialListFileStillContainsRealSecret verifies that while the JSON
-// output masks the secret, the on-disk credentials file still contains the real
-// unredacted secret value.
 func TestCredentialListFileStillContainsRealSecret(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()

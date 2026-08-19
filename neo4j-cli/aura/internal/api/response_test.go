@@ -1,10 +1,6 @@
 // Copyright (c) "Neo4j"
 // Neo4j Sweden AB [http://neo4j.com]
 
-// Security-audit finding 01 test: asserts that handleResponseError's branches
-// do not leak command-line secrets into panic messages. Redacted args are used
-// instead of raw os.Args in error output.
-
 package api
 
 import (

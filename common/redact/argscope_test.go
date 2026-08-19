@@ -14,33 +14,24 @@ import (
 	"testing"
 )
 
-// TestArgScopeRegression ensures that raw os.Args reads are confined to
-// the sanctioned capture points in neo4j-cli/aura/cmd/main.go and neo4j-cli/main.go.
-// This guards against regressions where unredacted argument slices leak elsewhere.
 func TestArgScopeRegression(t *testing.T) {
-	// Sanctioned locations where os.Args access is permitted.
 	sanctionedLocations := map[string]bool{
 		"common/redact/argscope_test.go": true,
 		"neo4j-cli/aura/cmd/main.go":     true,
 		"neo4j-cli/main.go":              true,
 	}
 
-	// Pattern to find raw os.Args reads: matches any reference to os.Args
-	// This catches: os.Args[1:], args := os.Args, fmt.Print(os.Args), etc.
 	osArgsPattern := regexp.MustCompile(`\bos\.Args\b`)
 
 	repoRoot := findRepoRoot(t)
 	violations := []string{}
 
-	// Walk the repository and examine all .go files
 	err := filepath.Walk(repoRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// Skip directories and non-.go files
 		if info.IsDir() {
-			// Skip hidden directories (.git, .claude, etc.)
 			if strings.HasPrefix(info.Name(), ".") {
 				return filepath.SkipDir
 			}
@@ -75,12 +66,10 @@ func TestArgScopeRegression(t *testing.T) {
 			line := scanner.Text()
 			trimmedLine := strings.TrimSpace(line)
 
-			// Skip comment-only lines
 			if strings.HasPrefix(trimmedLine, "//") {
 				continue
 			}
 
-			// Strip inline comments for checking
 			codePart := line
 			if idx := strings.Index(line, "//"); idx >= 0 {
 				codePart = line[:idx]
@@ -104,7 +93,6 @@ func TestArgScopeRegression(t *testing.T) {
 		t.Fatalf("Failed to walk repository: %v", err)
 	}
 
-	// If violations were found, fail with a detailed report
 	if len(violations) > 0 {
 		t.Errorf("Found raw os.Args reads outside sanctioned locations:\n%s",
 			strings.Join(violations, "\n"))

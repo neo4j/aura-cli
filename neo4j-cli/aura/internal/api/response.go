@@ -30,7 +30,6 @@ type ServerError struct {
 	Error string `json:"error"`
 }
 
-// unexpectedStatusError creates a panic with a message including the status code and redacted args.
 func unexpectedStatusError(statusCode int, resBody ...string) error {
 	var bodyStr string
 	if len(resBody) > 0 && resBody[0] != "" {
@@ -165,8 +164,6 @@ func getHeaders(credential *credentials.AuraCredential, cfg *clicfg.Config) (htt
 	}, nil
 }
 
-// Response types
-
 const (
 	InstanceStatusCreating      string = "creating"
 	InstanceStatusDestroying    string = "destroying"
@@ -190,7 +187,6 @@ const (
 	SnapshotStatusFailed     string = "Failed"
 )
 
-// Response Body of Create and Get Instance for successful requests
 type CreateInstanceResponse struct {
 	Data struct {
 		Id            string
@@ -210,7 +206,6 @@ const (
 	CMKStatusPending = "pending"
 )
 
-// Response Body of Create and Get Instance for successful requests
 type CreateCMKResponse struct {
 	Data struct {
 		Id     string
@@ -218,14 +213,12 @@ type CreateCMKResponse struct {
 	}
 }
 
-// Response Body of Create and Get Instance for successful requests
 type CreateSnapshotResponse struct {
 	Data struct {
 		SnapshotId string `json:"snapshot_id"`
 	}
 }
 
-// Response Body of Create GraphQL Data API for successful requests
 type CreateGraphQLDataApiResponse struct {
 	Data struct {
 		Id                      string

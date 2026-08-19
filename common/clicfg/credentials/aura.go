@@ -160,11 +160,7 @@ func (credential *AuraCredential) HasValidAccessToken() bool {
 	return true
 }
 
-// Conversion methods for on-disk serialization.
-// These methods are defined in aura.go (not credentials.go) to keep all credential-related logic together.
-
-// toOnDisk converts AuraCredentials to its on-disk representation,
-// calling Reveal() once on the secret.
+// toOnDisk calls Reveal() once on the secret for storage.
 func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	result := auraCredentialsOnDisk{
 		DefaultCredential: c.DefaultCredential,
@@ -182,8 +178,7 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	return result
 }
 
-// toAuraCredentials converts the on-disk representation to AuraCredentials,
-// wrapping the secret in redact.Secret.
+// toAuraCredentials wraps the secret in redact.Secret.
 func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredentials {
 	result := &AuraCredentials{
 		DefaultCredential: od.DefaultCredential,
