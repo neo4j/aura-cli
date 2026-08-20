@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSecretString(t *testing.T) {
@@ -42,11 +45,9 @@ func TestSecretString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewSecret(tt.value)
 			got := s.String()
-			if got != mask {
-				t.Errorf("String() = %q, want %q", got, mask)
-			}
-			if len(tt.value) > 0 && got == tt.value {
-				t.Errorf("String() leaked the actual value: %q", got)
+			assert.Equal(t, mask, got, "String()")
+			if len(tt.value) > 0 {
+				assert.NotEqual(t, tt.value, got, "String() leaked the actual value")
 			}
 		})
 	}
@@ -89,16 +90,10 @@ func TestSecretMarshalJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewSecret(tt.value)
 			got, err := s.MarshalJSON()
-			if err != nil {
-				t.Errorf("MarshalJSON() error = %v", err)
-			}
+			require.NoError(t, err, "MarshalJSON()")
 			gotString := string(got)
-			if gotString != tt.wantString {
-				t.Errorf("MarshalJSON() = %s, want %s", gotString, tt.wantString)
-			}
-			if string(got) == `"`+tt.value+`"` {
-				t.Errorf("MarshalJSON() leaked the actual value: %s", string(got))
-			}
+			assert.Equal(t, tt.wantString, gotString, "MarshalJSON()")
+			assert.NotEqual(t, `"`+tt.value+`"`, gotString, "MarshalJSON() leaked the actual value")
 		})
 	}
 }
@@ -134,9 +129,7 @@ func TestSecretReveal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := NewSecret(tt.value)
 			got := s.Reveal()
-			if got != tt.value {
-				t.Errorf("Reveal() = %q, want %q", got, tt.value)
-			}
+			assert.Equal(t, tt.value, got, "Reveal()")
 		})
 	}
 }
@@ -171,29 +164,20 @@ func TestSecretInJSON(t *testing.T) {
 				Safe:   "visible",
 			}
 			data, err := json.Marshal(ts)
-			if err != nil {
-				t.Errorf("json.Marshal error = %v", err)
-			}
+			require.NoError(t, err, "json.Marshal")
 
 			var result map[string]interface{}
 			err = json.Unmarshal(data, &result)
-			if err != nil {
-				t.Errorf("json.Unmarshal error = %v", err)
-			}
+			require.NoError(t, err, "json.Unmarshal")
 
-			secretVal := result["secret"].(string)
-			if secretVal != mask {
-				t.Errorf("JSON marshaled secret = %q, want %q", secretVal, mask)
-			}
+			secretVal, ok := result["secret"].(string)
+			require.True(t, ok, "secret field is not a string")
+			assert.Equal(t, mask, secretVal, "JSON marshaled secret")
+			assert.NotEqual(t, tt.secretValue, secretVal, "JSON marshaled secret leaked actual value")
 
-			if secretVal == tt.secretValue {
-				t.Errorf("JSON marshaled secret leaked actual value: %q", secretVal)
-			}
-
-			safeVal := result["safe"].(string)
-			if safeVal != "visible" {
-				t.Errorf("Safe field = %q, want %q", safeVal, "visible")
-			}
+			safeVal, ok := result["safe"].(string)
+			require.True(t, ok, "safe field is not a string")
+			assert.Equal(t, "visible", safeVal, "Safe field")
 		})
 	}
 }
@@ -366,18 +350,10 @@ func TestMaskArgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			got := MaskArgs(tt.args)
-			if len(got) != len(tt.want) {
-				t.Errorf("MaskArgs() returned %d elements, want %d", len(got), len(tt.want))
-			}
+			require.Equal(t, len(tt.want), len(got), "MaskArgs() element count")
 
 			for i, gotArg := range got {
-				if i >= len(tt.want) {
-					t.Errorf("MaskArgs()[%d] unexpected extra element: %q", i, gotArg)
-					continue
-				}
-				if gotArg != tt.want[i] {
-					t.Errorf("MaskArgs()[%d] = %q, want %q", i, gotArg, tt.want[i])
-				}
+				assert.Equal(t, tt.want[i], gotArg, "MaskArgs()[%d]", i)
 			}
 		})
 	}
@@ -404,21 +380,13 @@ func TestMaskArgsMasksSecrets(t *testing.T) {
 			args := []string{"--" + tt.flagName, "test-value"}
 			result := MaskArgs(args)
 
-			if len(result) != 2 {
-				t.Fatalf("MaskArgs() returned %d elements, want 2", len(result))
-			}
+			require.Len(t, result, 2, "MaskArgs() element count")
 
 			if tt.shouldMask {
-				if result[1] != mask {
-					t.Errorf("Flag %s: got %q, want %q (masked)", tt.flagName, result[1], mask)
-				}
+				assert.Equal(t, mask, result[1], "flag %s", tt.flagName)
 			} else {
-				if result[1] == mask {
-					t.Errorf("Flag %s: got masked value, should not be masked", tt.flagName)
-				}
-				if result[1] != "test-value" {
-					t.Errorf("Flag %s: got %q, want %q", tt.flagName, result[1], "test-value")
-				}
+				assert.NotEqual(t, mask, result[1], "flag %s: got masked value, should not be masked", tt.flagName)
+				assert.Equal(t, "test-value", result[1], "flag %s", tt.flagName)
 			}
 		})
 	}
@@ -449,13 +417,11 @@ func TestMaskArgsPreservesStructure(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := MaskArgs(tt.args)
 
-			if len(result) != len(tt.args) {
-				t.Fatalf("MaskArgs() changed argument count: got %d, want %d", len(result), len(tt.args))
-			}
+			require.Len(t, result, len(tt.args), "MaskArgs() changed argument count")
 
 			for i, arg := range tt.args {
-				if strings.HasPrefix(arg, "--") && result[i] != arg {
-					t.Errorf("flag name at index %d changed: got %q, want %q", i, result[i], arg)
+				if strings.HasPrefix(arg, "--") {
+					assert.Equal(t, arg, result[i], "flag name at index %d changed", i)
 				}
 			}
 		})
