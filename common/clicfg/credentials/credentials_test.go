@@ -18,10 +18,10 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	c := NewCredentials(fs, "/test")
 
-	err := c.Aura.Add("test-cred", "test-client-id", "test-secret")
+	err := c.Add("test-cred", "test-client-id", "test-secret")
 	assert.NoError(t, err, "failed to add credential")
 
-	err = c.Aura.SetDefault("test-cred")
+	err = c.SetDefault("test-cred")
 	assert.NoError(t, err, "failed to set default")
 
 	data, _ := afero.ReadFile(fs, "/test/neo4j/cli/credentials.json")
@@ -98,8 +98,8 @@ func TestRoundTripSaveAndLoad(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	c1 := NewCredentials(fs, "/test")
-	c1.Aura.Add("cred1", "id1", "secret1")
-	c1.Aura.SetDefault("cred1")
+	c1.Add("cred1", "id1", "secret1")
+	c1.SetDefault("cred1")
 
 	c2 := NewCredentials(fs, "/test")
 
@@ -127,7 +127,7 @@ func TestLoadPartialCredentialObjectDoesNotPanic(t *testing.T) {
 func TestJSONMarshalingPreservesSecretMasking(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	c := NewCredentials(fs, "/test")
-	c.Aura.Add("test-cred", "test-id", "test-secret")
+	c.Add("test-cred", "test-id", "test-secret")
 
 	data, err := json.Marshal(c.Aura.Credentials)
 	assert.NoError(t, err, "failed to marshal credentials")
@@ -152,12 +152,12 @@ func TestConcurrentSaveDoesNotLoseAnEarlierWrite(t *testing.T) {
 	processB := NewCredentials(fs, configPrefix)
 
 	// Process A finishes first: `credential add --name first ...`.
-	assert.NoError(t, processA.Aura.Add("first", "client-a", "secret-a"))
+	assert.NoError(t, processA.Add("first", "client-a", "secret-a"))
 
 	// Process B finishes second — e.g. a routine token refresh triggering a
 	// save as a side effect, or a second `credential add`. It never re-read
 	// the file, so its in-memory view still thinks the store is empty.
-	assert.NoError(t, processB.Aura.Add("second", "client-b", "secret-b"))
+	assert.NoError(t, processB.Add("second", "client-b", "secret-b"))
 
 	// A fresh read of the file is what the next command would see.
 	onDisk := NewCredentials(fs, configPrefix)
@@ -168,4 +168,31 @@ func TestConcurrentSaveDoesNotLoseAnEarlierWrite(t *testing.T) {
 
 	assert.ElementsMatch(t, []string{"first", "second"}, names,
 		"a save from one process must not silently erase a credential a concurrently-running process already saved")
+}
+
+func TestRemoveThenReaddSameNameWithinProcessDoesNotLoseCredential(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	const configPrefix = "/config"
+
+	// A single process:
+	// 1. Loads an empty store
+	cli := NewCredentials(fs, configPrefix)
+
+	// 2. Adds a credential
+	assert.NoError(t, cli.Add("test", "client-id", "client-secret"))
+
+	// 3. Removes it
+	assert.NoError(t, cli.Remove("test"))
+
+	// 4. Re-adds it with the same name (but new client ID/secret)
+	assert.NoError(t, cli.Add("test", "new-client-id", "new-client-secret"))
+
+	// 5. A fresh read of the file should have the credential
+	onDisk := NewCredentials(fs, configPrefix)
+	cred, err := onDisk.Aura.Get("test")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, cred)
+	assert.Equal(t, "new-client-id", cred.ClientId)
+	assert.Equal(t, "new-client-secret", cred.ClientSecret.Reveal())
 }

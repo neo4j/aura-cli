@@ -14,7 +14,7 @@ func NewRemoveCmd(cfg *clicfg.Config) *cobra.Command {
 		Short: "Removes a credential",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.Credentials.Aura.Remove(args[0])
+			return cfg.Credentials.Remove(args[0])
 		},
 	}
 }

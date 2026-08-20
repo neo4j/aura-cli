@@ -15,7 +15,6 @@ import (
 type AuraCredentials struct {
 	DefaultCredential string            `json:"default-credential"`
 	Credentials       []*AuraCredential `json:"credentials"`
-	onUpdate          func()
 }
 
 func (c *AuraCredentials) List() []*AuraCredential {
@@ -33,59 +32,6 @@ func (config *AuraCredentials) Print(writer io.Writer) error {
 	return nil
 }
 
-func (c *AuraCredentials) Add(name string, clientId string, clientSecret string) error {
-	auraCredentials := c.Credentials
-	for _, credential := range auraCredentials {
-		if credential.Name == name {
-			return clierr.NewUsageError("already have credential with name %s", name)
-		}
-	}
-
-	c.Credentials = append(c.Credentials, &AuraCredential{
-		Name:         name,
-		ClientId:     clientId,
-		ClientSecret: redact.NewSecret(clientSecret),
-	})
-	if len(c.Credentials) == 1 {
-		c.SetDefault(name)
-	}
-	c.onUpdate()
-	return nil
-}
-
-func (c *AuraCredentials) Remove(name string) error {
-	var indexToRemove = -1
-
-	for i, credential := range c.Credentials {
-		if credential.Name == name {
-			indexToRemove = i
-			break
-		}
-	}
-
-	if indexToRemove == -1 {
-		return clierr.NewUsageError("could not find credential with name %s to remove", name)
-	}
-
-	if c.DefaultCredential == name {
-		c.DefaultCredential = ""
-	}
-
-	c.Credentials = append(c.Credentials[:indexToRemove], c.Credentials[indexToRemove+1:]...)
-	c.onUpdate()
-	return nil
-}
-
-func (c *AuraCredentials) SetDefault(name string) error {
-	if !c.credentialExists(name) {
-		return clierr.NewUsageError("could not find credential with name %s", name)
-	}
-
-	c.DefaultCredential = name
-	c.onUpdate()
-	return nil
-}
-
 func (c *AuraCredentials) GetDefault() (*AuraCredential, error) {
 	if c.DefaultCredential == "" {
 		return nil, clierr.NewUsageError("default credential not set, please follow the instructions at https://neo4j.com/docs/aura/classic/platform/api/authentication/#_creating_credentials and use the `credential add` subcommand to add the created credentials")
@@ -100,42 +46,6 @@ func (c *AuraCredentials) Get(name string) (*AuraCredential, error) {
 		}
 	}
 	return nil, clierr.NewUsageError("could not find credential with name %s", name)
-}
-
-func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken string, expiresInSeconds int64) *AuraCredential {
-	credential, err := c.Get(cred.Name)
-	if err != nil {
-		panic(err)
-	}
-	const expireToleranceSeconds = 60
-
-	now := time.Now().UnixMilli()
-
-	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
-	credential.AccessToken = redact.NewSecret(accessToken)
-	c.onUpdate()
-	return credential
-}
-
-func (c *AuraCredentials) ClearAccessToken(cred *AuraCredential) (*AuraCredential, error) {
-	credential, err := c.Get(cred.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	credential.TokenExpiry = 0
-	credential.AccessToken = redact.NewSecret("")
-	c.onUpdate()
-	return credential, nil
-}
-
-func (c *AuraCredentials) credentialExists(name string) bool {
-	for _, credential := range c.Credentials {
-		if credential.Name == name {
-			return true
-		}
-	}
-	return false
 }
 
 type AuraCredential struct {
@@ -175,11 +85,10 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	return result
 }
 
-func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredentials {
+func (od auraCredentialsOnDisk) toAuraCredentials() *AuraCredentials {
 	result := &AuraCredentials{
 		DefaultCredential: od.DefaultCredential,
 		Credentials:       make([]*AuraCredential, len(od.Credentials)),
-		onUpdate:          onUpdate,
 	}
 	for i, cred := range od.Credentials {
 		newCred := cred.AuraCredential
