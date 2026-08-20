@@ -34,7 +34,7 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	credentialsData, ok := auraData["credentials"].([]interface{})
 	require.True(t, ok, "credentials field is not an array")
 
-	assert.Equal(t, 1, len(credentialsData), "expected 1 credential")
+	require.Equal(t, 1, len(credentialsData), "expected 1 credential")
 
 	credentialMap, ok := credentialsData[0].(map[string]interface{})
 	require.True(t, ok, "credential is not a map")
