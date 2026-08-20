@@ -45,6 +45,7 @@ func (c *AuraCredentials) Add(name string, clientId string, clientSecret string)
 		Name:         name,
 		ClientId:     clientId,
 		ClientSecret: redact.NewSecret(clientSecret),
+		AccessToken:  redact.NewSecret(""),
 	})
 	if len(c.Credentials) == 1 {
 		c.SetDefault(name)
@@ -112,7 +113,7 @@ func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken st
 	now := time.Now().UnixMilli()
 
 	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
-	credential.AccessToken = accessToken
+	credential.AccessToken = redact.NewSecret(accessToken)
 	c.onUpdate()
 	return credential
 }
@@ -124,7 +125,7 @@ func (c *AuraCredentials) ClearAccessToken(cred *AuraCredential) (*AuraCredentia
 	}
 
 	credential.TokenExpiry = 0
-	credential.AccessToken = ""
+	credential.AccessToken = redact.NewSecret("")
 	c.onUpdate()
 	return credential, nil
 }
@@ -142,14 +143,14 @@ type AuraCredential struct {
 	Name         string        `json:"name"`
 	ClientId     string        `json:"client-id"`
 	ClientSecret redact.Secret `json:"client-secret"`
-	AccessToken  string        `json:"access-token"`
+	AccessToken  redact.Secret `json:"access-token"`
 	TokenExpiry  int64         `json:"token-expiry"`
 }
 
 func (credential *AuraCredential) HasValidAccessToken() bool {
 	now := time.Now().UnixMilli()
 
-	if credential.AccessToken == "" {
+	if credential.AccessToken.Reveal() == "" {
 		return false
 	}
 
@@ -169,6 +170,7 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 		result.Credentials[i] = auraCredentialOnDisk{
 			AuraCredential: *cred,
 			ClientSecret:   cred.ClientSecret.Reveal(),
+			AccessToken:    cred.AccessToken.Reveal(),
 		}
 	}
 	return result
@@ -183,6 +185,7 @@ func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredenti
 	for i, cred := range od.Credentials {
 		newCred := cred.AuraCredential
 		newCred.ClientSecret = redact.NewSecret(cred.ClientSecret)
+		newCred.AccessToken = redact.NewSecret(cred.AccessToken)
 		result.Credentials[i] = &newCred
 	}
 	return result

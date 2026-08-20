@@ -6,7 +6,7 @@ package redact
 var capturedArgs []string
 
 func CaptureArgs(args []string) {
-	capturedArgs = Args(args)
+	capturedArgs = MaskArgs(args)
 }
 
 func CapturedArgs() []string {

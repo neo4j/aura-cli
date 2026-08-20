@@ -198,7 +198,7 @@ func TestSecretInJSON(t *testing.T) {
 	}
 }
 
-func TestArgs(t *testing.T) {
+func TestMaskArgs(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     []string
@@ -365,7 +365,7 @@ func TestArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			got := Args(tt.args)
+			got := MaskArgs(tt.args)
 			if len(got) != len(tt.want) {
 				t.Errorf("Args() returned %d elements, want %d", len(got), len(tt.want))
 			}
@@ -383,7 +383,7 @@ func TestArgs(t *testing.T) {
 	}
 }
 
-func TestArgsMasksSecrets(t *testing.T) {
+func TestMaskArgsMasksSecrets(t *testing.T) {
 	tests := []struct {
 		name       string
 		flagName   string
@@ -402,10 +402,10 @@ func TestArgsMasksSecrets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			args := []string{"--" + tt.flagName, "test-value"}
-			result := Args(args)
+			result := MaskArgs(args)
 
 			if len(result) != 2 {
-				t.Fatalf("Args() returned %d elements, want 2", len(result))
+				t.Fatalf("MaskArgs() returned %d elements, want 2", len(result))
 			}
 
 			if tt.shouldMask {
@@ -424,7 +424,7 @@ func TestArgsMasksSecrets(t *testing.T) {
 	}
 }
 
-func TestArgsPreservesStructure(t *testing.T) {
+func TestMaskArgsPreservesStructure(t *testing.T) {
 	tests := []struct {
 		name string
 		args []string
@@ -447,10 +447,10 @@ func TestArgsPreservesStructure(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := Args(tt.args)
+			result := MaskArgs(tt.args)
 
 			if len(result) != len(tt.args) {
-				t.Fatalf("Args() changed argument count: got %d, want %d", len(result), len(tt.args))
+				t.Fatalf("MaskArgs() changed argument count: got %d, want %d", len(result), len(tt.args))
 			}
 
 			for i, arg := range tt.args {

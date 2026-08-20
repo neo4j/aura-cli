@@ -19,6 +19,7 @@ type auraCredentialsOnDisk struct {
 type auraCredentialOnDisk struct {
 	AuraCredential
 	ClientSecret string `json:"client-secret"`
+	AccessToken  string `json:"access-token"`
 }
 
 type CredentialsFile struct {

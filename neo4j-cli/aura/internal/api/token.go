@@ -18,7 +18,7 @@ import (
 
 func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (string, error) {
 	if credential.HasValidAccessToken() {
-		return credential.AccessToken, nil
+		return credential.AccessToken.Reveal(), nil
 	}
 
 	data := url.Values{}

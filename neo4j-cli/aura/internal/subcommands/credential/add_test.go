@@ -17,7 +17,7 @@ func TestAddFirstCredential(t *testing.T) {
 
 	helper.ExecuteCommand("credential add --name test --client-id testclientid --client-secret testclientsecret")
 
-	helper.AssertCredentialsValue("aura.credentials", `[{"name":"test","client-id":"testclientid","access-token":"","token-expiry":0,"client-secret":"testclientsecret"}]`)
+	helper.AssertCredentialsValue("aura.credentials", `[{"name":"test","client-id":"testclientid","token-expiry":0,"client-secret":"testclientsecret","access-token":""}]`)
 	helper.AssertCredentialsValue("aura.default-credential", "test")
 }
 
@@ -40,6 +40,6 @@ func TestAddAditionalCredentials(t *testing.T) {
 
 	helper.ExecuteCommand("credential add --name test-new --client-id testclientid2 --client-secret testclientsecret2")
 
-	helper.AssertCredentialsValue("aura.credentials", `[{"name":"test","client-id":"testclientid","access-token":"","token-expiry":0,"client-secret":"testclientsecret"},{"name":"test-new","client-id":"testclientid2","access-token":"","token-expiry":0,"client-secret":"testclientsecret2"}]`)
+	helper.AssertCredentialsValue("aura.credentials", `[{"name":"test","client-id":"testclientid","token-expiry":0,"client-secret":"testclientsecret","access-token":""},{"name":"test-new","client-id":"testclientid2","token-expiry":0,"client-secret":"testclientsecret2","access-token":""}]`)
 	helper.AssertCredentialsValue("aura.default-credential", "test")
 }

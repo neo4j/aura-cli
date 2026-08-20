@@ -89,7 +89,7 @@ var booleanFlags = map[string]bool{
 	"help":                   true,
 }
 
-func Args(args []string) []string {
+func MaskArgs(args []string) []string {
 	if len(args) == 0 {
 		return args
 	}
