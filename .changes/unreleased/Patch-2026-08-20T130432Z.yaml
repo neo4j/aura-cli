@@ -1,0 +1,3 @@
+kind: Patch
+body: Fixed a bug where concurrent CLI invocations could silently lose a saved credential during a read-modify-write cycle; now re-reads the credentials file before saving to merge with any concurrent changes.
+time: 2026-08-20T13:04:32Z
