@@ -98,39 +98,42 @@ func parseFlagFromArg(arg string) (flagName string, inlineValue string, hasInlin
 	return flagName, "", false
 }
 
-func maskArg(args []string, i int) (output []string, extraConsumed int) {
-	arg := args[i]
+// maskArg handles the arg at the front of remaining, returning its masked output tokens
+// and how many of remaining's leading elements they account for (1, or 2 if a following
+// value was consumed).
+func maskArg(remaining []string) (output []string, consumed int) {
+	arg := remaining[0]
 
 	if !strings.HasPrefix(arg, "-") {
-		return []string{arg}, 0
+		return []string{arg}, 1
 	}
 
 	flagName, inlineValue, hasInlineValue := parseFlagFromArg(arg)
 
 	if hasInlineValue {
 		masked := arg[:strings.Index(arg, "=")+1] + maskIfUnsafe(flagName, inlineValue)
-		return []string{masked}, 0
+		return []string{masked}, 1
 	}
 
 	if booleanFlags[flagName] {
-		return []string{arg}, 0
+		return []string{arg}, 1
 	}
 
-	if i+1 >= len(args) {
-		return []string{arg}, 0
+	if len(remaining) < 2 {
+		return []string{arg}, 1
 	}
 
 	isSafeFlag := safeFlags[flagName]
-	nextLooksLikeFlag := strings.HasPrefix(args[i+1], "-")
+	nextLooksLikeFlag := strings.HasPrefix(remaining[1], "-")
 	if isSafeFlag && nextLooksLikeFlag {
-		return []string{arg}, 0
+		return []string{arg}, 1
 	}
 
-	value := args[i+1]
+	value := remaining[1]
 	if isSafeFlag {
-		return []string{arg, value}, 1
+		return []string{arg, value}, 2
 	}
-	return []string{arg, mask}, 1
+	return []string{arg, mask}, 2
 }
 
 func MaskArgs(args []string) []string {
@@ -140,10 +143,11 @@ func MaskArgs(args []string) []string {
 
 	result := make([]string, 0, len(args))
 
-	for i := 0; i < len(args); i++ {
-		output, extraConsumed := maskArg(args, i)
+	remaining := args
+	for len(remaining) > 0 {
+		output, consumed := maskArg(remaining)
 		result = append(result, output...)
-		i += extraConsumed
+		remaining = remaining[consumed:]
 	}
 
 	return result
