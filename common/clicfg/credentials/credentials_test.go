@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOnDiskJSONStructure(t *testing.T) {
@@ -28,15 +29,15 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	assert.NoError(t, err, "failed to parse saved JSON")
 
 	auraData, ok := parsed["aura"].(map[string]interface{})
-	assert.True(t, ok, "aura field is not a map")
+	require.True(t, ok, "aura field is not a map")
 
 	credentialsData, ok := auraData["credentials"].([]interface{})
-	assert.True(t, ok, "credentials field is not an array")
+	require.True(t, ok, "credentials field is not an array")
 
 	assert.Equal(t, 1, len(credentialsData), "expected 1 credential")
 
 	credentialMap, ok := credentialsData[0].(map[string]interface{})
-	assert.True(t, ok, "credential is not a map")
+	require.True(t, ok, "credential is not a map")
 
 	credType := reflect.TypeOf((*AuraCredential)(nil)).Elem()
 	for i := 0; i < credType.NumField(); i++ {
@@ -48,7 +49,7 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	}
 
 	secret, ok := credentialMap["client-secret"].(string)
-	assert.True(t, ok, "client-secret field is not a string")
+	require.True(t, ok, "client-secret field is not a string")
 	assert.Equal(t, "test-secret", secret, "expected secret in saved file")
 }
 

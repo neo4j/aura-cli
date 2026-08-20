@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestArgScopeRegression(t *testing.T) {
@@ -93,7 +94,7 @@ func TestArgScopeRegression(t *testing.T) {
 
 func findRepoRoot(t *testing.T) string {
 	_, filename, _, ok := runtime.Caller(0)
-	assert.True(t, ok, "unable to determine test file location")
+	require.True(t, ok, "unable to determine test file location")
 
 	current := filepath.Dir(filename)
 	for {
@@ -101,7 +102,7 @@ func findRepoRoot(t *testing.T) string {
 			return current
 		}
 		parent := filepath.Dir(current)
-		assert.NotEqual(t, parent, current, "could not find repository root")
+		require.NotEqual(t, parent, current, "could not find repository root")
 		current = parent
 	}
 }
