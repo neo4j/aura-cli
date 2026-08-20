@@ -367,16 +367,16 @@ func TestMaskArgs(t *testing.T) {
 		t.Run(tt.testName, func(t *testing.T) {
 			got := MaskArgs(tt.args)
 			if len(got) != len(tt.want) {
-				t.Errorf("Args() returned %d elements, want %d", len(got), len(tt.want))
+				t.Errorf("MaskArgs() returned %d elements, want %d", len(got), len(tt.want))
 			}
 
 			for i, gotArg := range got {
 				if i >= len(tt.want) {
-					t.Errorf("Args()[%d] unexpected extra element: %q", i, gotArg)
+					t.Errorf("MaskArgs()[%d] unexpected extra element: %q", i, gotArg)
 					continue
 				}
 				if gotArg != tt.want[i] {
-					t.Errorf("Args()[%d] = %q, want %q", i, gotArg, tt.want[i])
+					t.Errorf("MaskArgs()[%d] = %q, want %q", i, gotArg, tt.want[i])
 				}
 			}
 		})

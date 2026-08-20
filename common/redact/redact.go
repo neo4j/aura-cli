@@ -89,6 +89,15 @@ var booleanFlags = map[string]bool{
 	"help":                   true,
 }
 
+func parseFlagFromArg(arg string) (flagName string, inlineValue string, hasInlineValue bool) {
+	flagName = strings.TrimLeft(arg, "-")
+	if strings.Contains(flagName, "=") {
+		parts := strings.SplitN(flagName, "=", 2)
+		return parts[0], parts[1], true
+	}
+	return flagName, "", false
+}
+
 func MaskArgs(args []string) []string {
 	if len(args) == 0 {
 		return args
@@ -101,14 +110,10 @@ func MaskArgs(args []string) []string {
 		result = append(result, arg)
 
 		if strings.HasPrefix(arg, "-") {
-			flagName := strings.TrimLeft(arg, "-")
+			flagName, inlineValue, hasInlineValue := parseFlagFromArg(arg)
 
-			if strings.Contains(flagName, "=") {
-				parts := strings.SplitN(flagName, "=", 2)
-				flagName = parts[0]
-				value := parts[1]
-
-				result[len(result)-1] = arg[:strings.Index(arg, "=")+1] + maskIfUnsafe(flagName, value)
+			if hasInlineValue {
+				result[len(result)-1] = arg[:strings.Index(arg, "=")+1] + maskIfUnsafe(flagName, inlineValue)
 			} else if i+1 < len(args) && !booleanFlags[flagName] {
 				isSafeFlag := safeFlags[flagName]
 				nextLooksLikeFlag := strings.HasPrefix(args[i+1], "-")
