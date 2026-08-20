@@ -98,11 +98,8 @@ func parseFlagFromArg(arg string) (flagName string, inlineValue string, hasInlin
 	return flagName, "", false
 }
 
-// maskArg handles the arg at the front of remaining, returning its masked output tokens
-// and how many of remaining's leading elements they account for (1, or 2 if a following
-// value was consumed).
-func maskArg(remaining []string) (output []string, consumed int) {
-	arg := remaining[0]
+func maskArg(remainingArgs []string) (output []string, consumed int) {
+	arg := remainingArgs[0]
 
 	if !strings.HasPrefix(arg, "-") {
 		return []string{arg}, 1
@@ -119,17 +116,17 @@ func maskArg(remaining []string) (output []string, consumed int) {
 		return []string{arg}, 1
 	}
 
-	if len(remaining) < 2 {
+	if len(remainingArgs) < 2 {
 		return []string{arg}, 1
 	}
 
 	isSafeFlag := safeFlags[flagName]
-	nextLooksLikeFlag := strings.HasPrefix(remaining[1], "-")
+	nextLooksLikeFlag := strings.HasPrefix(remainingArgs[1], "-")
 	if isSafeFlag && nextLooksLikeFlag {
 		return []string{arg}, 1
 	}
 
-	value := remaining[1]
+	value := remainingArgs[1]
 	if isSafeFlag {
 		return []string{arg, value}, 2
 	}
@@ -143,11 +140,11 @@ func MaskArgs(args []string) []string {
 
 	result := make([]string, 0, len(args))
 
-	remaining := args
-	for len(remaining) > 0 {
-		output, consumed := maskArg(remaining)
+	remaindingArgs := args
+	for len(remaindingArgs) > 0 {
+		output, consumed := maskArg(remaindingArgs)
 		result = append(result, output...)
-		remaining = remaining[consumed:]
+		remaindingArgs = remaindingArgs[consumed:]
 	}
 
 	return result
