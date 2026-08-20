@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArgScopeRegression(t *testing.T) {
@@ -83,21 +85,15 @@ func TestArgScopeRegression(t *testing.T) {
 		return nil
 	})
 
-	if err != nil {
-		t.Fatalf("Failed to walk repository: %v", err)
-	}
+	assert.NoError(t, err, "failed to walk repository")
 
-	if len(violations) > 0 {
-		t.Errorf("Found raw os.Args reads outside sanctioned locations:\n%s",
-			strings.Join(violations, "\n"))
-	}
+	assert.Empty(t, violations, "found raw os.Args reads outside sanctioned locations:\n%s",
+		strings.Join(violations, "\n"))
 }
 
 func findRepoRoot(t *testing.T) string {
 	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("Unable to determine test file location")
-	}
+	assert.True(t, ok, "unable to determine test file location")
 
 	current := filepath.Dir(filename)
 	for {
@@ -105,9 +101,7 @@ func findRepoRoot(t *testing.T) string {
 			return current
 		}
 		parent := filepath.Dir(current)
-		if parent == current {
-			t.Fatalf("Could not find repository root")
-		}
+		assert.NotEqual(t, parent, current, "could not find repository root")
 		current = parent
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOnDiskJSONStructure(t *testing.T) {
@@ -16,57 +17,39 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	c := NewCredentials(fs, "/test")
 
 	err := c.Aura.Add("test-cred", "test-client-id", "test-secret")
-	if err != nil {
-		t.Fatalf("failed to add credential: %v", err)
-	}
+	assert.NoError(t, err, "failed to add credential")
 
 	err = c.Aura.SetDefault("test-cred")
-	if err != nil {
-		t.Fatalf("failed to set default: %v", err)
-	}
+	assert.NoError(t, err, "failed to set default")
 
 	data, _ := afero.ReadFile(fs, "/test/neo4j/cli/credentials.json")
 	var parsed map[string]interface{}
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		t.Fatalf("failed to parse saved JSON: %v", err)
-	}
+	err = json.Unmarshal(data, &parsed)
+	assert.NoError(t, err, "failed to parse saved JSON")
 
 	auraData, ok := parsed["aura"].(map[string]interface{})
-	if !ok {
-		t.Fatal("aura field is not a map")
-	}
+	assert.True(t, ok, "aura field is not a map")
 
 	credentialsData, ok := auraData["credentials"].([]interface{})
-	if !ok {
-		t.Fatal("credentials field is not an array")
-	}
+	assert.True(t, ok, "credentials field is not an array")
 
-	if len(credentialsData) != 1 {
-		t.Fatalf("expected 1 credential, got %d", len(credentialsData))
-	}
+	assert.Equal(t, 1, len(credentialsData), "expected 1 credential")
 
 	credentialMap, ok := credentialsData[0].(map[string]interface{})
-	if !ok {
-		t.Fatal("credential is not a map")
-	}
+	assert.True(t, ok, "credential is not a map")
 
 	credType := reflect.TypeOf((*AuraCredential)(nil)).Elem()
 	for i := 0; i < credType.NumField(); i++ {
 		field := credType.Field(i)
 		if tag, ok := field.Tag.Lookup("json"); ok {
-			if _, present := credentialMap[tag]; !present {
-				t.Errorf("field '%s' (JSON tag '%s') missing from on-disk JSON", field.Name, tag)
-			}
+			_, present := credentialMap[tag]
+			assert.True(t, present, "field '%s' (JSON tag '%s') missing from on-disk JSON", field.Name, tag)
 		}
 	}
 
-	if secret, ok := credentialMap["client-secret"].(string); ok {
-		if secret != "test-secret" {
-			t.Errorf("expected secret 'test-secret' in saved file, got '%s'", secret)
-		}
-	} else {
-		t.Fatal("client-secret field is not a string")
-	}
+	secret, ok := credentialMap["client-secret"].(string)
+	assert.True(t, ok, "client-secret field is not a string")
+	assert.Equal(t, "test-secret", secret, "expected secret in saved file")
 }
 
 func TestRoundTripSaveAndLoad(t *testing.T) {
@@ -78,27 +61,15 @@ func TestRoundTripSaveAndLoad(t *testing.T) {
 
 	c2 := NewCredentials(fs, "/test")
 
-	if len(c2.Aura.Credentials) != 1 {
-		t.Fatalf("expected 1 credential after load, got %d", len(c2.Aura.Credentials))
-	}
+	assert.Equal(t, 1, len(c2.Aura.Credentials), "expected 1 credential after load")
 
 	cred := c2.Aura.Credentials[0]
-	if cred.Name != "cred1" {
-		t.Errorf("expected name 'cred1', got '%s'", cred.Name)
-	}
-	if cred.ClientId != "id1" {
-		t.Errorf("expected client-id 'id1', got '%s'", cred.ClientId)
-	}
-	if cred.ClientSecret.Reveal() != "secret1" {
-		t.Errorf("expected secret 'secret1', got '%s'", cred.ClientSecret.Reveal())
-	}
-	if c2.Aura.DefaultCredential != "cred1" {
-		t.Errorf("expected default 'cred1', got '%s'", c2.Aura.DefaultCredential)
-	}
+	assert.Equal(t, "cred1", cred.Name, "expected name to match")
+	assert.Equal(t, "id1", cred.ClientId, "expected client-id to match")
+	assert.Equal(t, "secret1", cred.ClientSecret.Reveal(), "expected secret to match")
+	assert.Equal(t, "cred1", c2.Aura.DefaultCredential, "expected default credential to match")
 
-	if cred.ClientSecret.String() != "****" {
-		t.Errorf("expected masked secret '****', got '%s'", cred.ClientSecret.String())
-	}
+	assert.Equal(t, "****", cred.ClientSecret.String(), "expected masked secret")
 }
 
 func TestLoadPartialCredentialObjectDoesNotPanic(t *testing.T) {
@@ -107,12 +78,8 @@ func TestLoadPartialCredentialObjectDoesNotPanic(t *testing.T) {
 
 	c := NewCredentials(fs, "/test")
 
-	if len(c.Aura.Credentials) != 1 {
-		t.Fatalf("expected 1 credential after load, got %d", len(c.Aura.Credentials))
-	}
-	if c.Aura.Credentials[0].ClientSecret.Reveal() != "s" {
-		t.Errorf("expected secret 's', got '%s'", c.Aura.Credentials[0].ClientSecret.Reveal())
-	}
+	assert.Equal(t, 1, len(c.Aura.Credentials), "expected 1 credential after load")
+	assert.Equal(t, "s", c.Aura.Credentials[0].ClientSecret.Reveal(), "expected secret to match")
 }
 
 func TestJSONMarshalingPreservesSecretMasking(t *testing.T) {
@@ -121,21 +88,14 @@ func TestJSONMarshalingPreservesSecretMasking(t *testing.T) {
 	c.Aura.Add("test-cred", "test-id", "test-secret")
 
 	data, err := json.Marshal(c.Aura.Credentials)
-	if err != nil {
-		t.Fatalf("failed to marshal credentials: %v", err)
-	}
+	assert.NoError(t, err, "failed to marshal credentials")
 
 	var unmarshaled []map[string]interface{}
-	if err := json.Unmarshal(data, &unmarshaled); err != nil {
-		t.Fatalf("failed to unmarshal credentials: %v", err)
-	}
+	err = json.Unmarshal(data, &unmarshaled)
+	assert.NoError(t, err, "failed to unmarshal credentials")
 
-	if len(unmarshaled) != 1 {
-		t.Fatalf("expected 1 credential, got %d", len(unmarshaled))
-	}
+	assert.Equal(t, 1, len(unmarshaled), "expected 1 credential")
 
 	secret := unmarshaled[0]["client-secret"]
-	if secret != "****" {
-		t.Errorf("expected masked secret '****' in JSON output, got '%v'", secret)
-	}
+	assert.Equal(t, "****", secret, "expected masked secret in JSON output")
 }
