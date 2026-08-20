@@ -39,7 +39,7 @@ func getExistingOrigins(cfg *clicfg.Config, dataApiId, instanceId string) ([]str
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		panic(clierr.NewFatalError("unexpected status code %d running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, redact.CapturedArgs()))
+		panic(clierr.NewFatalError("unexpected status code %d running CLI with args %s, please report an issue in https://github.com/neo4j/aura-cli", statusCode, redact.CapturedArgs()))
 	}
 
 	var parsedGetResBody DetailedBody

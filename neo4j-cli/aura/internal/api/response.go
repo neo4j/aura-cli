@@ -31,11 +31,11 @@ type ServerError struct {
 }
 
 func unexpectedStatusError(statusCode int) error {
-	return clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, redact.CapturedArgs())
+	return clierr.NewFatalError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/aura-cli", statusCode, redact.CapturedArgs())
 }
 
 func unexpectedStatusErrorWithBody(statusCode int, body string) error {
-	return clierr.NewFatalError("unexpected error [status %d] and body %s running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, body, redact.CapturedArgs())
+	return clierr.NewFatalError("unexpected error [status %d] and body %s running CLI with args %s, please report an issue in https://github.com/neo4j/aura-cli", statusCode, body, redact.CapturedArgs())
 }
 
 func handleResponseError(res *http.Response, credential *credentials.AuraCredential, cfg *clicfg.Config) error {
@@ -345,7 +345,7 @@ func formatAuthorizationError(resBody []byte, statusCode int, credential *creden
 
 	err := json.Unmarshal(resBody, &errorResponse)
 	if err != nil {
-		return clierr.NewUsageError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, redact.CapturedArgs())
+		return clierr.NewUsageError("unexpected error [status %d] running CLI with args %s, please report an issue in https://github.com/neo4j/aura-cli", statusCode, redact.CapturedArgs())
 	}
 
 	messages := []string{}
@@ -355,7 +355,7 @@ func formatAuthorizationError(resBody []byte, statusCode int, credential *creden
 
 	_, err = cfg.Credentials.Aura.ClearAccessToken(credential)
 	if err != nil {
-		messages = append(messages, "Request failed authorization - attempted to clear the access token but encountered an error, please report an issue in https://github.com/neo4j/cli")
+		messages = append(messages, "Request failed authorization - attempted to clear the access token but encountered an error, please report an issue in https://github.com/neo4j/aura-cli")
 	} else {
 		messages = append(messages, "Request failed authorization - access token has been cleared and will be refreshed on next request - please retry the command")
 	}
