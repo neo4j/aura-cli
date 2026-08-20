@@ -69,6 +69,6 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 		panic(clierr.NewFatalError("can't retrieve authentication token. %w", err))
 	}
 
-	cfg.Credentials.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)
+	cfg.Credentials.Aura.UpdateAccessToken(credential, grant.AccessToken, grant.ExpiresIn)
 	return grant.AccessToken, err
 }

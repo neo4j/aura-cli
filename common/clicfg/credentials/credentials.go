@@ -6,11 +6,8 @@ package credentials
 import (
 	"encoding/json"
 	"path/filepath"
-	"time"
 
 	"github.com/neo4j/cli/common/clicfg/fileutils"
-	"github.com/neo4j/cli/common/clierr"
-	"github.com/neo4j/cli/common/redact"
 	"github.com/spf13/afero"
 )
 
@@ -50,39 +47,57 @@ func NewCredentials(fs afero.Fs, configPrefix string) *Credentials {
 }
 
 func (c *Credentials) load() {
-	aura, err := c.readAuraFresh()
-	if err != nil {
-		panic(err)
+	data := fileutils.ReadFileSafe(c.fs, c.filePath)
+	fileHasData := len(data) != 0
+
+	var credentials CredentialsFile = CredentialsFile{
+		Aura: &AuraCredentials{
+			Credentials: []*AuraCredential{},
+		},
+	}
+	if fileHasData {
+		var onDisk credentialsFileOnDisk
+		if err := json.Unmarshal(data, &onDisk); err != nil {
+			panic(err)
+		}
+		credentials.Aura = onDisk.Aura.toAuraCredentials()
 	}
 
-	c.Aura = aura
+	c.Aura = credentials.Aura
+	c.Aura.refresh = c.refreshAura
+	c.Aura.persist = c.save
 
-	data := fileutils.ReadFileSafe(c.fs, c.filePath)
-	if len(data) == 0 {
-		c.writeAura(c.Aura)
+	if !fileHasData {
+		c.save()
 	}
 }
 
-func (c *Credentials) readAuraFresh() (*AuraCredentials, error) {
+// refreshAura re-reads the credentials file from disk into the existing c.Aura, discarding
+// whatever was loaded or mutated in memory before this call. It updates the struct in place
+// rather than replacing it, so the refresh/persist closures wired up in load stay intact.
+func (c *Credentials) refreshAura() error {
 	data := fileutils.ReadFileSafe(c.fs, c.filePath)
 
 	if len(data) == 0 {
-		return &AuraCredentials{
-			Credentials: []*AuraCredential{},
-		}, nil
+		c.Aura.Credentials = []*AuraCredential{}
+		c.Aura.DefaultCredential = ""
+		return nil
 	}
 
 	var onDisk credentialsFileOnDisk
 	if err := json.Unmarshal(data, &onDisk); err != nil {
-		return nil, err
+		return err
 	}
 
-	return onDisk.Aura.toAuraCredentials(), nil
+	fresh := onDisk.Aura.toAuraCredentials()
+	c.Aura.Credentials = fresh.Credentials
+	c.Aura.DefaultCredential = fresh.DefaultCredential
+	return nil
 }
 
-func (c *Credentials) writeAura(aura *AuraCredentials) error {
+func (c *Credentials) save() error {
 	onDisk := credentialsFileOnDisk{
-		Aura: aura.toOnDisk(),
+		Aura: c.Aura.toOnDisk(),
 	}
 
 	data, err := json.Marshal(onDisk)
@@ -91,128 +106,5 @@ func (c *Credentials) writeAura(aura *AuraCredentials) error {
 	}
 
 	fileutils.WriteFile(c.fs, c.filePath, data)
-	c.Aura = aura
 	return nil
-}
-
-func (c *Credentials) Add(name string, clientId string, clientSecret string) error {
-	aura, err := c.readAuraFresh()
-	if err != nil {
-		return err
-	}
-
-	for _, credential := range aura.Credentials {
-		if credential.Name == name {
-			return clierr.NewUsageError("already have credential with name %s", name)
-		}
-	}
-
-	aura.Credentials = append(aura.Credentials, &AuraCredential{
-		Name:         name,
-		ClientId:     clientId,
-		ClientSecret: redact.NewSecret(clientSecret),
-	})
-	if len(aura.Credentials) == 1 {
-		aura.DefaultCredential = name
-	}
-
-	return c.writeAura(aura)
-}
-
-func (c *Credentials) Remove(name string) error {
-	aura, err := c.readAuraFresh()
-	if err != nil {
-		return err
-	}
-
-	var indexToRemove = -1
-	for i, credential := range aura.Credentials {
-		if credential.Name == name {
-			indexToRemove = i
-			break
-		}
-	}
-
-	if indexToRemove == -1 {
-		return clierr.NewUsageError("could not find credential with name %s to remove", name)
-	}
-
-	if aura.DefaultCredential == name {
-		aura.DefaultCredential = ""
-	}
-
-	aura.Credentials = append(aura.Credentials[:indexToRemove], aura.Credentials[indexToRemove+1:]...)
-
-	return c.writeAura(aura)
-}
-
-func (c *Credentials) SetDefault(name string) error {
-	aura, err := c.readAuraFresh()
-	if err != nil {
-		return err
-	}
-
-	if !c.credentialExists(name, aura) {
-		return clierr.NewUsageError("could not find credential with name %s", name)
-	}
-
-	aura.DefaultCredential = name
-
-	return c.writeAura(aura)
-}
-
-func (c *Credentials) UpdateAccessToken(cred *AuraCredential, accessToken string, expiresInSeconds int64) *AuraCredential {
-	aura, err := c.readAuraFresh()
-	if err != nil {
-		panic(err)
-	}
-
-	credential, err := aura.Get(cred.Name)
-	if err != nil {
-		panic(err)
-	}
-
-	const expireToleranceSeconds = 60
-	now := time.Now().UnixMilli()
-
-	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
-	credential.AccessToken = redact.NewSecret(accessToken)
-
-	err = c.writeAura(aura)
-	if err != nil {
-		panic(err)
-	}
-
-	return credential
-}
-
-func (c *Credentials) ClearAccessToken(cred *AuraCredential) (*AuraCredential, error) {
-	aura, err := c.readAuraFresh()
-	if err != nil {
-		return nil, err
-	}
-
-	credential, err := aura.Get(cred.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	credential.TokenExpiry = 0
-	credential.AccessToken = redact.NewSecret("")
-
-	err = c.writeAura(aura)
-	if err != nil {
-		return nil, err
-	}
-
-	return credential, nil
-}
-
-func (c *Credentials) credentialExists(name string, aura *AuraCredentials) bool {
-	for _, credential := range aura.Credentials {
-		if credential.Name == name {
-			return true
-		}
-	}
-	return false
 }

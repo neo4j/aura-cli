@@ -353,7 +353,7 @@ func formatAuthorizationError(resBody []byte, statusCode int, credential *creden
 		messages = append(messages, e.Message)
 	}
 
-	_, err = cfg.Credentials.ClearAccessToken(credential)
+	_, err = cfg.Credentials.Aura.ClearAccessToken(credential)
 	if err != nil {
 		messages = append(messages, "Request failed authorization - attempted to clear the access token but encountered an error, please report an issue in https://github.com/neo4j/aura-cli")
 	} else {
