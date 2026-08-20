@@ -141,3 +141,31 @@ func TestJSONMarshalingPreservesSecretMasking(t *testing.T) {
 	secret := unmarshaled[0]["client-secret"]
 	assert.Equal(t, "****", secret, "expected masked secret in JSON output")
 }
+
+func TestConcurrentSaveDoesNotLoseAnEarlierWrite(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	const configPrefix = "/config"
+
+	// Two CLI processes starting at (roughly) the same time both load the
+	// same, initially-empty store.
+	processA := NewCredentials(fs, configPrefix)
+	processB := NewCredentials(fs, configPrefix)
+
+	// Process A finishes first: `credential add --name first ...`.
+	assert.NoError(t, processA.Aura.Add("first", "client-a", "secret-a"))
+
+	// Process B finishes second — e.g. a routine token refresh triggering a
+	// save as a side effect, or a second `credential add`. It never re-read
+	// the file, so its in-memory view still thinks the store is empty.
+	assert.NoError(t, processB.Aura.Add("second", "client-b", "secret-b"))
+
+	// A fresh read of the file is what the next command would see.
+	onDisk := NewCredentials(fs, configPrefix)
+	names := make([]string, 0, len(onDisk.Aura.List()))
+	for _, c := range onDisk.Aura.List() {
+		names = append(names, c.Name)
+	}
+
+	assert.ElementsMatch(t, []string{"first", "second"}, names,
+		"a save from one process must not silently erase a credential a concurrently-running process already saved")
+}
