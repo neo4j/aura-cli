@@ -170,7 +170,7 @@ func TestConcurrentSaveDoesNotLoseAnEarlierWrite(t *testing.T) {
 		"a save from one process must not silently erase a credential a concurrently-running process already saved")
 }
 
-func TestRemoveThenReaddSameNameWithinProcessDoesNotLoseCredential(t *testing.T) {
+func TestRemoveThenReadSameNameWithinProcessDoesNotLoseCredential(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	const configPrefix = "/config"
 
