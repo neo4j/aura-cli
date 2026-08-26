@@ -50,14 +50,6 @@ var safeFlags = map[string]bool{
 	"import-model-id":         true,
 	"dbid":                    true,
 
-	// Single-letter shorthands for the identifier flags above (deployment
-	// server database list registers -o/-p/-d/-s for organization-id/
-	// project-id/deployment-id/server-id)
-	"o": true,
-	"p": true,
-	"d": true,
-	"s": true,
-
 	// Output and format options
 	"output": true,
 
@@ -98,26 +90,47 @@ var booleanFlags = map[string]bool{
 	"help":                   true,
 }
 
-func parseFlagFromArg(arg string) (flagName string, inlineValue string, hasInlineValue bool) {
-	flagName = strings.TrimLeft(arg, "-")
+// ShorthandResolver maps a flag shorthand (e.g. "p") to its long name (e.g.
+// "project-id") for the command actually being invoked.
+type ShorthandResolver func(flagName string) (longName string, ok bool)
+
+// parseFlagFromArg also recognises pflag's attached-shorthand form
+// ("-xvalue", no "=") - without it, a secret passed that way would be left
+// on the token entirely unmasked.
+func parseFlagFromArg(arg string, resolve ShorthandResolver) (flagName string, inlineValue string, hasInlineValue bool) {
+	trimmed := strings.TrimLeft(arg, "-")
+
+	if !strings.HasPrefix(arg, "--") && len(trimmed) > 1 && trimmed[1] != '=' {
+		flagName, inlineValue, hasInlineValue = trimmed[:1], trimmed[1:], true
+	} else {
+		flagName = trimmed
+	}
+
 	if strings.Contains(flagName, "=") {
 		parts := strings.SplitN(flagName, "=", 2)
-		return parts[0], parts[1], true
+		flagName, inlineValue, hasInlineValue = parts[0], parts[1], true
 	}
-	return flagName, "", false
+
+	if resolve != nil {
+		if longName, ok := resolve(flagName); ok {
+			flagName = longName
+		}
+	}
+
+	return flagName, inlineValue, hasInlineValue
 }
 
-func maskArg(remainingArgs []string) (output []string, consumed int) {
+func maskArg(remainingArgs []string, resolve ShorthandResolver) (output []string, consumed int) {
 	arg := remainingArgs[0]
 
-	if !strings.HasPrefix(arg, "-") {
+	if arg == "--" || !strings.HasPrefix(arg, "-") {
 		return []string{arg}, 1
 	}
 
-	flagName, inlineValue, hasInlineValue := parseFlagFromArg(arg)
+	flagName, inlineValue, hasInlineValue := parseFlagFromArg(arg, resolve)
 
 	if hasInlineValue {
-		masked := arg[:strings.Index(arg, "=")+1] + maskIfUnsafe(flagName, inlineValue)
+		masked := arg[:len(arg)-len(inlineValue)] + maskIfUnsafe(flagName, inlineValue)
 		return []string{masked}, 1
 	}
 
@@ -135,10 +148,8 @@ func maskArg(remainingArgs []string) (output []string, consumed int) {
 		return []string{arg}, 1
 	}
 
-	// For an unsafe flag, the next token is always consumed as its value even
-	// when it looks like a flag (e.g. starts with "-"). This is deliberate:
-	// generated secrets can themselves start with a dash, and masking them is
-	// more important than correctly parsing a malformed/unknown flag.
+	// Consume the next token as the value even if it looks like a flag:
+	// generated secrets can themselves start with a dash.
 	value := remainingArgs[1]
 	if isSafeFlag {
 		return []string{arg, value}, 2
@@ -147,6 +158,11 @@ func maskArg(remainingArgs []string) (output []string, consumed int) {
 }
 
 func MaskArgs(args []string) []string {
+	return MaskArgsWithShorthandResolver(args, nil)
+}
+
+// MaskArgsWithShorthandResolver is MaskArgs, but resolves shorthands via resolve first.
+func MaskArgsWithShorthandResolver(args []string, resolve ShorthandResolver) []string {
 	if len(args) == 0 {
 		return args
 	}
@@ -155,7 +171,7 @@ func MaskArgs(args []string) []string {
 
 	remaindingArgs := args
 	for len(remaindingArgs) > 0 {
-		output, consumed := maskArg(remaindingArgs)
+		output, consumed := maskArg(remaindingArgs, resolve)
 		result = append(result, output...)
 		remaindingArgs = remaindingArgs[consumed:]
 	}

@@ -60,11 +60,8 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	}
 }
 
-// TestSecretFieldsHaveOnDiskShadow guards against a redact.Secret field being
-// added to AuraCredential without a matching plain-string shadow field on
-// auraCredentialOnDisk. Without the shadow, the embedded AuraCredential's own
-// Secret.MarshalJSON runs instead, silently persisting the mask to disk in
-// place of the real value.
+// A redact.Secret field on AuraCredential without a shadow field on
+// auraCredentialOnDisk would silently persist as the mask instead of its real value.
 func TestSecretFieldsHaveOnDiskShadow(t *testing.T) {
 	secretType := reflect.TypeOf(redact.Secret{})
 	credType := reflect.TypeOf(AuraCredential{})

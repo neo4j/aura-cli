@@ -244,28 +244,10 @@ func TestMaskArgs(t *testing.T) {
 			testName: "agent database ID not masked",
 		},
 		{
-			name:     "organization-id shorthand safe",
-			args:     []string{"-o", "org-12345"},
-			want:     []string{"-o", "org-12345"},
-			testName: "organization ID shorthand not masked",
-		},
-		{
-			name:     "project-id shorthand safe",
+			name:     "unresolved shorthand masked",
 			args:     []string{"-p", "project-12345"},
-			want:     []string{"-p", "project-12345"},
-			testName: "project ID shorthand not masked",
-		},
-		{
-			name:     "deployment-id shorthand safe",
-			args:     []string{"-d", "deployment-12345"},
-			want:     []string{"-d", "deployment-12345"},
-			testName: "deployment ID shorthand not masked",
-		},
-		{
-			name:     "server-id shorthand safe",
-			args:     []string{"-s", "server-12345"},
-			want:     []string{"-s", "server-12345"},
-			testName: "server ID shorthand not masked",
+			want:     []string{"-p", mask},
+			testName: "shorthand flags are masked without a resolver tying them to a long name",
 		},
 		{
 			name:     "flag with equals syntax safe",
@@ -375,6 +357,12 @@ func TestMaskArgs(t *testing.T) {
 			want:     []string{"--enabled", "--name", "my-api"},
 			testName: "boolean flag doesn't consume next flag as its value",
 		},
+		{
+			name:     "double-dash terminator passes through",
+			args:     []string{"--name", "my-app", "--", "positional-secret-looking-arg"},
+			want:     []string{"--name", "my-app", "--", "positional-secret-looking-arg"},
+			testName: "-- is not treated as a flag to mask",
+		},
 	}
 
 	for _, tt := range tests {
@@ -454,6 +442,73 @@ func TestMaskArgsPreservesStructure(t *testing.T) {
 					assert.Equal(t, arg, result[i], "flag name at index %d changed", i)
 				}
 			}
+		})
+	}
+}
+
+func TestMaskArgsWithShorthandResolver(t *testing.T) {
+	resolve := func(known map[string]string) ShorthandResolver {
+		return func(flagName string) (string, bool) {
+			longName, ok := known[flagName]
+			return longName, ok
+		}
+	}
+
+	tests := []struct {
+		name     string
+		args     []string
+		resolve  ShorthandResolver
+		want     []string
+		testName string
+	}{
+		{
+			name:     "shorthand resolves to a safe long name",
+			args:     []string{"-p", "project-12345"},
+			resolve:  resolve(map[string]string{"p": "project-id"}),
+			want:     []string{"-p", "project-12345"},
+			testName: "shorthand tied to a safe flag is not masked",
+		},
+		{
+			name:     "same shorthand resolves to an unsafe long name in a different command",
+			args:     []string{"-p", "super-secret"},
+			resolve:  resolve(map[string]string{"p": "password"}),
+			want:     []string{"-p", mask},
+			testName: "the same letter can mean something unsafe elsewhere and still gets masked",
+		},
+		{
+			name:     "unresolvable shorthand defaults to masked",
+			args:     []string{"-x", "some-value"},
+			resolve:  resolve(map[string]string{"p": "project-id"}),
+			want:     []string{"-x", mask},
+			testName: "a shorthand the resolver doesn't recognise is treated as unsafe",
+		},
+		{
+			name:     "nil resolver defaults to masked",
+			args:     []string{"-p", "project-12345"},
+			resolve:  nil,
+			want:     []string{"-p", mask},
+			testName: "no resolver at all falls back to masking",
+		},
+		{
+			name:     "attached-value unsafe shorthand is masked",
+			args:     []string{"-wsuper-secret"},
+			resolve:  resolve(map[string]string{"w": "password"}),
+			want:     []string{"-w" + mask},
+			testName: "pflag's -xvalue attached form still gets masked, not left verbatim",
+		},
+		{
+			name:     "attached-value safe shorthand is not masked",
+			args:     []string{"-pproject-12345"},
+			resolve:  resolve(map[string]string{"p": "project-id"}),
+			want:     []string{"-pproject-12345"},
+			testName: "attached form for a safe flag is left as-is",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := MaskArgsWithShorthandResolver(tt.args, tt.resolve)
+			assert.Equal(t, tt.want, result, tt.testName)
 		})
 	}
 }
