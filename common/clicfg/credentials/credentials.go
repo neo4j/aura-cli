@@ -16,6 +16,10 @@ type auraCredentialsOnDisk struct {
 	Credentials       []auraCredentialOnDisk `json:"credentials"`
 }
 
+type credentialsFileOnDisk struct {
+	Aura auraCredentialsOnDisk `json:"aura"`
+}
+
 type auraCredentialOnDisk struct {
 	AuraCredential
 	ClientSecret string `json:"client-secret"`
@@ -53,9 +57,7 @@ func (c *Credentials) load() {
 		},
 	}
 	if fileHasData {
-		var onDisk struct {
-			Aura auraCredentialsOnDisk `json:"aura"`
-		}
+		var onDisk credentialsFileOnDisk
 		if err := json.Unmarshal(data, &onDisk); err != nil {
 			panic(err)
 		}
@@ -70,9 +72,7 @@ func (c *Credentials) load() {
 }
 
 func (c *Credentials) save() {
-	onDisk := struct {
-		Aura auraCredentialsOnDisk `json:"aura"`
-	}{
+	onDisk := credentialsFileOnDisk{
 		Aura: c.Aura.toOnDisk(),
 	}
 
