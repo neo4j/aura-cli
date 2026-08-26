@@ -238,6 +238,36 @@ func TestMaskArgs(t *testing.T) {
 			testName: "database ID not masked",
 		},
 		{
+			name:     "dbid safe",
+			args:     []string{"--dbid", "db-12345"},
+			want:     []string{"--dbid", "db-12345"},
+			testName: "agent database ID not masked",
+		},
+		{
+			name:     "organization-id shorthand safe",
+			args:     []string{"-o", "org-12345"},
+			want:     []string{"-o", "org-12345"},
+			testName: "organization ID shorthand not masked",
+		},
+		{
+			name:     "project-id shorthand safe",
+			args:     []string{"-p", "project-12345"},
+			want:     []string{"-p", "project-12345"},
+			testName: "project ID shorthand not masked",
+		},
+		{
+			name:     "deployment-id shorthand safe",
+			args:     []string{"-d", "deployment-12345"},
+			want:     []string{"-d", "deployment-12345"},
+			testName: "deployment ID shorthand not masked",
+		},
+		{
+			name:     "server-id shorthand safe",
+			args:     []string{"-s", "server-12345"},
+			want:     []string{"-s", "server-12345"},
+			testName: "server ID shorthand not masked",
+		},
+		{
 			name:     "flag with equals syntax safe",
 			args:     []string{"--name=my-instance"},
 			want:     []string{"--name=my-instance"},
