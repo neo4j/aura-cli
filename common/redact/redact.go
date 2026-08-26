@@ -48,6 +48,15 @@ var safeFlags = map[string]bool{
 	"project-id":              true,
 	"organization-id":         true,
 	"import-model-id":         true,
+	"dbid":                    true,
+
+	// Single-letter shorthands for the identifier flags above (deployment
+	// server database list registers -o/-p/-d/-s for organization-id/
+	// project-id/deployment-id/server-id)
+	"o": true,
+	"p": true,
+	"d": true,
+	"s": true,
 
 	// Output and format options
 	"output": true,
@@ -126,6 +135,10 @@ func maskArg(remainingArgs []string) (output []string, consumed int) {
 		return []string{arg}, 1
 	}
 
+	// For an unsafe flag, the next token is always consumed as its value even
+	// when it looks like a flag (e.g. starts with "-"). This is deliberate:
+	// generated secrets can themselves start with a dash, and masking them is
+	// more important than correctly parsing a malformed/unknown flag.
 	value := remainingArgs[1]
 	if isSafeFlag {
 		return []string{arg, value}, 2
