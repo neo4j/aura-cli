@@ -4,11 +4,12 @@
 package redact
 
 import (
-	"bufio"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -23,8 +24,6 @@ func TestArgScopeRegression(t *testing.T) {
 		"neo4j-cli/aura/cmd/main.go":     true,
 		"neo4j-cli/main.go":              true,
 	}
-
-	osArgsPattern := regexp.MustCompile(`\bos\.Args\b`)
 
 	repoRoot := findRepoRoot(t)
 	violations := []string{}
@@ -56,32 +55,28 @@ func TestArgScopeRegression(t *testing.T) {
 			return nil
 		}
 
-		file, err := os.Open(path)
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, path, nil, 0)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse %s: %w", relPath, err)
 		}
-		defer file.Close()
 
-		scanner := bufio.NewScanner(file)
-		lineNum := 0
-		for scanner.Scan() {
-			lineNum++
-			line := scanner.Text()
-			codePart := line
-			if idx := strings.Index(line, "//"); idx >= 0 {
-				codePart = line[:idx]
+		ast.Inspect(file, func(n ast.Node) bool {
+			sel, ok := n.(*ast.SelectorExpr)
+			if !ok {
+				return true
 			}
 
-			if osArgsPattern.MatchString(codePart) {
-				violations = append(violations,
-					fmt.Sprintf("%s:%d: raw os.Args read: %s",
-						relPath, lineNum, strings.TrimSpace(line)))
+			pkgIdent, ok := sel.X.(*ast.Ident)
+			if !ok || pkgIdent.Name != "os" || sel.Sel.Name != "Args" {
+				return true
 			}
-		}
 
-		if err := scanner.Err(); err != nil {
-			return err
-		}
+			pos := fset.Position(sel.Pos())
+			violations = append(violations,
+				fmt.Sprintf("%s:%d: raw os.Args read", relPath, pos.Line))
+			return true
+		})
 
 		return nil
 	})
