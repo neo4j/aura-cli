@@ -16,7 +16,7 @@ import (
 var Version = "dev"
 
 func main() {
-	redact.CaptureArgs(os.Args[1:])
+	redact.CaptureArgs(nil, os.Args[1:])
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -27,8 +27,10 @@ func main() {
 	}()
 
 	cfg := clicfg.NewConfig(afero.NewOsFs(), Version)
-
 	cmd := aura.NewCmd(cfg)
+
+	redact.CaptureArgs(cmd, os.Args[1:])
+
 	cmd.SetOut(os.Stdout)
 	cmd.SetErr(os.Stderr)
 	cmd.Execute()
