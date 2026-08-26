@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/neo4j/cli/common/redact"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,6 +52,49 @@ func TestOnDiskJSONStructure(t *testing.T) {
 	secret, ok := credentialMap["client-secret"].(string)
 	require.True(t, ok, "client-secret field is not a string")
 	assert.Equal(t, "test-secret", secret, "expected secret in saved file")
+
+	for field, value := range credentialMap {
+		if str, ok := value.(string); ok {
+			assert.NotEqual(t, "****", str, "field '%s' was persisted as the mask instead of its real value", field)
+		}
+	}
+}
+
+// TestSecretFieldsHaveOnDiskShadow guards against a redact.Secret field being
+// added to AuraCredential without a matching plain-string shadow field on
+// auraCredentialOnDisk. Without the shadow, the embedded AuraCredential's own
+// Secret.MarshalJSON runs instead, silently persisting the mask to disk in
+// place of the real value.
+func TestSecretFieldsHaveOnDiskShadow(t *testing.T) {
+	secretType := reflect.TypeOf(redact.Secret{})
+	credType := reflect.TypeOf(AuraCredential{})
+
+	onDiskType := reflect.TypeOf(auraCredentialOnDisk{})
+	shadowKindByTag := map[string]reflect.Kind{}
+	for i := 0; i < onDiskType.NumField(); i++ {
+		field := onDiskType.Field(i)
+		if field.Anonymous {
+			continue
+		}
+		if tag, ok := field.Tag.Lookup("json"); ok {
+			shadowKindByTag[tag] = field.Type.Kind()
+		}
+	}
+
+	for i := 0; i < credType.NumField(); i++ {
+		field := credType.Field(i)
+		if field.Type != secretType {
+			continue
+		}
+
+		tag, ok := field.Tag.Lookup("json")
+		require.True(t, ok, "secret field '%s' has no json tag", field.Name)
+
+		kind, shadowed := shadowKindByTag[tag]
+		if assert.True(t, shadowed, "secret field '%s' (json tag '%s') has no shadow field on auraCredentialOnDisk - it will be persisted as the mask instead of the real value", field.Name, tag) {
+			assert.Equal(t, reflect.String, kind, "shadow field for '%s' should be a plain string", field.Name)
+		}
+	}
 }
 
 func TestRoundTripSaveAndLoad(t *testing.T) {
