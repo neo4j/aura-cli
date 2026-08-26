@@ -45,7 +45,6 @@ func (c *AuraCredentials) Add(name string, clientId string, clientSecret string)
 		Name:         name,
 		ClientId:     clientId,
 		ClientSecret: redact.NewSecret(clientSecret),
-		AccessToken:  redact.NewSecret(""),
 	})
 	if len(c.Credentials) == 1 {
 		c.SetDefault(name)
