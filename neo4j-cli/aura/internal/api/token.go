@@ -18,7 +18,7 @@ import (
 
 func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (string, error) {
 	if credential.HasValidAccessToken() {
-		return credential.AccessToken, nil
+		return credential.AccessToken.Reveal(), nil
 	}
 
 	data := url.Values{}
@@ -38,7 +38,7 @@ func getToken(credential *credentials.AuraCredential, cfg *clicfg.Config) (strin
 		"Content-Type": {"application/x-www-form-urlencoded"},
 		"User-Agent":   {fmt.Sprintf(userAgent, version)},
 	}
-	req.SetBasicAuth(credential.ClientId, credential.ClientSecret)
+	req.SetBasicAuth(credential.ClientId, credential.ClientSecret.Reveal())
 
 	client := http.Client{}
 

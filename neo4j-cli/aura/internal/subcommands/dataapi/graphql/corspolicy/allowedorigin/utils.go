@@ -7,10 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clierr"
+	"github.com/neo4j/cli/common/redact"
 	"github.com/neo4j/cli/neo4j-cli/aura/internal/api"
 )
 
@@ -39,7 +39,7 @@ func getExistingOrigins(cfg *clicfg.Config, dataApiId, instanceId string) ([]str
 		return nil, err
 	}
 	if statusCode != http.StatusOK {
-		panic(clierr.NewFatalError("unexpected status code %d running CLI with args %s, please report an issue in https://github.com/neo4j/cli", statusCode, os.Args[1:]))
+		panic(clierr.NewFatalError("unexpected status code %d running CLI with args %s, please report an issue in https://github.com/neo4j/aura-cli", statusCode, redact.CapturedArgs()))
 	}
 
 	var parsedGetResBody DetailedBody

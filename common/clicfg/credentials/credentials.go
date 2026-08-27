@@ -11,6 +11,21 @@ import (
 	"github.com/spf13/afero"
 )
 
+type auraCredentialsOnDisk struct {
+	DefaultCredential string                 `json:"default-credential"`
+	Credentials       []auraCredentialOnDisk `json:"credentials"`
+}
+
+type credentialsFileOnDisk struct {
+	Aura auraCredentialsOnDisk `json:"aura"`
+}
+
+type auraCredentialOnDisk struct {
+	AuraCredential
+	ClientSecret string `json:"client-secret"`
+	AccessToken  string `json:"access-token"`
+}
+
 type CredentialsFile struct {
 	Aura *AuraCredentials `json:"aura"`
 }
@@ -42,9 +57,11 @@ func (c *Credentials) load() {
 		},
 	}
 	if fileHasData {
-		if err := json.Unmarshal(data, &credentials); err != nil {
+		var onDisk credentialsFileOnDisk
+		if err := json.Unmarshal(data, &onDisk); err != nil {
 			panic(err)
 		}
+		credentials.Aura = onDisk.Aura.toAuraCredentials(c.save)
 	}
 
 	c.Aura = credentials.Aura
@@ -55,9 +72,11 @@ func (c *Credentials) load() {
 }
 
 func (c *Credentials) save() {
-	data, err := json.Marshal(CredentialsFile{
-		Aura: c.Aura,
-	})
+	onDisk := credentialsFileOnDisk{
+		Aura: c.Aura.toOnDisk(),
+	}
+
+	data, err := json.Marshal(onDisk)
 	if err != nil {
 		panic(err)
 	}
