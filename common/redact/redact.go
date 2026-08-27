@@ -157,12 +157,7 @@ func maskArg(remainingArgs []string, resolve ShorthandResolver) (output []string
 	return []string{arg, mask}, 2
 }
 
-func MaskArgs(args []string) []string {
-	return MaskArgsWithShorthandResolver(args, nil)
-}
-
-// MaskArgsWithShorthandResolver is MaskArgs, but resolves shorthands via resolve first.
-func MaskArgsWithShorthandResolver(args []string, resolve ShorthandResolver) []string {
+func maskArgs(args []string, resolve ShorthandResolver) []string {
 	if len(args) == 0 {
 		return args
 	}

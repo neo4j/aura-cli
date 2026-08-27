@@ -8,7 +8,7 @@ import "github.com/spf13/cobra"
 var capturedArgs []string
 
 func CaptureArgs(rootCmd *cobra.Command, args []string) {
-	capturedArgs = MaskArgsWithShorthandResolver(args, shorthandResolverFor(rootCmd, args))
+	capturedArgs = maskArgs(args, shorthandResolverFor(rootCmd, args))
 }
 
 func CapturedArgs() []string {

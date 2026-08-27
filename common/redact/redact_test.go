@@ -367,11 +367,11 @@ func TestMaskArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			got := MaskArgs(tt.args)
-			require.Equal(t, len(tt.want), len(got), "MaskArgs() element count")
+			got := maskArgs(tt.args, nil)
+			require.Equal(t, len(tt.want), len(got), "maskArgs() element count")
 
 			for i, gotArg := range got {
-				assert.Equal(t, tt.want[i], gotArg, "MaskArgs()[%d]", i)
+				assert.Equal(t, tt.want[i], gotArg, "maskArgs()[%d]", i)
 			}
 		})
 	}
@@ -396,9 +396,9 @@ func TestMaskArgsMasksSecrets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			args := []string{"--" + tt.flagName, "test-value"}
-			result := MaskArgs(args)
+			result := maskArgs(args, nil)
 
-			require.Len(t, result, 2, "MaskArgs() element count")
+			require.Len(t, result, 2, "maskArgs() element count")
 
 			if tt.shouldMask {
 				assert.Equal(t, mask, result[1], "flag %s", tt.flagName)
@@ -433,9 +433,9 @@ func TestMaskArgsPreservesStructure(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := MaskArgs(tt.args)
+			result := maskArgs(tt.args, nil)
 
-			require.Len(t, result, len(tt.args), "MaskArgs() changed argument count")
+			require.Len(t, result, len(tt.args), "maskArgs() changed argument count")
 
 			for i, arg := range tt.args {
 				if strings.HasPrefix(arg, "--") {
@@ -507,7 +507,7 @@ func TestMaskArgsWithShorthandResolver(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := MaskArgsWithShorthandResolver(tt.args, tt.resolve)
+			result := maskArgs(tt.args, tt.resolve)
 			assert.Equal(t, tt.want, result, tt.testName)
 		})
 	}
