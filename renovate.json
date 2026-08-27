@@ -21,6 +21,25 @@
         {
             "matchUpdateTypes": ["minor", "patch"],
             "groupName": "minor-and-patch"
+        },
+        {
+            "matchDepNames": ["go"],
+            "matchDatasources": ["golang-version"],
+            "groupName": "go version",
+            "description": "Keep go.mod's go directive and the CI-pinned go-version strings on the same version"
+        }
+    ],
+    "customManagers": [
+        {
+            "customType": "regex",
+            "description": "Keep the go.mod directive and the CI-pinned go-version strings on the same version",
+            "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/", "/^go\\.mod$/"],
+            "matchStrings": [
+                "go-version: \"(?<currentValue>.*?)\"\\s",
+                "\\ngo (?<currentValue>\\d+\\.\\d+\\.\\d+)\\n"
+            ],
+            "depNameTemplate": "go",
+            "datasourceTemplate": "golang-version"
         }
     ]
 }
