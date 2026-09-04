@@ -53,7 +53,6 @@ func (c *Credentials) load() {
 	var credentials CredentialsFile = CredentialsFile{
 		Aura: &AuraCredentials{
 			Credentials: []*AuraCredential{},
-			onUpdate:    c.save,
 		},
 	}
 	if fileHasData {
@@ -61,17 +60,42 @@ func (c *Credentials) load() {
 		if err := json.Unmarshal(data, &onDisk); err != nil {
 			panic(err)
 		}
-		credentials.Aura = onDisk.Aura.toAuraCredentials(c.save)
+		credentials.Aura = onDisk.Aura.toAuraCredentials()
 	}
 
 	c.Aura = credentials.Aura
+	c.Aura.refresh = c.refreshAura
+	c.Aura.persist = c.save
 
 	if !fileHasData {
 		c.save()
 	}
 }
 
-func (c *Credentials) save() {
+// refreshAura re-reads the credentials file from disk into the existing c.Aura, discarding
+// whatever was loaded or mutated in memory before this call. It updates the struct in place
+// rather than replacing it, so the refresh/persist closures wired up in load stay intact.
+func (c *Credentials) refreshAura() error {
+	data := fileutils.ReadFileSafe(c.fs, c.filePath)
+
+	if len(data) == 0 {
+		c.Aura.Credentials = []*AuraCredential{}
+		c.Aura.DefaultCredential = ""
+		return nil
+	}
+
+	var onDisk credentialsFileOnDisk
+	if err := json.Unmarshal(data, &onDisk); err != nil {
+		return err
+	}
+
+	fresh := onDisk.Aura.toAuraCredentials()
+	c.Aura.Credentials = fresh.Credentials
+	c.Aura.DefaultCredential = fresh.DefaultCredential
+	return nil
+}
+
+func (c *Credentials) save() error {
 	onDisk := credentialsFileOnDisk{
 		Aura: c.Aura.toOnDisk(),
 	}
@@ -82,4 +106,5 @@ func (c *Credentials) save() {
 	}
 
 	fileutils.WriteFile(c.fs, c.filePath, data)
+	return nil
 }

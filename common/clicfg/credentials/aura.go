@@ -15,7 +15,21 @@ import (
 type AuraCredentials struct {
 	DefaultCredential string            `json:"default-credential"`
 	Credentials       []*AuraCredential `json:"credentials"`
-	onUpdate          func()
+	refresh           func() error
+	persist           func() error
+}
+
+// refreshAndPersist re-reads the on-disk state into c immediately before mutate runs, so mutate
+// always applies its delta on top of the current file rather than a snapshot that may have gone
+// stale since load. It only persists if mutate succeeds.
+func (c *AuraCredentials) refreshAndPersist(mutate func() error) error {
+	if err := c.refresh(); err != nil {
+		return err
+	}
+	if err := mutate(); err != nil {
+		return err
+	}
+	return c.persist()
 }
 
 func (c *AuraCredentials) List() []*AuraCredential {
@@ -34,56 +48,58 @@ func (config *AuraCredentials) Print(writer io.Writer) error {
 }
 
 func (c *AuraCredentials) Add(name string, clientId string, clientSecret string) error {
-	auraCredentials := c.Credentials
-	for _, credential := range auraCredentials {
-		if credential.Name == name {
-			return clierr.NewUsageError("already have credential with name %s", name)
+	return c.refreshAndPersist(func() error {
+		for _, credential := range c.Credentials {
+			if credential.Name == name {
+				return clierr.NewUsageError("already have credential with name %s", name)
+			}
 		}
-	}
 
-	c.Credentials = append(c.Credentials, &AuraCredential{
-		Name:         name,
-		ClientId:     clientId,
-		ClientSecret: redact.NewSecret(clientSecret),
+		c.Credentials = append(c.Credentials, &AuraCredential{
+			Name:         name,
+			ClientId:     clientId,
+			ClientSecret: redact.NewSecret(clientSecret),
+		})
+		if len(c.Credentials) == 1 {
+			c.DefaultCredential = name
+		}
+		return nil
 	})
-	if len(c.Credentials) == 1 {
-		c.SetDefault(name)
-	}
-	c.onUpdate()
-	return nil
 }
 
 func (c *AuraCredentials) Remove(name string) error {
-	var indexToRemove = -1
+	return c.refreshAndPersist(func() error {
+		var indexToRemove = -1
 
-	for i, credential := range c.Credentials {
-		if credential.Name == name {
-			indexToRemove = i
-			break
+		for i, credential := range c.Credentials {
+			if credential.Name == name {
+				indexToRemove = i
+				break
+			}
 		}
-	}
 
-	if indexToRemove == -1 {
-		return clierr.NewUsageError("could not find credential with name %s to remove", name)
-	}
+		if indexToRemove == -1 {
+			return clierr.NewUsageError("could not find credential with name %s to remove", name)
+		}
 
-	if c.DefaultCredential == name {
-		c.DefaultCredential = ""
-	}
+		if c.DefaultCredential == name {
+			c.DefaultCredential = ""
+		}
 
-	c.Credentials = append(c.Credentials[:indexToRemove], c.Credentials[indexToRemove+1:]...)
-	c.onUpdate()
-	return nil
+		c.Credentials = append(c.Credentials[:indexToRemove], c.Credentials[indexToRemove+1:]...)
+		return nil
+	})
 }
 
 func (c *AuraCredentials) SetDefault(name string) error {
-	if !c.credentialExists(name) {
-		return clierr.NewUsageError("could not find credential with name %s", name)
-	}
+	return c.refreshAndPersist(func() error {
+		if !c.credentialExists(name) {
+			return clierr.NewUsageError("could not find credential with name %s", name)
+		}
 
-	c.DefaultCredential = name
-	c.onUpdate()
-	return nil
+		c.DefaultCredential = name
+		return nil
+	})
 }
 
 func (c *AuraCredentials) GetDefault() (*AuraCredential, error) {
@@ -103,29 +119,43 @@ func (c *AuraCredentials) Get(name string) (*AuraCredential, error) {
 }
 
 func (c *AuraCredentials) UpdateAccessToken(cred *AuraCredential, accessToken string, expiresInSeconds int64) *AuraCredential {
-	credential, err := c.Get(cred.Name)
+	var credential *AuraCredential
+	err := c.refreshAndPersist(func() error {
+		var err error
+		credential, err = c.Get(cred.Name)
+		if err != nil {
+			return err
+		}
+
+		const expireToleranceSeconds = 60
+		now := time.Now().UnixMilli()
+
+		credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
+		credential.AccessToken = redact.NewSecret(accessToken)
+		return nil
+	})
 	if err != nil {
 		panic(err)
 	}
-	const expireToleranceSeconds = 60
-
-	now := time.Now().UnixMilli()
-
-	credential.TokenExpiry = now + (expiresInSeconds-expireToleranceSeconds)*1000
-	credential.AccessToken = redact.NewSecret(accessToken)
-	c.onUpdate()
 	return credential
 }
 
 func (c *AuraCredentials) ClearAccessToken(cred *AuraCredential) (*AuraCredential, error) {
-	credential, err := c.Get(cred.Name)
+	var credential *AuraCredential
+	err := c.refreshAndPersist(func() error {
+		var err error
+		credential, err = c.Get(cred.Name)
+		if err != nil {
+			return err
+		}
+
+		credential.TokenExpiry = 0
+		credential.AccessToken = redact.NewSecret("")
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	credential.TokenExpiry = 0
-	credential.AccessToken = redact.NewSecret("")
-	c.onUpdate()
 	return credential, nil
 }
 
@@ -175,11 +205,10 @@ func (c *AuraCredentials) toOnDisk() auraCredentialsOnDisk {
 	return result
 }
 
-func (od auraCredentialsOnDisk) toAuraCredentials(onUpdate func()) *AuraCredentials {
+func (od auraCredentialsOnDisk) toAuraCredentials() *AuraCredentials {
 	result := &AuraCredentials{
 		DefaultCredential: od.DefaultCredential,
 		Credentials:       make([]*AuraCredential, len(od.Credentials)),
-		onUpdate:          onUpdate,
 	}
 	for i, cred := range od.Credentials {
 		newCred := cred.AuraCredential

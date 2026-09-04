@@ -1,0 +1,3 @@
+kind: Patch
+body: Fixed a bug where removing and re-adding a credential with the same name within a single process would silently lose the re-added credential from disk. Restructured credential persistence to read the file fresh before each mutation, eliminating reliance on stale in-memory state.
+time: 2026-08-20T13:04:32Z
