@@ -19,6 +19,6 @@ jobs:
               with:
                   go-version: "1.27.0"
             - name: Install addlicense
-              run: go install github.com/google/addlicense@latest
+              run: go install github.com/google/addlicense@v1.2.0
             - name: Run addlicense
-              run: addlicense -f ./addlicense -check $(find . -name "*.go" -type f -print0 | xargs -0)
+              run: find . -name "*.go" -type f -exec addlicense -f ./addlicense -check {} +
