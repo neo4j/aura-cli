@@ -1,3 +1,0 @@
-kind: Patch
-body: Secrets are now redacted from CLI error output and credential list display
-time: 2026-08-19T10:54:53.097302+01:00
