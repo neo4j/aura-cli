@@ -1,3 +1,3 @@
 kind: Patch
-body: Fix removing the default project promoting a random replacement instead of clearing the default
+body: Removing the default project now clears the default project instead of randomly picking another project to replace it; use `config project use` to set a new one
 time: 2026-09-11T17:15:00.000000+01:00
