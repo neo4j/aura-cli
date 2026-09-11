@@ -1,0 +1,3 @@
+kind: Patch
+body: Fix removing the default project promoting a random replacement instead of clearing the default
+time: 2026-09-11T17:15:00.000000+01:00
