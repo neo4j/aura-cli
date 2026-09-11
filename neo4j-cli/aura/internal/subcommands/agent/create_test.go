@@ -23,7 +23,7 @@ func TestCreateAgent(t *testing.T) {
 		"name": "My Agent",
 		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
-		"is_private": false,
+		"is_private": true,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
@@ -41,7 +41,7 @@ func TestCreateAgent(t *testing.T) {
 		"name": "My Agent",
 		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
-		"is_private": false,
+		"is_private": true,
 		"is_mcp_enabled": false,
 		"enabled": true,
 		"system_prompt": "",
@@ -53,7 +53,7 @@ func TestCreateAgent(t *testing.T) {
 		"name": "My Agent",
 		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
-		"is_private": false,
+		"is_private": true,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
@@ -71,7 +71,7 @@ func TestCreateAgentWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 		"name": "My Agent",
 		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
-		"is_private": false,
+		"is_private": true,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
@@ -92,13 +92,13 @@ func TestCreateAgentWithOrganizationAndProjectIdFromConfig(t *testing.T) {
 		"name": "My Agent",
 		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
-		"is_private": false,
+		"is_private": true,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
 }
 
-func TestCreateAgentWithPrivateFlag(t *testing.T) {
+func TestCreateAgentWithPublicFlag(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()
 
@@ -107,10 +107,10 @@ func TestCreateAgentWithPrivateFlag(t *testing.T) {
 
 	mockHandler := helper.NewRequestHandlerMock(fmt.Sprintf("/v2beta1/organizations/%s/projects/%s/agents", organizationId, projectId), http.StatusCreated, `{
 		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-		"name": "Private Agent",
-		"description": "A private agent",
+		"name": "Public Agent",
+		"description": "A public agent",
 		"dbid": "a1b2c3d4",
-		"is_private": true,
+		"is_private": false,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
@@ -118,17 +118,17 @@ func TestCreateAgentWithPrivateFlag(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetConfigValue("aura.output", "json")
 	helper.ExecuteCommand(fmt.Sprintf(
-		`agent create --name "Private Agent" --description "A private agent" --dbid a1b2c3d4 --is-private --tools '%s' --organization-id %s --project-id %s`,
+		`agent create --name "Public Agent" --description "A public agent" --dbid a1b2c3d4 --is-public --tools '%s' --organization-id %s --project-id %s`,
 		testTools, organizationId, projectId,
 	))
 
 	mockHandler.AssertCalledTimes(1)
 	mockHandler.AssertCalledWithMethod(http.MethodPost)
 	mockHandler.AssertCalledWithBody(fmt.Sprintf(`{
-		"name": "Private Agent",
-		"description": "A private agent",
+		"name": "Public Agent",
+		"description": "A public agent",
 		"dbid": "a1b2c3d4",
-		"is_private": true,
+		"is_private": false,
 		"is_mcp_enabled": false,
 		"enabled": true,
 		"system_prompt": "",
@@ -137,10 +137,10 @@ func TestCreateAgentWithPrivateFlag(t *testing.T) {
 
 	helper.AssertOutJson(`{
 		"id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-		"name": "Private Agent",
-		"description": "A private agent",
+		"name": "Public Agent",
+		"description": "A public agent",
 		"dbid": "a1b2c3d4",
-		"is_private": true,
+		"is_private": false,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
@@ -190,7 +190,7 @@ func TestCreateAgentWithTableOutput(t *testing.T) {
 		"name": "My Agent",
 		"description": "An agent that queries the database",
 		"dbid": "a1b2c3d4",
-		"is_private": false,
+		"is_private": true,
 		"is_mcp_enabled": false,
 		"enabled": true
 	}`)
@@ -209,7 +209,7 @@ func TestCreateAgentWithTableOutput(t *testing.T) {
 ┌──────────────────────────────────────┬──────────┬────────────────────────────────────┬──────────┬────────────┬────────────────┬─────────┐
 │ ID                                   │ NAME     │ DESCRIPTION                        │ DBID     │ IS_PRIVATE │ IS_MCP_ENABLED │ ENABLED │
 ├──────────────────────────────────────┼──────────┼────────────────────────────────────┼──────────┼────────────┼────────────────┼─────────┤
-│ f47ac10b-58cc-4372-a567-0e02b2c3d479 │ My Agent │ An agent that queries the database │ a1b2c3d4 │ false      │ false          │ true    │
+│ f47ac10b-58cc-4372-a567-0e02b2c3d479 │ My Agent │ An agent that queries the database │ a1b2c3d4 │ true       │ false          │ true    │
 └──────────────────────────────────────┴──────────┴────────────────────────────────────┴──────────┴────────────┴────────────────┴─────────┘
 	`)
 }

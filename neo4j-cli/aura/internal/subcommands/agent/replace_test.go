@@ -42,7 +42,7 @@ func TestReplaceAgent(t *testing.T) {
 		"name": "My Updated Agent",
 		"description": "An updated description",
 		"dbid": "a1b2c3d4",
-		"is_private": false,
+		"is_private": true,
 		"is_mcp_enabled": false,
 		"enabled": true,
 		"system_prompt": "",

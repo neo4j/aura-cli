@@ -82,7 +82,7 @@ var booleanFlags = map[string]bool{
 	"await":                  true,
 	"enabled":                true,
 	"disabled":               true,
-	"is-private":             true,
+	"is-public":              true,
 	"is-mcp-enabled":         true,
 	"vector-optimized":       true,
 	"graph-analytics-plugin": true,

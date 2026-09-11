@@ -23,7 +23,7 @@ func NewReplaceCmd(cfg *clicfg.Config) *cobra.Command {
 		name           string
 		description    string
 		dbid           string
-		isPrivate      bool
+		isPublic       bool
 		toolsJSON      string
 		systemPrompt   string
 		isMcpEnabled   bool
@@ -36,7 +36,7 @@ func NewReplaceCmd(cfg *clicfg.Config) *cobra.Command {
 		nameFlag           = "name"
 		descriptionFlag    = "description"
 		dbidFlag           = "dbid"
-		isPrivateFlag      = "is-private"
+		isPublicFlag       = "is-public"
 		toolsFlag          = "tools"
 		systemPromptFlag   = "system-prompt"
 		isMcpEnabledFlag   = "is-mcp-enabled"
@@ -69,7 +69,7 @@ func NewReplaceCmd(cfg *clicfg.Config) *cobra.Command {
 				"name":           name,
 				"description":    description,
 				"dbid":           dbid,
-				"is_private":     isPrivate,
+				"is_private":     !isPublic,
 				"tools":          tools,
 				"system_prompt":  systemPrompt,
 				"is_mcp_enabled": isMcpEnabled,
@@ -99,7 +99,7 @@ func NewReplaceCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&name, nameFlag, "", "(required) Agent name")
 	cmd.Flags().StringVar(&description, descriptionFlag, "", "(required) Agent description")
 	cmd.Flags().StringVar(&dbid, dbidFlag, "", "(required) Aura database instance ID the agent connects to")
-	cmd.Flags().BoolVar(&isPrivate, isPrivateFlag, false, "Whether the agent is private")
+	cmd.Flags().BoolVar(&isPublic, isPublicFlag, false, "Whether the agent is public")
 	cmd.Flags().StringVar(&toolsJSON, toolsFlag, "", "(required) Tools configuration as a JSON array")
 	cmd.Flags().StringVar(&systemPrompt, systemPromptFlag, "", "System prompt for the agent")
 	cmd.Flags().BoolVar(&isMcpEnabled, isMcpEnabledFlag, false, "Whether MCP is enabled for the agent")
