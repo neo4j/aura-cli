@@ -152,6 +152,15 @@ func TestGetTenantWithTrailingNewlineInId(t *testing.T) {
 	`)
 }
 
+func TestGetTenantWithPathTraversalIdIsRejected(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.ExecuteCommand("tenant get ../../evil")
+
+	helper.AssertErr(`Error: invalid resource identifier: ".." is not allowed in a request path`)
+}
+
 func TestGetTenantWithTableOutput(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()

@@ -10,8 +10,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/neo4j/cli/common/clicfg"
+	"github.com/neo4j/cli/common/clierr"
 )
 
 const userAgent = "Neo4jCLI/%s"
@@ -50,7 +52,14 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	}
 	versionPath := getVersionPath(cfg, config.Version)
 
-	u, _ := url.ParseRequestURI(baseUrl)
+	if err := validatePath(path); err != nil {
+		return responseBody, 0, err
+	}
+
+	u, err := url.ParseRequestURI(baseUrl)
+	if err != nil {
+		return responseBody, 0, clierr.NewUsageError("configured base-url %q is not a valid URL: %w", baseUrl, err)
+	}
 	u = u.JoinPath(versionPath)
 	u = u.JoinPath(path)
 
@@ -91,6 +100,15 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 	}
 
 	return responseBody, res.StatusCode, handleResponseError(res, credential, cfg)
+}
+
+func validatePath(p string) error {
+	for _, seg := range strings.FieldsFunc(p, func(r rune) bool { return r == '/' }) {
+		if seg == ".." {
+			return clierr.NewUsageError("invalid resource identifier: %q is not allowed in a request path", seg)
+		}
+	}
+	return nil
 }
 
 func getVersionPath(cfg *clicfg.Config, version AuraApiVersion) string {
