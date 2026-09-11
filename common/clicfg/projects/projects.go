@@ -6,6 +6,7 @@ package projects
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/neo4j/cli/common/clicfg/fileutils"
 	"github.com/neo4j/cli/common/clierr"
@@ -79,11 +80,10 @@ func (p *AuraConfigProjects) Remove(name string) error {
 			projects.Default = ""
 		} else {
 			if _, ok := projects.Projects[projects.Default]; !ok {
-				for key := range projects.Projects {
-					fmt.Printf("Removed the current default project %s, setting %s as the new default project", name, key)
-					projects.Default = key
-					break
-				}
+				projects.Default = ""
+				fmt.Fprintf(os.Stderr,
+					"Removed the default project %q. No default project is set; "+
+						"choose one with `aura-cli config project use <name>`.\n", name)
 			}
 		}
 		return p.updateProjects(data, projects)
