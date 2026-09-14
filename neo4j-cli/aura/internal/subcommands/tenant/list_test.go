@@ -63,3 +63,12 @@ func TestListCustomerManagedKeysWithInvalidOutput(t *testing.T) {
 
 	helper.AssertErr("Error: invalid output value specified: invalid")
 }
+
+func TestListTenantsWithInvalidBaseUrlFlag(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.ExecuteCommand(`tenant list --base-url "http://exa mple.com"`)
+
+	helper.AssertErr(`Error: configured base-url is not a valid URL: parse "http://exa mple.com": invalid character " " in host name`)
+}

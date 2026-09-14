@@ -46,7 +46,10 @@ func MakeRequest(cfg *clicfg.Config, path string, config *RequestConfig) (respon
 
 	body := createBody(config.PostBody)
 
-	baseUrl := cfg.Aura.BaseUrl()
+	baseUrl, err := cfg.Aura.BaseUrl()
+	if err != nil {
+		return responseBody, 0, clierr.NewUsageError("configured base-url is not a valid URL: %w", err)
+	}
 	if config.Version == "" {
 		config.Version = AuraApiVersion1
 	}
