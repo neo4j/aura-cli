@@ -22,7 +22,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 		name           string
 		description    string
 		dbid           string
-		isPrivate      bool
+		isPublic       bool
 		toolsJSON      string
 		systemPrompt   string
 		isMcpEnabled   bool
@@ -35,7 +35,7 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 		nameFlag           = "name"
 		descriptionFlag    = "description"
 		dbidFlag           = "dbid"
-		isPrivateFlag      = "is-private"
+		isPublicFlag       = "is-public"
 		toolsFlag          = "tools"
 		systemPromptFlag   = "system-prompt"
 		isMcpEnabledFlag   = "is-mcp-enabled"
@@ -77,8 +77,8 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 				}
 				body["tools"] = tools
 			}
-			if cmd.Flags().Changed(isPrivateFlag) {
-				body["is_private"] = isPrivate
+			if cmd.Flags().Changed(isPublicFlag) {
+				body["is_private"] = !isPublic
 			}
 			if cmd.Flags().Changed(isMcpEnabledFlag) {
 				body["is_mcp_enabled"] = isMcpEnabled
@@ -113,13 +113,13 @@ func NewUpdateCmd(cfg *clicfg.Config) *cobra.Command {
 	cmd.Flags().StringVar(&name, nameFlag, "", "Agent name")
 	cmd.Flags().StringVar(&description, descriptionFlag, "", "Agent description")
 	cmd.Flags().StringVar(&dbid, dbidFlag, "", "Aura database instance ID the agent connects to")
-	cmd.Flags().BoolVar(&isPrivate, isPrivateFlag, false, "Whether the agent is private")
+	cmd.Flags().BoolVar(&isPublic, isPublicFlag, false, "Whether the agent is public")
 	cmd.Flags().StringVar(&toolsJSON, toolsFlag, "", "Tools configuration as a JSON array")
 	cmd.Flags().StringVar(&systemPrompt, systemPromptFlag, "", "System prompt for the agent")
 	cmd.Flags().BoolVar(&isMcpEnabled, isMcpEnabledFlag, false, "Whether MCP is enabled for the agent")
 	cmd.Flags().BoolVar(&enabled, enabledFlag, true, "Whether the agent is enabled")
 
-	cmd.MarkFlagsOneRequired(nameFlag, descriptionFlag, dbidFlag, toolsFlag, systemPromptFlag, isPrivateFlag, isMcpEnabledFlag, enabledFlag)
+	cmd.MarkFlagsOneRequired(nameFlag, descriptionFlag, dbidFlag, toolsFlag, systemPromptFlag, isPublicFlag, isMcpEnabledFlag, enabledFlag)
 
 	return cmd
 }

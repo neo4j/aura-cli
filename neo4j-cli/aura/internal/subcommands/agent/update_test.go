@@ -72,7 +72,7 @@ func TestUpdateAgentBooleanFields(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.SetConfigValue("aura.output", "json")
 	helper.ExecuteCommand(fmt.Sprintf(
-		`agent update %s --is-private --is-mcp-enabled --organization-id %s --project-id %s`,
+		`agent update %s --is-public=false --is-mcp-enabled --organization-id %s --project-id %s`,
 		agentId, organizationId, projectId,
 	))
 
@@ -180,7 +180,7 @@ func TestUpdateAgentWithNoFields(t *testing.T) {
 	helper.SetConfigValue("aura.beta-enabled", true)
 	helper.ExecuteCommand(fmt.Sprintf("agent update %s --organization-id %s --project-id %s", agentId, organizationId, projectId))
 
-	helper.AssertErr("Error: at least one of the flags in the group [name description dbid tools system-prompt is-private is-mcp-enabled enabled] is required")
+	helper.AssertErr("Error: at least one of the flags in the group [name description dbid tools system-prompt is-public is-mcp-enabled enabled] is required")
 }
 
 func TestUpdateAgentWithInvalidToolsJSON(t *testing.T) {
