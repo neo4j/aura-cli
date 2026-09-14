@@ -1,3 +1,0 @@
-kind: Minor
-body: Rename agent create/update/replace --is-private flag to --is-public (not treated as breaking; agent commands are beta)
-time: 2026-09-11T15:47:54.411699+01:00
