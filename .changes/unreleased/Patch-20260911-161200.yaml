@@ -1,0 +1,3 @@
+kind: Patch
+body: Reject resource identifiers containing ".." path segments and surface a clear error when base-url is misconfigured, instead of building an unintended request path
+time: 2026-09-11T16:12:00.000000+01:00

@@ -42,5 +42,35 @@ func TestGetAuraBaseUrlConfigRemovesTrailingPath(t *testing.T) {
 	cfg := clicfg.NewConfig(fs, "test")
 
 	//The path parameter will be removed from GET base url
-	assert.Equal(t, server.URL, cfg.Aura.BaseUrl())
+	baseUrl, err := cfg.Aura.BaseUrl()
+	assert.Nil(t, err)
+	assert.Equal(t, server.URL, baseUrl)
+}
+
+func TestGetAuraBaseUrlConfigReturnsErrorForInvalidUrl(t *testing.T) {
+	cfgStr := `{
+		"aura": {
+			"auth-url": "http://example.com/oauth/token",
+			"base-url": "http://exa mple.com",
+			"output": "json"
+			}
+		}`
+
+	credentialsStr := `{
+		"aura": {
+			"credentials": [{
+				"name": "test-cred",
+				"access-token": "dsa",
+				"token-expiry": 123
+			}],
+			"default-credential": "test-cred"
+			}
+		}`
+
+	fs, err := testfs.GetTestFs(cfgStr, credentialsStr)
+	assert.Nil(t, err)
+	cfg := clicfg.NewConfig(fs, "test")
+
+	_, err = cfg.Aura.BaseUrl()
+	assert.EqualError(t, err, `parse "http://exa mple.com": invalid character " " in host name`)
 }

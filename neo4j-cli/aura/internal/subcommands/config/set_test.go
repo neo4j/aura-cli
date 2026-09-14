@@ -31,6 +31,28 @@ func TestSetConfigWithInvalidConfigKey(t *testing.T) {
 	helper.AssertErr("Error: invalid config key specified: invalid")
 }
 
+func TestSetConfigWithValidBaseUrl(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.OverwriteConfig("{}")
+
+	helper.ExecuteCommand("config set base-url https://api.neo4j.io")
+
+	helper.AssertConfigValue("aura.base-url", "https://api.neo4j.io")
+}
+
+func TestSetConfigWithInvalidBaseUrl(t *testing.T) {
+	helper := testutils.NewAuraTestHelper(t)
+	defer helper.Close()
+
+	helper.OverwriteConfig("{}")
+
+	helper.ExecuteCommand("config set base-url not-a-url")
+
+	helper.AssertErr("Error: invalid base-url specified: not-a-url")
+}
+
 func TestSetConfigWithInvalidOutputValue(t *testing.T) {
 	helper := testutils.NewAuraTestHelper(t)
 	defer helper.Close()

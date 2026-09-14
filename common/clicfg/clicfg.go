@@ -155,19 +155,19 @@ func (config *AuraConfig) print(cmd *cobra.Command, path string) {
 	}
 }
 
-func (config *AuraConfig) BaseUrl() string {
+func (config *AuraConfig) BaseUrl() (string, error) {
 	originalUrl := config.viper.GetString("aura.base-url")
 	//Existing users have base url configs with trailing path /v1.
 	//To make it backward compatible, we allow old config and clear up by removing trailing path /v1 in the url
 	return removePathParametersFromUrl(originalUrl)
 }
 
-func removePathParametersFromUrl(originalUrl string) string {
+func removePathParametersFromUrl(originalUrl string) (string, error) {
 	parsedUrl, err := url.Parse(originalUrl)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, parsedUrl.Host)
+	return fmt.Sprintf("%s://%s", parsedUrl.Scheme, parsedUrl.Host), nil
 }
 
 func (config *AuraConfig) BetaPathV1() string {
@@ -231,5 +231,9 @@ func (config *AuraConfig) auraBaseUrlOnConfigChange(url string) string {
 	if url == "" {
 		return DefaultAuraBaseUrl
 	}
-	return removePathParametersFromUrl(url)
+	cleaned, err := removePathParametersFromUrl(url)
+	if err != nil {
+		panic(err)
+	}
+	return cleaned
 }

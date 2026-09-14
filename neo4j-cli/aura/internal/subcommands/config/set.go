@@ -4,6 +4,8 @@
 package config
 
 import (
+	"net/url"
+
 	"github.com/neo4j/cli/common/clicfg"
 	"github.com/neo4j/cli/common/clierr"
 	"github.com/spf13/cobra"
@@ -32,6 +34,12 @@ func NewSetCmd(cfg *clicfg.Config) *cobra.Command {
 				}
 				if !validOutputValue {
 					return clierr.NewUsageError("invalid output value specified: %s", args[1])
+				}
+			}
+
+			if args[0] == "base-url" {
+				if _, err := url.ParseRequestURI(args[1]); err != nil {
+					return clierr.NewUsageError("invalid base-url specified: %s", args[1])
 				}
 			}
 
