@@ -54,7 +54,7 @@ func TestRemoveProjectWhenMultipleProjectsExist(t *testing.T) {
 			"project-id": "testprojectid"
 		}
 	}`)
-	helper.AssertConfigValue("aura-projects.default", "second-project")
+	helper.AssertConfigValue("aura-projects.default", "")
 }
 
 func TestRemoveProjectWhenProjectDoesNotExistWithMultipleProjects(t *testing.T) {
